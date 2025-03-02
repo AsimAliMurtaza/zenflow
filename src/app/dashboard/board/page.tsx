@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Box,
   Flex,
@@ -15,28 +15,7 @@ import {
   Droppable,
   Draggable,
   DropResult,
-  DroppableProvided,
-} from "react-beautiful-dnd";
-
-// Fix: Strict Mode Wrapper for Droppable
-const StrictModeDroppable = ({
-  droppableId,
-  children,
-}: {
-  droppableId: string;
-  children: any;
-}) => {
-  return (
-    <Droppable droppableId={droppableId}>
-      {(provided, snapshot) => (
-        <div ref={provided.innerRef} {...provided.droppableProps}>
-          {children(provided, snapshot)}
-          {provided.placeholder}
-        </div>
-      )}
-    </Droppable>
-  );
-};
+} from "@hello-pangea/dnd"; // ✅ Use this instead of react-beautiful-dnd
 
 // Define task type
 type Task = { id: string; title: string; priority: "Low" | "Medium" | "High" };
@@ -49,7 +28,7 @@ type TaskBoard = {
 };
 
 // Initial tasks
-const initialTasks: TaskBoard = {
+const defaultTasks: TaskBoard = {
   todo: [
     { id: "1", title: "Create UI Design", priority: "High" },
     { id: "4", title: "Write Documentation", priority: "Low" },
@@ -59,7 +38,20 @@ const initialTasks: TaskBoard = {
 };
 
 const KanbanBoard = () => {
-  const [tasks, setTasks] = useState<TaskBoard>(initialTasks);
+  const [tasks, setTasks] = useState<TaskBoard>(defaultTasks);
+
+  // Load tasks from localStorage
+  useEffect(() => {
+    const savedTasks = localStorage.getItem("kanbanTasks");
+    if (savedTasks) {
+      setTasks(JSON.parse(savedTasks));
+    }
+  }, []);
+
+  // Save tasks to localStorage
+  useEffect(() => {
+    localStorage.setItem("kanbanTasks", JSON.stringify(tasks));
+  }, [tasks]);
 
   const onDragEnd = (result: DropResult) => {
     if (!result.destination) return;
@@ -90,8 +82,8 @@ const KanbanBoard = () => {
     <DragDropContext onDragEnd={onDragEnd}>
       <Flex p={4} gap={4} bg={bgColor} wrap="wrap">
         {Object.entries(tasks).map(([status, taskList]) => (
-          <StrictModeDroppable key={status} droppableId={status}>
-            {(provided: DroppableProvided) => (
+          <Droppable key={status} droppableId={status}>
+            {(provided) => (
               <VStack
                 ref={provided.innerRef}
                 {...provided.droppableProps}
@@ -117,6 +109,7 @@ const KanbanBoard = () => {
                     ? "In Progress"
                     : "Done"}
                 </Heading>
+
                 {taskList.map((task, index) => (
                   <Draggable key={task.id} draggableId={task.id} index={index}>
                     {(provided, snapshot) => (
@@ -154,9 +147,10 @@ const KanbanBoard = () => {
                     )}
                   </Draggable>
                 ))}
+                {provided.placeholder}
               </VStack>
             )}
-          </StrictModeDroppable>
+          </Droppable>
         ))}
       </Flex>
     </DragDropContext>

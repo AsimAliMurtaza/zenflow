@@ -13,11 +13,13 @@ import {
 import { BiHome, BiSolidDashboard } from "react-icons/bi";
 import { FiUsers, FiBarChart2, FiSettings } from "react-icons/fi";
 import Topbar from "@/components/Topbar";
+import { GrProjects } from "react-icons/gr";
 
 // Sidebar navigation modules
 const modules = [
   { name: "Overview", icon: BiHome, path: "/dashboard" },
   { name: "Board", icon: BiSolidDashboard, path: "/dashboard/board" },
+  { name: "Projects", icon: GrProjects, path: "/dashboard/projects" },
   { name: "Teams", icon: FiUsers, path: "/dashboard/teams" },
   { name: "Reports", icon: FiBarChart2, path: "/dashboard/reports" },
   { name: "Settings", icon: FiSettings, path: "/dashboard/settings" },
@@ -83,7 +85,7 @@ const NavItem = ({
     <Flex
       align="center"
       w="full"
-      borderRadius="50"
+      borderRadius="10"
       cursor="pointer"
       bg={isActive ? "gray.700" : "transparent"}
       color={isActive ? "white" : "inherit"}

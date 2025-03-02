@@ -1,6 +1,16 @@
 "use client";
 
-import { Box, Heading, Text, SimpleGrid, Progress, Card, CardBody, VStack, Badge } from "@chakra-ui/react";
+import {
+  Box,
+  Heading,
+  Text,
+  SimpleGrid,
+  Progress,
+  Card,
+  CardBody,
+  VStack,
+  Badge,
+} from "@chakra-ui/react";
 
 // Sample project data
 const projects = [
@@ -38,7 +48,7 @@ const Projects = () => {
   return (
     <Box p={6}>
       <Heading size="xl" mb={6}>
-        🚀 Projects
+        Projects
       </Heading>
       <Text fontSize="lg" mb={4}>
         Here are your ongoing and completed projects.
@@ -53,9 +63,18 @@ const Projects = () => {
               <Text fontSize="sm" color="gray.500" mb={3}>
                 {project.description}
               </Text>
-              <Progress value={project.completion} colorScheme="blue" size="sm" mb={3} />
+              <Progress
+                value={project.completion}
+                colorScheme="blue"
+                size="sm"
+                mb={3}
+              />
               <VStack align="start">
-                <Badge colorScheme={project.status === "Completed" ? "green" : "yellow"}>
+                <Badge
+                  colorScheme={
+                    project.status === "Completed" ? "green" : "yellow"
+                  }
+                >
                   {project.status}
                 </Badge>
                 <Text fontSize="sm" color="gray.600">

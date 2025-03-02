@@ -13,6 +13,7 @@
     "@chakra-ui/react": "^2.10.6",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
+    "@hello-pangea/dnd": "^18.0.1",
     "framer-motion": "^12.4.7",
     "next": "14.2.23",
     "react": "^18",
