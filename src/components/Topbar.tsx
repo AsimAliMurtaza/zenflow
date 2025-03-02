@@ -1,22 +1,32 @@
-'use client';
+"use client";
+
 import {
   Flex,
   Input,
   IconButton,
   Avatar,
   Spacer,
-  useColorModeValue,
   Box,
+  Text,
+  useColorModeValue,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
 } from "@chakra-ui/react";
-import { FiSearch, FiBell } from "react-icons/fi";
+import { FiSearch, FiBell, FiUser, FiLogOut } from "react-icons/fi";
+import { useRouter } from "next/navigation";
 
 const Topbar = () => {
-  // Dynamic color mode values
+  const router = useRouter();
+
+  // Light mode colors based on the provided UI
   const bgColor = useColorModeValue("white", "gray.800");
-  const borderColor = useColorModeValue("gray.300", "gray.600");
+  const borderColor = useColorModeValue("gray.200", "gray.600");
   const inputBg = useColorModeValue("gray.100", "gray.700");
-  const iconColor = useColorModeValue("gray.600", "gray.300");
+  const iconColor = useColorModeValue("gray.500", "gray.300");
   const hoverBg = useColorModeValue("gray.200", "gray.600");
+  const menuBg = useColorModeValue("white", "gray.700");
 
   return (
     <Flex
@@ -26,16 +36,18 @@ const Topbar = () => {
       shadow="sm"
       borderBottom="1px solid"
       borderColor={borderColor}
+      px={6} // Add horizontal padding for a clean look
     >
-      {/* Search Input with subtle styling */}
-      <Box position="relative" w="300px">
+      {/* Search Input - Centered */}
+      <Box flex="1" maxW="400px" mx={6} position="relative">
         <Input
           placeholder="Search..."
           borderRadius="full"
           bg={inputBg}
-          border="none"
+          border="1px solid"
+          borderColor={borderColor}
           px={4}
-          _focus={{ bg: "white", border: "1px solid", borderColor }}
+          _focus={{ bg: "white", borderColor: "blue.400" }}
           _placeholder={{ color: iconColor }}
         />
         <IconButton
@@ -64,8 +76,29 @@ const Topbar = () => {
         _hover={{ bg: hoverBg }}
       />
 
-      {/* User Avatar */}
-      <Avatar name="Asim Ali" ml={4} size="md" />
+      {/* Profile Dropdown Menu */}
+      <Menu>
+        <MenuButton>
+          <Avatar name="Asim Ali" ml={4} size="md" src="/profile.jpg" cursor="pointer" />
+        </MenuButton>
+        <MenuList bg={menuBg} borderColor={borderColor} shadow="lg">
+          <MenuItem
+            icon={<FiUser />}
+            onClick={() => router.push("/dashboard/profile")}
+          >
+            Profile
+          </MenuItem>
+          <MenuItem
+            icon={<FiLogOut />}
+            onClick={() => {
+              console.log("Logout clicked");
+              // TODO: Add logout functionality
+            }}
+          >
+            Logout
+          </MenuItem>
+        </MenuList>
+      </Menu>
     </Flex>
   );
 };

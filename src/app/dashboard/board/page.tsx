@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 import {
   Box,
@@ -14,9 +15,30 @@ import {
   Droppable,
   Draggable,
   DropResult,
+  DroppableProvided,
 } from "react-beautiful-dnd";
 
-// Define task type with priority
+// Fix: Strict Mode Wrapper for Droppable
+const StrictModeDroppable = ({
+  droppableId,
+  children,
+}: {
+  droppableId: string;
+  children: any;
+}) => {
+  return (
+    <Droppable droppableId={droppableId}>
+      {(provided, snapshot) => (
+        <div ref={provided.innerRef} {...provided.droppableProps}>
+          {children(provided, snapshot)}
+          {provided.placeholder}
+        </div>
+      )}
+    </Droppable>
+  );
+};
+
+// Define task type
 type Task = { id: string; title: string; priority: "Low" | "Medium" | "High" };
 
 // Define board structure
@@ -26,7 +48,7 @@ type TaskBoard = {
   done: Task[];
 };
 
-// Initial tasks with priority labels
+// Initial tasks
 const initialTasks: TaskBoard = {
   todo: [
     { id: "1", title: "Create UI Design", priority: "High" },
@@ -41,8 +63,8 @@ const KanbanBoard = () => {
 
   const onDragEnd = (result: DropResult) => {
     if (!result.destination) return;
-    const { source, destination } = result;
 
+    const { source, destination } = result;
     const sourceList = [...tasks[source.droppableId as keyof TaskBoard]];
     const destinationList = [
       ...tasks[destination.droppableId as keyof TaskBoard],
@@ -57,57 +79,63 @@ const KanbanBoard = () => {
     }));
   };
 
-  // Dynamic color mode values
-  const bgColor = useColorModeValue("gray.100", "gray.800");
-  const columnBg = useColorModeValue("white", "gray.700");
+  // Color themes
+  const bgColor = useColorModeValue("gray.100", "gray.900");
+  const columnBg = useColorModeValue("white", "gray.800");
   const textColor = useColorModeValue("gray.800", "white");
-  const cardBg = useColorModeValue("gray.200", "gray.600");
-  const hoverBg = useColorModeValue("gray.300", "gray.500");
+  const cardBg = useColorModeValue("white", "gray.700");
+  const hoverBg = useColorModeValue("gray.200", "gray.600");
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      <Flex gap={4} p={4} minH="auto" bg={bgColor}>
-        {Object.keys(tasks).map((status) => (
-          <Droppable droppableId={status} key={status}>
-            {(provided) => (
+      <Flex p={4} gap={4} bg={bgColor} wrap="wrap">
+        {Object.entries(tasks).map(([status, taskList]) => (
+          <StrictModeDroppable key={status} droppableId={status}>
+            {(provided: DroppableProvided) => (
               <VStack
                 ref={provided.innerRef}
                 {...provided.droppableProps}
                 bg={columnBg}
-                p={5}
-                w="320px"
-                minH="500px"
+                p={4}
+                w={{ base: "100%", md: "300px" }}
+                minH="550px"
                 borderRadius="xl"
-                shadow="lg"
+                shadow="xl"
                 align="stretch"
+                transition="all 0.3s"
               >
-                <Heading size="md" mb={4} textAlign="center">
+                <Heading
+                  size="md"
+                  mb={4}
+                  textAlign="center"
+                  color="blue.200"
+                  textTransform="uppercase"
+                >
                   {status === "todo"
                     ? "To Do"
                     : status === "inProgress"
                     ? "In Progress"
                     : "Done"}
                 </Heading>
-                {tasks[status as keyof TaskBoard].map((task, index) => (
+                {taskList.map((task, index) => (
                   <Draggable key={task.id} draggableId={task.id} index={index}>
-                    {(provided) => (
+                    {(provided, snapshot) => (
                       <Box
                         ref={provided.innerRef}
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}
                         bg={cardBg}
-                        p={4}
-                        borderRadius="lg"
-                        shadow="md"
+                        p={3}
+                        borderRadius="md"
+                        shadow={snapshot.isDragging ? "2xl" : "md"}
                         w="full"
                         transition="all 0.2s"
-                        _hover={{ bg: hoverBg, transform: "scale(1.02)" }}
+                        transform={
+                          snapshot.isDragging ? "scale(1.05)" : "scale(1)"
+                        }
+                        _hover={{ bg: hoverBg }}
                       >
-                        <Text
-                          fontSize="md"
-                          fontWeight="semibold"
-                          color={textColor}
-                        >
+                        <Text fontSize="md" fontWeight="bold" color={textColor}>
                           {task.title}
                         </Text>
                         <Badge
@@ -126,10 +154,9 @@ const KanbanBoard = () => {
                     )}
                   </Draggable>
                 ))}
-                {provided.placeholder}
               </VStack>
             )}
-          </Droppable>
+          </StrictModeDroppable>
         ))}
       </Flex>
     </DragDropContext>
