@@ -41,7 +41,7 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
         borderColor={useColorModeValue("gray.200", "gray.700")}
         minW="250px"
       >
-        <Text fontSize="2xl" fontWeight="bold" mb={6} textAlign="center">
+        <Text fontSize="2xl" fontWeight="bold" mb={6} textAlign="left">
           zenflow
         </Text>
         <VStack align="start" spacing={2}>

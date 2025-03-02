@@ -4,9 +4,6 @@ import { Providers } from "./providers";
 export const metadata: Metadata = {
   title: "Zenflow",
   description: "Ai-based code collaboration tool",
-  icons: {
-    icon: "/icon.png",
-  },
 };
 
 export default function RootLayout({
