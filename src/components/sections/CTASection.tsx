@@ -11,11 +11,18 @@ import {
 } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 import { Typewriter } from "react-simple-typewriter";
+import { useRouter } from "next/navigation";
 
 const MotionBox = motion(Box);
 const MotionButton = motion(Button);
 
 const CTASection = () => {
+  const router = useRouter();
+
+  const onClickHandler = async () => {
+    router.push("/signup");
+  };
+
   return (
     <MotionBox
       as="section"
@@ -77,6 +84,7 @@ const CTASection = () => {
             boxShadow="xl"
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
+            onClick={onClickHandler}
           >
             Sign Up Now
           </MotionButton>

@@ -59,10 +59,6 @@ export default function LoginPage() {
     }, 1500);
   };
 
-  const handleEmailSubmit = async () => {
-    if (!email) return;
-    await checkUserExists(email);
-  };
 
   const handleLogin = async () => {
     setLoading(true);
