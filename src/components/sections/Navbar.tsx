@@ -19,12 +19,18 @@ import {
 } from "@chakra-ui/react";
 import { HamburgerIcon, SunIcon, MoonIcon } from "@chakra-ui/icons";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 const MotionBox = motion(Box);
 
 const Navbar = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const { colorMode, toggleColorMode } = useColorMode(); // Dark mode toggle
+  const { colorMode, toggleColorMode } = useColorMode();
+  const router = useRouter();
+
+  const onClickHandler = () => {
+    router.push("/login");
+  };
 
   return (
     <Box
@@ -38,19 +44,18 @@ const Navbar = () => {
       <Container maxW="container.xl">
         <Flex justify="space-between" align="center" py={4}>
           {/* Logo */}
-          <Heading as="h1" size="lg" color={useColorModeValue("blue.600", "blue.300")}>
+          <Heading
+            as="h1"
+            size="lg"
+            color={useColorModeValue("blue.600", "blue.300")}
+          >
             Zenflow
           </Heading>
 
           {/* Desktop Navigation */}
           <Flex display={{ base: "none", md: "flex" }} align="center">
             {["Features", "Pricing", "Contact"].map((item, index) => (
-              <MotionBox
-                key={index}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                mx={4}
-              >
+              <MotionBox key={index} whileTap={{ scale: 0.95 }} mx={4}>
                 <Link
                   href="#"
                   fontSize="lg"
@@ -76,7 +81,13 @@ const Navbar = () => {
             />
 
             {/* Sign In Button */}
-            <Button colorScheme="blue" borderRadius={50} size="lg" display={{ base: "none", md: "inline-flex" }}>
+            <Button
+              colorScheme="blue"
+              borderRadius={50}
+              size="lg"
+              display={{ base: "none", md: "inline-flex" }}
+                onClick={onClickHandler}
+            >
               Sign In
             </Button>
 
@@ -123,7 +134,12 @@ const Navbar = () => {
             />
 
             {/* Sign In Button */}
-            <Button colorScheme="blue" borderRadius={50} size="lg" onClick={onClose}>
+            <Button
+              colorScheme="blue"
+              borderRadius={50}
+              size="lg"
+              onClick={onClickHandler}
+            >
               Sign In
             </Button>
           </VStack>

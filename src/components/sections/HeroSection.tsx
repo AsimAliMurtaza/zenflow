@@ -12,8 +12,11 @@ import {
   Icon,
   useColorModeValue,
   Divider,
+  FormControl,
+  FormLabel,
+  Input,
 } from "@chakra-ui/react";
-import { FaGoogle, FaMicrosoft } from "react-icons/fa";
+import { FaGithub, FaGoogle, FaMicrosoft } from "react-icons/fa";
 import { Typewriter } from "react-simple-typewriter";
 
 const HeroSection = () => {
@@ -50,7 +53,13 @@ const HeroSection = () => {
                 fontWeight="bold"
               >
                 <Typewriter
-                  words={["Zenflow"]}
+                  words={[
+                    "Productivity.",
+                    "Creativity.",
+                    "Collaboration.",
+                    "Us.",
+                    "Zenflow.",
+                  ]}
                   loop={false}
                   cursor
                   cursorStyle="|"
@@ -73,19 +82,26 @@ const HeroSection = () => {
           </GridItem>
 
           {/* Middle Column: Divider (Only on Large Screens) */}
-          <GridItem display={{ base: "none", lg: "block" }}>
-            <Divider orientation="vertical" h="80%" borderColor="gray.500" />
-          </GridItem>
+          <Divider orientation="vertical" h="100%" borderColor="gray.300" />
 
           {/* Right Column: Buttons */}
           <GridItem>
             <Flex direction="column" align="center" gap={4}>
+              <Text
+                fontSize={{ base: "lg", md: "xl" }}
+                color={useColorModeValue("gray.600", "gray.300")}
+                maxW={{ base: "100%", lg: "80%" }}
+                mx={{ base: "auto", lg: "0" }}
+              >
+                Continue with
+              </Text>
               <Button
                 leftIcon={<Icon as={FaGoogle} />}
                 colorScheme="blue"
                 variant="solid"
                 size="lg"
-                w={{ base: "full", md: "80%" }}
+                borderRadius={50}
+                w={{ base: "full", md: "60%" }}
               >
                 Continue with Google
               </Button>
@@ -94,7 +110,8 @@ const HeroSection = () => {
                 colorScheme="gray"
                 variant="outline"
                 size="lg"
-                w={{ base: "full", md: "80%" }}
+                borderRadius={50}
+                w={{ base: "full", md: "60%" }}
               >
                 Continue with Microsoft
               </Button>
