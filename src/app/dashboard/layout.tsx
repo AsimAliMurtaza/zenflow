@@ -28,7 +28,7 @@ const modules = [
 const DashboardLayout = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
   const pathname = usePathname();
-  const hoverColor = useColorModeValue("gray.200", "gray.700");
+  const hoverColor = useColorModeValue("blue.400", "blue.600");
   const textColor = useColorModeValue("gray.800", "white");
 
   return (
@@ -87,7 +87,7 @@ const NavItem = ({
       w="full"
       borderRadius="10"
       cursor="pointer"
-      bg={isActive ? "gray.700" : "transparent"}
+      bg={isActive ? "blue.500" : "transparent"}
       color={isActive ? "white" : "inherit"}
       _hover={{ bg: hoverColor, transform: "scale(1.05)", transition: "0.2s" }}
       onClick={onClick}

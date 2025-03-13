@@ -37,29 +37,6 @@ export default function LoginPage() {
   const textColor = useColorModeValue("gray.600", "gray.200");
   const borderColor = useColorModeValue("gray.300", "gray.600");
 
-  // Simulate checking if user exists (Replace with real API call)
-  const checkUserExists = async (email: string) => {
-    setLoading(true);
-
-    // Simulated API delay
-    setTimeout(() => {
-      if (email === "user@example.com") {
-        setUserExists(true); // Simulate found user
-      } else {
-        setUserExists(false);
-        toast({
-          title: "User not found",
-          description: "No account exists with this email.",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-      }
-      setLoading(false);
-    }, 1500);
-  };
-
-
   const handleLogin = async () => {
     setLoading(true);
 

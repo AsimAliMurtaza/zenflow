@@ -16,11 +16,12 @@ import {
 } from "@chakra-ui/react";
 import { FiSearch, FiBell, FiUser, FiLogOut } from "react-icons/fi";
 import { useRouter } from "next/navigation";
+import { signOut, useSession } from "next-auth/react";
 
 const Topbar = () => {
   const router = useRouter();
+  const { data: session } = useSession();
 
-  // Light mode colors based on the provided UI
   const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.600");
   const inputBg = useColorModeValue("gray.100", "gray.700");
@@ -36,7 +37,7 @@ const Topbar = () => {
       shadow="sm"
       borderBottom="1px solid"
       borderColor={borderColor}
-      px={6} // Add horizontal padding for a clean look
+      px={6}
     >
       {/* Search Input - Centered */}
       <Box flex="1" maxW="400px" mx={6} position="relative">
@@ -79,7 +80,13 @@ const Topbar = () => {
       {/* Profile Dropdown Menu */}
       <Menu>
         <MenuButton>
-          <Avatar name="Asim Ali" ml={4} size="md" src="/profile.jpg" cursor="pointer" />
+          <Avatar
+            name={session?.user?.name || "user"}
+            ml={4}
+            size="md"
+            src={session?.user?.image || ""}
+            cursor="pointer"
+          />
         </MenuButton>
         <MenuList bg={menuBg} borderColor={borderColor} shadow="lg">
           <MenuItem
@@ -90,10 +97,7 @@ const Topbar = () => {
           </MenuItem>
           <MenuItem
             icon={<FiLogOut />}
-            onClick={() => {
-              console.log("Logout clicked");
-              // TODO: Add logout functionality
-            }}
+            onClick={() => signOut({ callbackUrl: "/" })}
           >
             Logout
           </MenuItem>
