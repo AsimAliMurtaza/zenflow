@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: "Zenflow",
+  title: "Zenflow | AI-based code collaboration tool",
   description: "Ai-based code collaboration tool",
 };
 
