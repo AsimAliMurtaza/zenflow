@@ -34,18 +34,25 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
   const textColor = useColorModeValue("gray.800", "white");
   const sidebarBg = useColorModeValue("gray.50", "gray.900");
 
+  const sidebarWidth = collapsed ? "80px" : "250px";
+
   return (
-    <Flex h="100vh">
+    <Flex h="100vh" overflow="hidden">
       {/* Sidebar */}
       <Box
-        color={textColor}
+        position="fixed"
+        left="0"
+        top="0"
+        h="100vh"
+        w={sidebarWidth}
         bg={sidebarBg}
+        color={textColor}
         p={5}
         borderRightWidth="1px"
         borderColor={useColorModeValue("gray.200", "gray.700")}
-        w={collapsed ? "80px" : "250px"}
         transition="width 0.3s ease-in-out"
         overflow="hidden"
+        zIndex="1100"
       >
         {/* Toggle Button */}
         <Flex justify="space-between" align="center" mb={6}>
@@ -58,12 +65,12 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
             aria-label="Toggle Sidebar"
             icon={collapsed ? <BiMenu size={24} /> : <BiMenuAltLeft size={24} />}
             variant="ghost"
-            borderRadius="50"
+            borderRadius="full"
             onClick={() => setCollapsed(!collapsed)}
           />
         </Flex>
 
-        <VStack align="start" spacing={2}>
+        <VStack align="start" spacing={2} w="full">
           {modules.map((module) => (
             <NavItem
               key={module.name}
@@ -79,7 +86,13 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
       </Box>
 
       {/* Main Content */}
-      <Box flex="1" maxW="100vw">
+      <Box
+        flex="1"
+        maxW="100vw"
+        ml={sidebarWidth} // Ensures content starts after sidebar width
+        transition="margin-left 0.3s ease-in-out"
+        overflowY="auto"
+      >
         <Topbar />
         {children}
       </Box>
