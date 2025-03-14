@@ -16,8 +16,14 @@ import {
   HStack,
   Divider,
   IconButton,
+  Tag,
+  TagLabel,
+  TagLeftIcon,
+  Badge,
+  Progress,
+  AvatarGroup,
 } from "@chakra-ui/react";
-import { FiHome, FiCheckCircle, FiClock, FiPlus } from "react-icons/fi";
+import { FiHome, FiCheckCircle, FiClock, FiPlus, FiUser, FiAlertCircle } from "react-icons/fi";
 
 const DashboardContent = () => {
   const bgColor = useColorModeValue("gray.50", "gray.900");
@@ -28,12 +34,12 @@ const DashboardContent = () => {
 
   return (
     <Flex flex="1" flexDir="column" p={8} bg={bgColor} minH="100vh">
-      <Text fontSize="2xl" fontWeight="bold" mb={4}>
+      <Text fontSize="2xl" fontWeight="bold" mb={6} color={textColor}>
         Dashboard
       </Text>
 
       {/* Stats Grid */}
-      <Grid templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }} gap={6} mb={6}>
+      <Grid templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }} gap={6} mb={8}>
         {[
           { title: "Total Tasks", count: 24, change: "+2 from yesterday", icon: FiHome, color: "blue.500" },
           { title: "Completed Tasks", count: 16, change: "+5 from yesterday", icon: FiCheckCircle, color: "green.500" },
@@ -45,13 +51,14 @@ const DashboardContent = () => {
             shadow="md"
             border="1px solid"
             borderColor={borderColor}
+            borderRadius="2xl"
             transition="all 0.2s"
-            _hover={{ transform: "scale(1.02)" }}
+            _hover={{ transform: "scale(1.02)", shadow: "lg" }}
           >
             <CardBody>
               <HStack justify="space-between">
                 <Box>
-                  <Text fontSize="sm" color={iconColor}>
+                  <Text fontSize="sm" color={iconColor} mb={1}>
                     {title}
                   </Text>
                   <Text fontSize="2xl" fontWeight="bold" color={textColor}>
@@ -61,7 +68,7 @@ const DashboardContent = () => {
                     {change}
                   </Text>
                 </Box>
-                <Icon as={icon} boxSize={6} color={color} />
+                <Icon as={icon} boxSize={8} color={color} />
               </HStack>
             </CardBody>
           </Card>
@@ -74,22 +81,24 @@ const DashboardContent = () => {
         shadow="md"
         border="1px solid"
         borderColor={borderColor}
-        mb={6}
-        p={4}
+        borderRadius="2xl"
+        mb={8}
+        p={6}
         transition="all 0.2s"
         _hover={{ shadow: "lg" }}
       >
         <CardBody>
-          <Text fontSize="lg" fontWeight="bold" mb={3}>
+          <Text fontSize="lg" fontWeight="bold" mb={4} color={textColor}>
             AI Task Creation
           </Text>
           <HStack>
             <Input
               placeholder="Describe your task..."
               borderColor={borderColor}
+              borderRadius="lg"
               _focus={{ borderColor: "blue.400", shadow: "sm" }}
             />
-            <Button leftIcon={<FiPlus />} colorScheme="blue">
+            <Button leftIcon={<FiPlus />} colorScheme="blue" borderRadius="full">
               Create Task
             </Button>
           </HStack>
@@ -102,27 +111,71 @@ const DashboardContent = () => {
         shadow="md"
         border="1px solid"
         borderColor={borderColor}
-        p={4}
+        borderRadius="2xl"
+        p={6}
         transition="all 0.2s"
         _hover={{ shadow: "lg" }}
       >
         <CardBody>
-          <Text fontSize="lg" fontWeight="bold" mb={3}>
+          <Text fontSize="lg" fontWeight="bold" mb={4} color={textColor}>
             Recent Activity
           </Text>
-          <Divider mb={3} />
-          <VStack align="start" spacing={3}>
+          <Divider mb={4} />
+          <VStack align="start" spacing={4}>
             {[
-              { text: "John completed the homepage design", color: "green.500" },
-              { text: "Sarah added comments to the marketing plan", color: "blue.500" },
-              { text: "Team meeting scheduled for tomorrow at 10 AM", color: "purple.500" },
-            ].map(({ text, color }, index) => (
-              <HStack key={index} spacing={2}>
-                <Box w={2} h={2} bg={color} borderRadius="full" />
+              { text: "John completed the homepage design", color: "green.500", icon: FiCheckCircle },
+              { text: "Sarah added comments to the marketing plan", color: "blue.500", icon: FiUser },
+              { text: "Team meeting scheduled for tomorrow at 10 AM", color: "purple.500", icon: FiAlertCircle },
+            ].map(({ text, color, icon }, index) => (
+              <HStack key={index} spacing={3}>
+                <Icon as={icon} boxSize={5} color={color} />
                 <Text fontSize="sm" color={textColor}>
                   {text}
                 </Text>
               </HStack>
+            ))}
+          </VStack>
+        </CardBody>
+      </Card>
+
+      {/* Team Progress */}
+      <Card
+        bg={cardBg}
+        shadow="md"
+        border="1px solid"
+        borderColor={borderColor}
+        borderRadius="2xl"
+        p={6}
+        transition="all 0.2s"
+        _hover={{ shadow: "lg" }}
+      >
+        <CardBody>
+          <Text fontSize="lg" fontWeight="bold" mb={4} color={textColor}>
+            Team Progress
+          </Text>
+          <Divider mb={4} />
+          <VStack align="start" spacing={4}>
+            {[
+              { name: "AI Research Team", progress: 80, members: ["Alice", "Bob", "Charlie"] },
+              { name: "Web Dev Team", progress: 60, members: ["David", "Eve"] },
+              { name: "Marketing Team", progress: 45, members: ["Frank", "Grace"] },
+            ].map(({ name, progress, members }, index) => (
+              <Box key={index} w="full">
+                <HStack justify="space-between" mb={2}>
+                  <Text fontSize="md" fontWeight="medium" color={textColor}>
+                    {name}
+                  </Text>
+                  <Badge colorScheme={progress > 70 ? "green" : progress > 40 ? "yellow" : "red"} borderRadius="full">
+                    {progress}%
+                  </Badge>
+                </HStack>
+                <Progress value={progress} colorScheme="blue" size="sm" borderRadius="full" mb={2} />
+                <AvatarGroup size="sm" max={3}>
+                  {members.map((member, idx) => (
+                    <Avatar key={idx} name={member} />
+                  ))}
+                </AvatarGroup>
+              </Box>
             ))}
           </VStack>
         </CardBody>

@@ -27,8 +27,16 @@ import {
   useToast,
   useColorMode,
   useColorModeValue,
+  Avatar,
+  AvatarGroup,
+  Tag,
+  TagLabel,
+  TagLeftIcon,
+  TagRightIcon,
+  Flex,
+  Spacer,
 } from "@chakra-ui/react";
-import { AddIcon, EditIcon, DeleteIcon } from "@chakra-ui/icons";
+import { AddIcon, EditIcon, DeleteIcon, CheckIcon, TimeIcon } from "@chakra-ui/icons";
 import { useRouter } from "next/navigation";
 
 // Sample team data
@@ -47,6 +55,8 @@ const initialProjects = [
     completion: 80,
     status: "In Progress",
     assignedTeam: "AI Research Team",
+    teamMembers: ["Alice", "Bob", "Charlie"],
+    dueDate: "2024-03-15",
   },
   {
     id: "2",
@@ -55,6 +65,8 @@ const initialProjects = [
     completion: 100,
     status: "Completed",
     assignedTeam: "Web Dev Team",
+    teamMembers: ["David", "Eve"],
+    dueDate: "2024-02-10",
   },
 ];
 
@@ -66,6 +78,8 @@ const Projects = () => {
   const [completion, setCompletion] = useState(0);
   const [status, setStatus] = useState("In Progress");
   const [assignedTeam, setAssignedTeam] = useState("");
+  const [teamMembers, setTeamMembers] = useState<string[]>([]);
+  const [dueDate, setDueDate] = useState("");
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
@@ -87,6 +101,8 @@ const Projects = () => {
       setCompletion(project.completion);
       setStatus(project.status);
       setAssignedTeam(project.assignedTeam);
+      setTeamMembers(project.teamMembers || []);
+      setDueDate(project.dueDate || "");
     } else {
       setEditingProject(null);
       setProjectName("");
@@ -94,6 +110,8 @@ const Projects = () => {
       setCompletion(0);
       setStatus("In Progress");
       setAssignedTeam("");
+      setTeamMembers([]);
+      setDueDate("");
     }
     onOpen();
   };
@@ -117,6 +135,8 @@ const Projects = () => {
                 completion,
                 status,
                 assignedTeam,
+                teamMembers,
+                dueDate,
               }
             : proj
         )
@@ -131,6 +151,8 @@ const Projects = () => {
         completion,
         status,
         assignedTeam,
+        teamMembers,
+        dueDate,
       };
       setProjects([...projects, newProject]);
       toast({ title: "Project added!", status: "success" });
@@ -147,16 +169,15 @@ const Projects = () => {
 
   // Handle Project Click
   const handleProjectClick = (id: string) => {
-    // Implement your logic here
     router.push(`/dashboard/projects/${id}`);
   };
 
   return (
-    <Box p={4} bg={bgColor} color={textColor} borderRadius="lg">
-      <Heading size="xl" mb={6}>
+    <Box p={8} bg={bgColor} color={textColor} borderRadius="lg">
+      <Heading size="2xl" mb={6} fontWeight="bold">
         Projects Management
       </Heading>
-      <Text fontSize="lg" mb={4}>
+      <Text fontSize="lg" mb={8} color={useColorModeValue("gray.600", "gray.300")}>
         Manage your projects, track progress, and assign teams.
       </Text>
 
@@ -168,7 +189,9 @@ const Projects = () => {
         }}
         leftIcon={<AddIcon />}
         onClick={() => openModal()}
-        mb={6}
+        mb={8}
+        size="lg"
+        borderRadius="full"
       >
         Add Project
       </Button>
@@ -179,31 +202,42 @@ const Projects = () => {
           <Card
             onClick={() => handleProjectClick(project.id)}
             key={project.id}
-            p={4}
-            borderRadius="lg"
-            shadow="md"
+            p={6}
+            borderRadius="2xl"
+            shadow="lg"
             bg={cardBg}
+            _hover={{ transform: "scale(1.02)", transition: "transform 0.2s" }}
           >
             <CardBody>
               <HStack justify="space-between">
-                <Heading size="md">{project.name}</Heading>
+                <Heading size="lg" fontWeight="semibold">
+                  {project.name}
+                </Heading>
                 <HStack>
                   <IconButton
                     aria-label="Edit project"
                     icon={<EditIcon />}
                     size="sm"
-                    onClick={() => openModal(project)}
+                    variant="ghost"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openModal(project);
+                    }}
                   />
                   <IconButton
                     aria-label="Delete project"
                     icon={<DeleteIcon />}
                     size="sm"
-                    onClick={() => removeProject(project.id)}
+                    variant="ghost"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeProject(project.id);
+                    }}
                   />
                 </HStack>
               </HStack>
 
-              <Text fontSize="sm" color="gray.500" mt={2} mb={3}>
+              <Text fontSize="md" color="gray.500" mt={2} mb={4}>
                 {project.description}
               </Text>
 
@@ -211,21 +245,41 @@ const Projects = () => {
                 value={project.completion}
                 colorScheme={progressColor}
                 size="sm"
-                mb={3}
+                borderRadius="full"
+                mb={4}
               />
 
-              <VStack align="start">
+              <VStack align="start" spacing={3}>
                 <Badge
                   colorScheme={
                     project.status === "Completed" ? "green" : "yellow"
                   }
+                  borderRadius="full"
+                  px={3}
+                  py={1}
                 >
                   {project.status}
                 </Badge>
-                <Text fontSize="sm">Completion: {project.completion}%</Text>
+                <Text fontSize="sm" color="gray.500">
+                  Completion: {project.completion}%
+                </Text>
                 <Text fontSize="sm" fontWeight="bold">
                   Team: {project.assignedTeam || "Not Assigned"}
                 </Text>
+                <AvatarGroup size="sm" max={3}>
+                  {project.teamMembers?.map((member, index) => (
+                    <Avatar key={index} name={member} />
+                  ))}
+                </AvatarGroup>
+                <Tag
+                  colorScheme={project.dueDate ? "red" : "gray"}
+                  borderRadius="full"
+                >
+                  <TagLeftIcon as={TimeIcon} />
+                  <TagLabel>
+                    Due: {project.dueDate || "No due date"}
+                  </TagLabel>
+                </Tag>
               </VStack>
             </CardBody>
           </Card>
@@ -235,8 +289,8 @@ const Projects = () => {
       {/* Add/Edit Project Modal */}
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
-        <ModalContent bg={bgColor} color={textColor}>
-          <ModalHeader>
+        <ModalContent bg={bgColor} color={textColor} borderRadius="2xl">
+          <ModalHeader fontSize="2xl" fontWeight="bold">
             {editingProject ? "Edit Project" : "Add Project"}
           </ModalHeader>
           <ModalCloseButton />
@@ -246,17 +300,20 @@ const Projects = () => {
               value={projectName}
               onChange={(e) => setProjectName(e.target.value)}
               mb={4}
+              borderRadius="lg"
             />
             <Input
               placeholder="Project Description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               mb={4}
+              borderRadius="lg"
             />
             <Select
               value={status}
               onChange={(e) => setStatus(e.target.value)}
               mb={4}
+              borderRadius="lg"
             >
               <option value="In Progress">In Progress</option>
               <option value="Completed">Completed</option>
@@ -266,6 +323,8 @@ const Projects = () => {
               placeholder="Assign Team"
               value={assignedTeam}
               onChange={(e) => setAssignedTeam(e.target.value)}
+              mb={4}
+              borderRadius="lg"
             >
               {teams.map((team) => (
                 <option key={team.id} value={team.name}>
@@ -273,12 +332,27 @@ const Projects = () => {
                 </option>
               ))}
             </Select>
+            <Input
+              type="date"
+              placeholder="Due Date"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+              mb={4}
+              borderRadius="lg"
+            />
           </ModalBody>
           <ModalFooter>
-            <Button colorScheme="blue" onClick={handleSaveProject} mr={3}>
+            <Button
+              colorScheme="blue"
+              onClick={handleSaveProject}
+              mr={3}
+              borderRadius="full"
+            >
               {editingProject ? "Update" : "Save"}
             </Button>
-            <Button onClick={onClose}>Cancel</Button>
+            <Button onClick={onClose} borderRadius="full">
+              Cancel
+            </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>

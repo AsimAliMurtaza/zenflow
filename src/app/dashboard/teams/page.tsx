@@ -25,8 +25,16 @@ import {
   Select,
   useDisclosure,
   useToast,
+  Avatar,
+  AvatarGroup,
+  Tag,
+  TagLabel,
+  TagLeftIcon,
+  Flex,
+  Spacer,
+  useColorModeValue,
 } from "@chakra-ui/react";
-import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
+import { AddIcon, DeleteIcon, EditIcon } from "@chakra-ui/icons";
 
 type Member = {
   id: string;
@@ -46,9 +54,14 @@ const Teams = () => {
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   const [newMemberName, setNewMemberName] = useState("");
   const [newMemberRole, setNewMemberRole] = useState("");
-  
+
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
+
+  // Color mode values
+  const bgColor = useColorModeValue("white", "gray.800");
+  const cardBg = useColorModeValue("gray.50", "gray.700");
+  const textColor = useColorModeValue("gray.800", "gray.100");
 
   // Add New Team
   const addTeam = () => {
@@ -100,41 +113,58 @@ const Teams = () => {
   };
 
   return (
-    <Box p={6}>
-      <Heading size="xl" mb={4}>
+    <Box p={8} bg={bgColor} color={textColor} borderRadius="lg">
+      <Heading size="2xl" mb={6} fontWeight="bold">
         👥 Teams Management
       </Heading>
-      <Text fontSize="lg" mb={4}>
+      <Text fontSize="lg" mb={8} color={useColorModeValue("gray.600", "gray.300")}>
         Manage your teams and add members.
       </Text>
 
-      <Button colorScheme="blue" leftIcon={<AddIcon />} onClick={onOpen} mb={6}>
+      <Button
+        colorScheme="blue"
+        leftIcon={<AddIcon />}
+        onClick={onOpen}
+        mb={8}
+        size="lg"
+        borderRadius="full"
+      >
         Create Team
       </Button>
 
       {/* Team Cards */}
-      <VStack spacing={4} align="stretch">
+      <VStack spacing={6} align="stretch">
         {teams.map((team) => (
-          <Card key={team.id} shadow="md">
+          <Card key={team.id} shadow="lg" borderRadius="2xl" bg={cardBg}>
             <CardHeader>
               <HStack justify="space-between">
-                <Heading size="md">{team.name}</Heading>
+                <Heading size="lg" fontWeight="semibold">
+                  {team.name}
+                </Heading>
                 <IconButton
                   aria-label="Delete team"
                   icon={<DeleteIcon />}
                   colorScheme="red"
+                  variant="ghost"
                   onClick={() => removeTeam(team.id)}
                 />
               </HStack>
             </CardHeader>
             <CardBody>
               {team.members.length > 0 ? (
-                team.members.map((member) => (
-                  <HStack key={member.id} justify="space-between">
-                    <Text>{member.name}</Text>
-                    <Text color="gray.500">{member.role || "No Role"}</Text>
-                  </HStack>
-                ))
+                <VStack align="start" spacing={4}>
+                  {team.members.map((member) => (
+                    <HStack key={member.id} justify="space-between" w="full">
+                      <HStack>
+                        <Avatar name={member.name} size="sm" />
+                        <Text>{member.name}</Text>
+                      </HStack>
+                      <Tag colorScheme="blue" borderRadius="full">
+                        <TagLabel>{member.role || "No Role"}</TagLabel>
+                      </Tag>
+                    </HStack>
+                  ))}
+                </VStack>
               ) : (
                 <Text color="gray.500">No members yet</Text>
               )}
@@ -142,6 +172,7 @@ const Teams = () => {
                 mt={4}
                 colorScheme="green"
                 size="sm"
+                borderRadius="full"
                 onClick={() => {
                   setSelectedTeamId(team.id);
                   onOpen();
@@ -157,8 +188,10 @@ const Teams = () => {
       {/* Modal Dialog for Adding Teams and Members */}
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>{selectedTeamId ? "Add Member" : "Create Team"}</ModalHeader>
+        <ModalContent borderRadius="2xl">
+          <ModalHeader fontSize="2xl" fontWeight="bold">
+            {selectedTeamId ? "Add Member" : "Create Team"}
+          </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             {selectedTeamId ? (
@@ -169,6 +202,7 @@ const Teams = () => {
                     placeholder="Enter member name"
                     value={newMemberName}
                     onChange={(e) => setNewMemberName(e.target.value)}
+                    borderRadius="lg"
                   />
                 </FormControl>
                 <FormControl>
@@ -177,6 +211,7 @@ const Teams = () => {
                     placeholder="Enter role"
                     value={newMemberRole}
                     onChange={(e) => setNewMemberRole(e.target.value)}
+                    borderRadius="lg"
                   />
                 </FormControl>
               </>
@@ -187,15 +222,23 @@ const Teams = () => {
                   placeholder="Enter team name"
                   value={teamName}
                   onChange={(e) => setTeamName(e.target.value)}
+                  borderRadius="lg"
                 />
               </FormControl>
             )}
           </ModalBody>
           <ModalFooter>
-            <Button colorScheme="blue" mr={3} onClick={selectedTeamId ? addMember : addTeam}>
+            <Button
+              colorScheme="blue"
+              mr={3}
+              onClick={selectedTeamId ? addMember : addTeam}
+              borderRadius="full"
+            >
               {selectedTeamId ? "Add Member" : "Create"}
             </Button>
-            <Button onClick={onClose}>Cancel</Button>
+            <Button onClick={onClose} borderRadius="full">
+              Cancel
+            </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>

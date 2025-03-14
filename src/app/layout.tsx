@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: "Zenflow | AI-based code collaboration solution",
-  description: "Ai-based code collaboration solution",
+  title: "ZenFlow | AI-based code collaboration solution",
+  description: "AI-based code collaboration solution",
 };
 
 export default function RootLayout({

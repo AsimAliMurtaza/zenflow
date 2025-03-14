@@ -50,6 +50,7 @@ const Topbar = () => {
           borderColor={borderColor}
           px={4}
           py={2}
+          maxH="34px"
           _focus={{ bg: "white", borderColor: "blue.400", shadow: "md" }}
           _placeholder={{ color: iconColor }}
         />
@@ -87,7 +88,7 @@ const Topbar = () => {
           <Avatar
             name={session?.user?.name || "User"}
             ml={4}
-            size="md"
+            size="sm"
             src={session?.user?.image || ""}
             cursor="pointer"
             _hover={{ transform: "scale(1.05)", transition: "0.2s" }}
