@@ -27,7 +27,7 @@ const DashboardContent = () => {
   const iconColor = useColorModeValue("gray.600", "gray.300");
 
   return (
-    <Flex flex="1" flexDir="column" p={6} bg={bgColor} minH="100vh">
+    <Flex flex="1" flexDir="column" p={8} bg={bgColor} minH="100vh">
       <Text fontSize="2xl" fontWeight="bold" mb={4}>
         Dashboard
       </Text>

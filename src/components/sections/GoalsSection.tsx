@@ -29,6 +29,7 @@ const GoalsSection = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8, ease: "easeOut" }}
       py={20}
+
       bg={useColorModeValue("gray.50", "gray.900")}
     >
       <Container maxW="container.xl">

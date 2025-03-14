@@ -23,14 +23,15 @@ import { Typewriter } from "react-simple-typewriter";
 const HeroSection = () => {
   return (
     <Box
-      h="100vh"
+      h="50vh"
       display="flex"
       alignItems="center"
       justifyContent="center"
-      bg={useColorModeValue("gray.50", "gray.800")}
+      bg={useColorModeValue("white", "gray.800")}
       px={4}
+      mt={{ base: 28, lg: 24, md: 24 }}
     >
-      <Container maxW="container.xl">
+      <Container maxW="container.xl" maxH="50vh">
         <Grid
           templateColumns={{ base: "1fr", lg: "1fr auto 1fr" }} // Three columns for the divider
           gap={{ base: 6, lg: 10 }}

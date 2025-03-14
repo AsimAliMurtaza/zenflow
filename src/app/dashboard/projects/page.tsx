@@ -29,6 +29,7 @@ import {
   useColorModeValue,
 } from "@chakra-ui/react";
 import { AddIcon, EditIcon, DeleteIcon } from "@chakra-ui/icons";
+import { useRouter } from "next/navigation";
 
 // Sample team data
 const teams = [
@@ -69,6 +70,7 @@ const Projects = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
   const { colorMode } = useColorMode();
+  const router = useRouter();
 
   // Color mode values
   const bgColor = useColorModeValue("white", "gray.800");
@@ -143,10 +145,16 @@ const Projects = () => {
     toast({ title: "Project deleted.", status: "error" });
   };
 
+  // Handle Project Click
+  const handleProjectClick = (id: string) => {
+    // Implement your logic here
+    router.push(`/dashboard/projects/${id}`);
+  };
+
   return (
-    <Box p={6} bg={bgColor} color={textColor} borderRadius="lg">
+    <Box p={4} bg={bgColor} color={textColor} borderRadius="lg">
       <Heading size="xl" mb={6}>
-    Projects Management
+        Projects Management
       </Heading>
       <Text fontSize="lg" mb={4}>
         Manage your projects, track progress, and assign teams.
@@ -168,7 +176,14 @@ const Projects = () => {
       {/* Projects Grid */}
       <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
         {projects.map((project) => (
-          <Card key={project.id} p={4} borderRadius="lg" shadow="md" bg={cardBg}>
+          <Card
+            onClick={() => handleProjectClick(project.id)}
+            key={project.id}
+            p={4}
+            borderRadius="lg"
+            shadow="md"
+            bg={cardBg}
+          >
             <CardBody>
               <HStack justify="space-between">
                 <Heading size="md">{project.name}</Heading>
@@ -200,7 +215,11 @@ const Projects = () => {
               />
 
               <VStack align="start">
-                <Badge colorScheme={project.status === "Completed" ? "green" : "yellow"}>
+                <Badge
+                  colorScheme={
+                    project.status === "Completed" ? "green" : "yellow"
+                  }
+                >
                   {project.status}
                 </Badge>
                 <Text fontSize="sm">Completion: {project.completion}%</Text>
@@ -217,17 +236,37 @@ const Projects = () => {
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent bg={bgColor} color={textColor}>
-          <ModalHeader>{editingProject ? "Edit Project" : "Add Project"}</ModalHeader>
+          <ModalHeader>
+            {editingProject ? "Edit Project" : "Add Project"}
+          </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <Input placeholder="Project Name" value={projectName} onChange={(e) => setProjectName(e.target.value)} mb={4} />
-            <Input placeholder="Project Description" value={description} onChange={(e) => setDescription(e.target.value)} mb={4} />
-            <Select value={status} onChange={(e) => setStatus(e.target.value)} mb={4}>
+            <Input
+              placeholder="Project Name"
+              value={projectName}
+              onChange={(e) => setProjectName(e.target.value)}
+              mb={4}
+            />
+            <Input
+              placeholder="Project Description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              mb={4}
+            />
+            <Select
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              mb={4}
+            >
               <option value="In Progress">In Progress</option>
               <option value="Completed">Completed</option>
               <option value="Almost Done">Almost Done</option>
             </Select>
-            <Select placeholder="Assign Team" value={assignedTeam} onChange={(e) => setAssignedTeam(e.target.value)}>
+            <Select
+              placeholder="Assign Team"
+              value={assignedTeam}
+              onChange={(e) => setAssignedTeam(e.target.value)}
+            >
               {teams.map((team) => (
                 <option key={team.id} value={team.name}>
                   {team.name}
