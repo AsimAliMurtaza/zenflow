@@ -21,7 +21,7 @@ import {
   useColorModeValue,
 } from "@chakra-ui/react";
 import { FcGoogle } from "react-icons/fc";
-import { FaMicrosoft, FaApple, FaSlack } from "react-icons/fa";
+import { FaMicrosoft, FaApple, FaSlack, FaGithub } from "react-icons/fa";
 
 export default function LoginPage() {
   const [email, setEmail] = useState<string>("");
@@ -156,20 +156,10 @@ export default function LoginPage() {
               <Button
                 variant="outline"
                 w="full"
-                leftIcon={<FaMicrosoft color="#0066B8" />}
-                onClick={() =>
-                  signIn("microsoft", { callbackUrl: "/dashboard" })
-                }
+                leftIcon={<FaGithub color="#000000" />}
+                onClick={() => signIn("github", { callbackUrl: "/dashboard" })}
               >
-                Microsoft
-              </Button>
-              <Button
-                variant="outline"
-                w="full"
-                leftIcon={<FaSlack color="#4A154B" />}
-                onClick={() => signIn("slack", { callbackUrl: "/dashboard" })}
-              >
-                Slack
+                Github
               </Button>
             </VStack>
 

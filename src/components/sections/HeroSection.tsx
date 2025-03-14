@@ -16,7 +16,8 @@ import {
   FormLabel,
   Input,
 } from "@chakra-ui/react";
-import { FaGithub, FaGoogle, FaMicrosoft } from "react-icons/fa";
+import { signIn } from "next-auth/react";
+import { FaGithub, FaGithubAlt, FaGoogle, FaMicrosoft } from "react-icons/fa";
 import { Typewriter } from "react-simple-typewriter";
 
 const HeroSection = () => {
@@ -102,18 +103,20 @@ const HeroSection = () => {
                 size="lg"
                 borderRadius={50}
                 w={{ base: "full", md: "60%" }}
+                onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
               >
                 Continue with Google
               </Button>
               <Button
-                leftIcon={<Icon as={FaMicrosoft} />}
+                leftIcon={<Icon as={FaGithub} />}
                 colorScheme="gray"
                 variant="outline"
                 size="lg"
                 borderRadius={50}
                 w={{ base: "full", md: "60%" }}
+                onClick={() => signIn("github", { callbackUrl: "/dashboard" })}
               >
-                Continue with Microsoft
+                Continue with Github
               </Button>
             </Flex>
           </GridItem>
