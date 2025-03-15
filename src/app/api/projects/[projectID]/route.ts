@@ -5,10 +5,10 @@ import connectDB from "@/lib/mongodb";
 // GET project details
 export async function GET(
   request: Request,
-  { params }: { params: { projectId: string } }
+  { params }: { params: { projectID: string } }
 ) {
   await connectDB();
-  const project = await Project.findById(params.projectId)
+  const project = await Project.findById(params.projectID)
     .populate("assignedTeam")
     .populate("tasks.assignedTo")
     .populate("sprints.tasks");
@@ -18,14 +18,14 @@ export async function GET(
 // POST add a task to the project
 export async function POST(
   request: Request,
-  { params }: { params: { projectId: string } }
+  { params }: { params: { projectID: string } }
 ) {
   await connectDB();
   const { title, description, assignedTo, dueDate } = await request.json();
 
   const task = { title, description, assignedTo, dueDate };
   const project = await Project.findByIdAndUpdate(
-    params.projectId,
+    params.projectID,
     { $push: { tasks: task } },
     { new: true }
   );
@@ -36,13 +36,13 @@ export async function POST(
 // PUT update project status
 export async function PUT(
   request: Request,
-  { params }: { params: { projectId: string } }
+  { params }: { params: { projectID: string } }
 ) {
   await connectDB();
   const { status } = await request.json();
 
   const project = await Project.findByIdAndUpdate(
-    params.projectId,
+    params.projectID,
     { status },
     { new: true }
   );

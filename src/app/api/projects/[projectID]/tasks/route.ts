@@ -11,7 +11,6 @@ export async function GET(
   const tasks = await Task.find({ project: params.projectID });
   return NextResponse.json(tasks);
 }
-
 // POST a new task for a project
 export async function POST(
   request: Request,

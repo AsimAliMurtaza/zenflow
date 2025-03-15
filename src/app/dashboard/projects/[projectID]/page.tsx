@@ -11,11 +11,15 @@ import {
   TabPanel,
   useColorModeValue,
   Divider,
+  Spinner,
+  Center,
+  Text,
 } from "@chakra-ui/react";
 import { motion } from "framer-motion";
-import { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import dynamic from "next/dynamic";
+import { Project } from "@/types/types";
 
 const MotionBox = motion(Box);
 
@@ -32,22 +36,60 @@ const SettingsPage = dynamic(() => import("@/components/ProjectSettings"), {
 
 const ProjectTabs = () => {
   const [activeTab, setActiveTab] = useState(0);
-  const params = useParams();
-  const projectID = params?.projectID as string; // Ensure projectID is a string
-  const router = useRouter();
+  const { projectID } = useParams();
+  const [project, setProject] = useState<Project | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  console.log("Project ID:", projectID);
+
+  useEffect(() => {
+    const fetchProject = async () => {
+      try {
+        const response = await fetch(`/api/projects/${projectID}`);
+        if (!response.ok) throw new Error("Failed to fetch project");
+
+        const data = await response.json();
+        setProject(data);
+        console.log("Project data:", data);
+      } catch (err) {
+        console.error("Error fetching project:", err);
+        setError("Failed to load project data.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (projectID) fetchProject();
+  }, [projectID]);
+
+  // Handle loading state
+  if (loading) {
+    return (
+      <Center h="100vh">
+        <Spinner size="xl" />
+      </Center>
+    );
+  }
+
+  // Handle error state
+  if (error || !project) {
+    return (
+      <Center h="100vh">
+        <Text fontSize="lg" color="red.500">
+          {error || "Project not found"}
+        </Text>
+      </Center>
+    );
+  }
 
   // Tab labels
   const tabs = ["Overview", "Board", "Settings"];
 
-  // Handle tab change
-  const handleTabChange = (index: number) => {
-    setActiveTab(index);
-  };
-
   return (
     <Container maxW="100vw" p={0}>
       {/* Tab Bar */}
-      <Tabs index={activeTab} onChange={handleTabChange} variant="enclosed">
+      <Tabs index={activeTab} onChange={setActiveTab} variant="line">
         <TabList>
           {tabs.map((tab, index) => (
             <MotionBox key={index} whileTap={{ scale: 0.95 }}>
@@ -60,19 +102,18 @@ const ProjectTabs = () => {
         <Divider />
         {/* Tab Content */}
         <TabPanels mt={4}>
-          {/* Overview Tab */}
           <TabPanel>
-            <OverviewPage />
+            <OverviewPage project={project} />
           </TabPanel>
-
-          {/* Board Tab */}
           <TabPanel>
             <BoardPage />
           </TabPanel>
-
-          {/* Settings Tab */}
           <TabPanel>
-            <SettingsPage projectID={projectID} />
+            <SettingsPage
+              projectID={
+                Array.isArray(projectID) ? projectID[0] : projectID || ""
+              }
+            />
           </TabPanel>
         </TabPanels>
       </Tabs>

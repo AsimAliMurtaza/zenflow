@@ -32,13 +32,10 @@ const Projects = ({ projects: initialProjects, teams }: ProjectsProps) => {
   const [status, setStatus] = useState("In Progress");
   const [assignedTeam, setAssignedTeam] = useState("");
   const [dueDate, setDueDate] = useState("");
-
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
   const { colorMode } = useColorMode();
   const router = useRouter();
-
-  // Color mode values
   const bgColor = useColorModeValue("white", "gray.800");
   const textColor = useColorModeValue("gray.800", "gray.100");
 
@@ -50,14 +47,12 @@ const Projects = ({ projects: initialProjects, teams }: ProjectsProps) => {
       setDescription(project.description);
       setStatus(project.status);
       setAssignedTeam(project.assignedTeam._id);
-      setDueDate(project.dueDate || "");
     } else {
       setEditingProject(null);
       setProjectName("");
       setDescription("");
       setStatus("In Progress");
       setAssignedTeam("");
-      setDueDate("");
     }
     onOpen();
   };
@@ -71,10 +66,10 @@ const Projects = ({ projects: initialProjects, teams }: ProjectsProps) => {
 
     const projectData = {
       name: projectName,
-      description,
-      status,
-      assignedTeam,
-      dueDate,
+      description: description,
+      status: status,
+      assignedTeam: assignedTeam,
+      dueDate: dueDate,
     };
 
     const url = editingProject

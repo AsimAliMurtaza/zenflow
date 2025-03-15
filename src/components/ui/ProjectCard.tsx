@@ -1,4 +1,4 @@
-// components/ProjectCard.tsx
+// components/ui/ProjectCard.tsx
 import {
   Box,
   Heading,
@@ -15,11 +15,13 @@ import {
   TagLabel,
   TagLeftIcon,
   IconButton,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { EditIcon, DeleteIcon, TimeIcon } from "@chakra-ui/icons";
+import { Project } from "@/types/types";
 
 type ProjectCardProps = {
-  project: any; // Replace `any` with a proper type (see below)
+  project: Project | null;
   onEdit: () => void;
   onDelete: () => void;
   onClick: () => void;
@@ -31,14 +33,21 @@ const ProjectCard = ({
   onDelete,
   onClick,
 }: ProjectCardProps) => {
+  if (!project) {
+    return (
+      <Box p={4} bg="red.50" borderRadius="md">
+        <Text color="red.500">Invalid project data</Text>
+      </Box>
+    );
+  }
+
   return (
     <Card
       onClick={onClick}
       p={6}
       borderRadius="2xl"
       shadow="lg"
-      bg="gray.50"
-      _hover={{ transform: "scale(1.02)", transition: "transform 0.2s" }}
+      bg={useColorModeValue("gray.50", "gray.900")}
     >
       <CardBody>
         <HStack justify="space-between">
@@ -61,6 +70,7 @@ const ProjectCard = ({
               icon={<DeleteIcon />}
               size="sm"
               variant="ghost"
+              colorScheme="red"
               onClick={(e) => {
                 e.stopPropagation();
                 onDelete();
@@ -96,11 +106,6 @@ const ProjectCard = ({
           <Text fontSize="sm" fontWeight="bold">
             Team: {project.assignedTeam?.name || "Not Assigned"}
           </Text>
-          <AvatarGroup size="sm" max={3}>
-            {project.teamMembers?.map((member: string, index: number) => (
-              <Avatar key={index} name={member} />
-            ))}
-          </AvatarGroup>
           <Tag
             colorScheme={project.dueDate ? "red" : "gray"}
             borderRadius="full"

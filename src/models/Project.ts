@@ -5,11 +5,17 @@ const TaskSchema = new Schema({
   description: { type: String },
   status: {
     type: String,
-    enum: ["To Do", "In Progress", "Done"],
+    enum: ["To Do", "In Progress", "Completed"],
     default: "To Do",
   },
-  assignedTo: { type: Schema.Types.ObjectId, ref: "Member" },
+  priority: {
+    type: String,
+    enum: ["Low", "Medium", "High"],
+    default: "Medium",
+  },
   dueDate: { type: Date },
+  assignedTo: { type: Schema.Types.ObjectId, ref: "Member" },
+  project: { type: Schema.Types.ObjectId, ref: "Project", required: true },
 });
 
 const SprintSchema = new Schema({

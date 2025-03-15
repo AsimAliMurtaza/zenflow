@@ -6,13 +6,13 @@ export type Task = {
   status: string;
   priority: "Low" | "Medium" | "High";
   dueDate?: string;
-  assignedTo?: string;
+  assignedTo: { name: string };
 };
 
 export type TaskBoard = {
   "To Do": Task[];
   "In Progress": Task[];
-  "Completed": Task[];
+  Completed: Task[];
 };
 
 // types.ts
@@ -23,11 +23,20 @@ export type Project = {
   completion: number;
   status: string;
   assignedTeam: { _id: string; name: string };
-  teamMembers: string[];
   dueDate?: string;
+  tasks: Task[];
+  sprints: Sprint[];
 };
 
 export type Team = {
   _id: string;
   name: string;
+};
+
+export type Sprint = {
+  _id: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  tasks: Task[];
 };

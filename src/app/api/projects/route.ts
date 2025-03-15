@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
 import Project from "@/models/Project";
 import connectDB from "@/lib/mongodb";
+import mongoose from "mongoose";
 
 // GET all projects
 export async function GET() {
   await connectDB();
+  if (!mongoose.models.Project) {
+    mongoose.model("Project", Project.schema);
+  }
   const projects = await Project.find().populate("assignedTeam");
   return NextResponse.json(projects);
 }

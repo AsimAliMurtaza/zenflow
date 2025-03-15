@@ -45,7 +45,7 @@ const KanbanBoard = () => {
             acc[task.status as keyof TaskBoard].push(task);
             return acc;
           },
-          { "To Do": [], "In Progress": [], Completed: [] } as TaskBoard
+          { "To Do": [], "In Progress": [], "Completed": [] } as TaskBoard
         );
         setTasks(groupedTasks);
       } catch (error) {

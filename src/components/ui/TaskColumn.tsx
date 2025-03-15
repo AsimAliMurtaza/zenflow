@@ -1,5 +1,5 @@
 // components/TaskColumn.tsx
-import { VStack, Heading, Button, Box } from "@chakra-ui/react";
+import { VStack, Heading, Button, Box, useColorModeValue } from "@chakra-ui/react";
 import { Droppable, Draggable } from "@hello-pangea/dnd";
 import TaskCard from "./TaskCard";
 import { Task } from "@/types/types";
@@ -37,13 +37,11 @@ const TaskColumn = ({
         <VStack
           ref={provided.innerRef}
           {...provided.droppableProps}
-          bg="gray.50"
+          bg={useColorModeValue("gray.100", "gray.700")}
           p={4}
           w={{ base: "100%", md: "320px" }}
           minH="550px"
           borderRadius="xl"
-          border="1px solid"
-          borderColor="gray.300"
           shadow="lg"
           align="stretch"
           transition="all 0.3s"

@@ -8,6 +8,7 @@ import {
   Input,
   Select,
   Button,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { EditIcon, DeleteIcon } from "@chakra-ui/icons";
 import { Task } from "@/types/types";
@@ -37,13 +38,13 @@ const TaskCard = ({
 }: TaskCardProps) => {
   return (
     <Box
-      bg="white"
+      bg={useColorModeValue("white", "gray.600")}
       p={4}
       borderRadius="md"
       shadow="md"
       w="full"
       transition="all 0.2s"
-      _hover={{ bg: "gray.50" }}
+      _hover={{ bg: useColorModeValue("gray.50", "gray.500") }}
       display="flex"
       flexDirection="column"
       gap={2}
