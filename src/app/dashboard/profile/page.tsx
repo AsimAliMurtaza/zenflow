@@ -24,7 +24,15 @@ import {
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { FiEdit, FiCheckCircle, FiActivity, FiSettings, FiUser, FiMail, FiBriefcase } from "react-icons/fi";
+import {
+  FiEdit,
+  FiCheckCircle,
+  FiActivity,
+  FiSettings,
+  FiUser,
+  FiMail,
+  FiBriefcase,
+} from "react-icons/fi";
 
 const Profile = () => {
   const { data: session, status } = useSession();
@@ -64,11 +72,21 @@ const Profile = () => {
 
   return (
     <Box bg={bgColor} p={8} minH="100vh">
-      <Flex direction={{ base: "column", md: "row" }} maxW="1200px" mx="auto" gap={8}>
+      <Flex
+        direction={{ base: "column", md: "row" }}
+        maxW="1200px"
+        mx="auto"
+        gap={8}
+      >
         {/* Left Side: Profile Details */}
         <Box flex="1" bg={cardBg} p={6} borderRadius="2xl" shadow="lg">
           <Flex direction="column" align="center">
-            <Avatar size="xl" name={name} src={session?.user?.image || "/profile.jpg"} mb={4} />
+            <Avatar
+              size="xl"
+              name={name}
+              src={session?.user?.image || "/profile.jpg"}
+              mb={4}
+            />
             <Text fontSize="2xl" fontWeight="bold" color={textColor}>
               {name}
             </Text>
@@ -152,7 +170,12 @@ const Profile = () => {
             <Text fontSize="sm" fontWeight="bold" color={textColor} mb={2}>
               Profile Completion
             </Text>
-            <Progress value={80} colorScheme="teal" size="sm" borderRadius="full" />
+            <Progress
+              value={80}
+              colorScheme="teal"
+              size="sm"
+              borderRadius="full"
+            />
             <Text fontSize="sm" color="gray.500" mt={2}>
               80% Complete
             </Text>
@@ -168,10 +191,26 @@ const Profile = () => {
           {/* Recent Activity */}
           <VStack align="start" spacing={4}>
             {[
-              { text: "Updated profile information", icon: FiEdit, color: "blue.500" },
-              { text: "Completed task 'Design Homepage'", icon: FiCheckCircle, color: "green.500" },
-              { text: "Joined new project 'AI Research'", icon: FiActivity, color: "purple.500" },
-              { text: "Changed account settings", icon: FiSettings, color: "orange.500" },
+              {
+                text: "Updated profile information",
+                icon: FiEdit,
+                color: "blue.500",
+              },
+              {
+                text: "Completed task 'Design Homepage'",
+                icon: FiCheckCircle,
+                color: "green.500",
+              },
+              {
+                text: "Joined new project 'AI Research'",
+                icon: FiActivity,
+                color: "purple.500",
+              },
+              {
+                text: "Changed account settings",
+                icon: FiSettings,
+                color: "orange.500",
+              },
             ].map(({ text, icon, color }, index) => (
               <HStack key={index} spacing={3}>
                 <Icon as={icon} boxSize={5} color={color} />
@@ -190,10 +229,30 @@ const Profile = () => {
           </Text>
           <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={6}>
             {[
-              { title: "Tasks Completed", value: 24, icon: FiCheckCircle, color: "green.500" },
-              { title: "Projects Joined", value: 3, icon: FiBriefcase, color: "blue.500" },
-              { title: "Team Members", value: 8, icon: FiUser, color: "purple.500" },
-              { title: "Emails Sent", value: 12, icon: FiMail, color: "orange.500" },
+              {
+                title: "Tasks Completed",
+                value: 24,
+                icon: FiCheckCircle,
+                color: "green.500",
+              },
+              {
+                title: "Projects Joined",
+                value: 3,
+                icon: FiBriefcase,
+                color: "blue.500",
+              },
+              {
+                title: "Team Members",
+                value: 8,
+                icon: FiUser,
+                color: "purple.500",
+              },
+              {
+                title: "Emails Sent",
+                value: 12,
+                icon: FiMail,
+                color: "orange.500",
+              },
             ].map(({ title, value, icon, color }, index) => (
               <Card key={index} bg={bgColor} borderRadius="lg" shadow="sm">
                 <CardBody>
