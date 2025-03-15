@@ -1,51 +1,36 @@
+// components/Projects.tsx
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Box,
   Heading,
   Text,
   SimpleGrid,
-  Progress,
-  Card,
-  CardBody,
-  VStack,
-  Badge,
   Button,
-  IconButton,
-  HStack,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalCloseButton,
-  ModalBody,
-  ModalFooter,
-  Input,
-  Select,
   useDisclosure,
   useToast,
   useColorMode,
   useColorModeValue,
-  Avatar,
-  AvatarGroup,
-  Tag,
-  TagLabel,
-  TagLeftIcon,
-  TagRightIcon,
 } from "@chakra-ui/react";
-import { AddIcon, EditIcon, DeleteIcon, TimeIcon } from "@chakra-ui/icons";
-import { useRouter } from "next/navigation";
+import { AddIcon } from "@chakra-ui/icons";
+import ProjectCard from "./ui/ProjectCard";
+import ProjectModal from "./ui/ProjectModal";
+import { Project, Team } from "@/types/types";
 
-const Projects = ({ projects: initialProjects, teams }) => {
-  const [projects, setProjects] = useState(initialProjects);
-  const [editingProject, setEditingProject] = useState<any>(null);
+type ProjectsProps = {
+  projects: Project[];
+  teams: Team[];
+};
+
+const Projects = ({ projects: initialProjects, teams }: ProjectsProps) => {
+  const [projects, setProjects] = useState<Project[]>(initialProjects);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [projectName, setProjectName] = useState("");
   const [description, setDescription] = useState("");
-  const [completion, setCompletion] = useState(0);
   const [status, setStatus] = useState("In Progress");
   const [assignedTeam, setAssignedTeam] = useState("");
-  const [teamMembers, setTeamMembers] = useState<string[]>([]);
   const [dueDate, setDueDate] = useState("");
 
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -56,28 +41,22 @@ const Projects = ({ projects: initialProjects, teams }) => {
   // Color mode values
   const bgColor = useColorModeValue("white", "gray.800");
   const textColor = useColorModeValue("gray.800", "gray.100");
-  const cardBg = useColorModeValue("gray.50", "gray.700");
-  const progressColor = useColorModeValue("blue", "cyan");
 
   // Open modal for adding or editing
-  const openModal = (project: any = null) => {
+  const openModal = (project: Project | null = null) => {
     if (project) {
       setEditingProject(project);
       setProjectName(project.name);
       setDescription(project.description);
-      setCompletion(project.completion);
       setStatus(project.status);
       setAssignedTeam(project.assignedTeam._id);
-      setTeamMembers(project.teamMembers || []);
       setDueDate(project.dueDate || "");
     } else {
       setEditingProject(null);
       setProjectName("");
       setDescription("");
-      setCompletion(0);
       setStatus("In Progress");
       setAssignedTeam("");
-      setTeamMembers([]);
       setDueDate("");
     }
     onOpen();
@@ -93,10 +72,8 @@ const Projects = ({ projects: initialProjects, teams }) => {
     const projectData = {
       name: projectName,
       description,
-      completion,
       status,
       assignedTeam,
-      teamMembers,
       dueDate,
     };
 
@@ -112,9 +89,9 @@ const Projects = ({ projects: initialProjects, teams }) => {
     });
 
     if (response.ok) {
-      const updatedProject = await response.json();
+      const updatedProject: Project = await response.json();
       if (editingProject) {
-        setProjects((prevProjects) =>
+        setProjects((prevProjects: Project[]) =>
           prevProjects.map((proj) =>
             proj._id === editingProject._id ? updatedProject : proj
           )
@@ -154,7 +131,11 @@ const Projects = ({ projects: initialProjects, teams }) => {
       <Heading size="2xl" mb={6} fontWeight="bold">
         Projects Management
       </Heading>
-      <Text fontSize="lg" mb={8} color={useColorModeValue("gray.600", "gray.300")}>
+      <Text
+        fontSize="lg"
+        mb={8}
+        color={useColorModeValue("gray.600", "gray.300")}
+      >
         Manage your projects, track progress, and assign teams.
       </Text>
 
@@ -176,163 +157,34 @@ const Projects = ({ projects: initialProjects, teams }) => {
       {/* Projects Grid */}
       <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
         {projects.map((project) => (
-          <Card
-            onClick={() => handleProjectClick(project._id)}
+          <ProjectCard
             key={project._id}
-            p={6}
-            borderRadius="2xl"
-            shadow="lg"
-            bg={cardBg}
-            _hover={{ transform: "scale(1.02)", transition: "transform 0.2s" }}
-          >
-            <CardBody>
-              <HStack justify="space-between">
-                <Heading size="lg" fontWeight="semibold">
-                  {project.name}
-                </Heading>
-                <HStack>
-                  <IconButton
-                    aria-label="Edit project"
-                    icon={<EditIcon />}
-                    size="sm"
-                    variant="ghost"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openModal(project);
-                    }}
-                  />
-                  <IconButton
-                    aria-label="Delete project"
-                    icon={<DeleteIcon />}
-                    size="sm"
-                    variant="ghost"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeProject(project._id);
-                    }}
-                  />
-                </HStack>
-              </HStack>
-
-              <Text fontSize="md" color="gray.500" mt={2} mb={4}>
-                {project.description}
-              </Text>
-
-              <Progress
-                value={project.completion}
-                colorScheme={progressColor}
-                size="sm"
-                borderRadius="full"
-                mb={4}
-              />
-
-              <VStack align="start" spacing={3}>
-                <Badge
-                  colorScheme={
-                    project.status === "Completed" ? "green" : "yellow"
-                  }
-                  borderRadius="full"
-                  px={3}
-                  py={1}
-                >
-                  {project.status}
-                </Badge>
-                <Text fontSize="sm" color="gray.500">
-                  Completion: {project.completion}%
-                </Text>
-                <Text fontSize="sm" fontWeight="bold">
-                  Team: {project.assignedTeam?.name || "Not Assigned"}
-                </Text>
-                <AvatarGroup size="sm" max={3}>
-                  {project.teamMembers?.map((member, index) => (
-                    <Avatar key={index} name={member} />
-                  ))}
-                </AvatarGroup>
-                <Tag
-                  colorScheme={project.dueDate ? "red" : "gray"}
-                  borderRadius="full"
-                >
-                  <TagLeftIcon as={TimeIcon} />
-                  <TagLabel>
-                    Due: {project.dueDate || "No due date"}
-                  </TagLabel>
-                </Tag>
-              </VStack>
-            </CardBody>
-          </Card>
+            project={project}
+            onEdit={() => openModal(project)}
+            onDelete={() => removeProject(project._id)}
+            onClick={() => handleProjectClick(project._id)}
+          />
         ))}
       </SimpleGrid>
 
       {/* Add/Edit Project Modal */}
-      <Modal isOpen={isOpen} onClose={onClose}>
-        <ModalOverlay />
-        <ModalContent bg={bgColor} color={textColor} borderRadius="2xl">
-          <ModalHeader fontSize="2xl" fontWeight="bold">
-            {editingProject ? "Edit Project" : "Add Project"}
-          </ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <Input
-              placeholder="Project Name"
-              value={projectName}
-              onChange={(e) => setProjectName(e.target.value)}
-              mb={4}
-              borderRadius="lg"
-            />
-            <Input
-              placeholder="Project Description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              mb={4}
-              borderRadius="lg"
-            />
-            <Select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              mb={4}
-              borderRadius="lg"
-            >
-              <option value="In Progress">In Progress</option>
-              <option value="Completed">Completed</option>
-              <option value="Almost Done">Almost Done</option>
-            </Select>
-            <Select
-              placeholder="Assign Team"
-              value={assignedTeam}
-              onChange={(e) => setAssignedTeam(e.target.value)}
-              mb={4}
-              borderRadius="lg"
-            >
-              {teams.map((team) => (
-                <option key={team._id} value={team._id}>
-                  {team.name}
-                </option>
-              ))}
-            </Select>
-            <Input
-              type="date"
-              placeholder="Due Date"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-              mb={4}
-              borderRadius="lg"
-            />
-          </ModalBody>
-          <ModalFooter>
-            <Button
-              colorScheme="blue"
-              onClick={handleSaveProject}
-              mr={3}
-              borderRadius="full"
-            >
-              {editingProject ? "Update" : "Save"}
-            </Button>
-            <Button onClick={onClose} borderRadius="full">
-              Cancel
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+      <ProjectModal
+        isOpen={isOpen}
+        onClose={onClose}
+        projectName={projectName}
+        description={description}
+        status={status}
+        assignedTeam={assignedTeam}
+        dueDate={dueDate}
+        teams={teams}
+        onProjectNameChange={setProjectName}
+        onDescriptionChange={setDescription}
+        onStatusChange={setStatus}
+        onAssignedTeamChange={setAssignedTeam}
+        onDueDateChange={setDueDate}
+        onSave={handleSaveProject}
+        isEditing={!!editingProject}
+      />
     </Box>
   );
 };
