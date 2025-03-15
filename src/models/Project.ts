@@ -1,16 +1,37 @@
 import mongoose, { Schema } from "mongoose";
 
-const ProjectSchema = new Schema({
-  name: { type: String, required: true },
-  description: { type: String, required: true },
+const TaskSchema = new Schema({
+  title: { type: String, required: true },
+  description: { type: String },
   status: {
     type: String,
-    enum: ["In Progress", "Completed", "Almost Done"],
-    default: "In Progress",
+    enum: ["To Do", "In Progress", "Done"],
+    default: "To Do",
   },
-  assignedTeam: { type: Schema.Types.ObjectId, ref: "Team", required: true },
+  assignedTo: { type: Schema.Types.ObjectId, ref: "Member" },
   dueDate: { type: Date },
-  completion: { type: Number, min: 0, max: 100, default: 0 },
+});
+
+const SprintSchema = new Schema({
+  name: { type: String, required: true },
+  startDate: { type: Date, required: true },
+  endDate: { type: Date, required: true },
+  tasks: [{ type: Schema.Types.ObjectId, ref: "Task" }],
+});
+
+const ProjectSchema = new Schema({
+  name: { type: String, required: true },
+  description: { type: String },
+  status: {
+    type: String,
+    enum: ["Not Started", "In Progress", "Completed"],
+    default: "Not Started",
+  },
+  assignedTeam: { type: Schema.Types.ObjectId, ref: "Team" },
+  tasks: [TaskSchema],
+  sprints: [SprintSchema],
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
 });
 
 const Project =
