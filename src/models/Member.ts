@@ -1,11 +1,10 @@
-import mongoose, { Schema } from "mongoose";
+// models/Member.ts
+import mongoose from "mongoose";
 
-const MemberSchema = new Schema({
+const memberSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  role: { type: String },
+  email: { type: String, required: true, unique: true },
+  role: { type: String, default: "member" },
 });
 
-// Register the model if it doesn't exist, otherwise reuse it
-const Member = mongoose.models.Member || mongoose.model("Member", MemberSchema);
-
-export default Member;
+export default mongoose.models.Member || mongoose.model("Member", memberSchema);

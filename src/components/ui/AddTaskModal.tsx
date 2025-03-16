@@ -1,12 +1,12 @@
-// components/AddTaskModal.tsx
+// components/ui/AddTaskModal.tsx
 import {
   Modal,
   ModalOverlay,
   ModalContent,
   ModalHeader,
-  ModalFooter,
-  ModalBody,
   ModalCloseButton,
+  ModalBody,
+  ModalFooter,
   FormControl,
   FormLabel,
   Input,
@@ -23,6 +23,7 @@ type AddTaskModalProps = {
   taskPriority: string;
   taskDueDate: string;
   taskAssignedTo: string;
+  teamMembers: any[]; // Replace `any` with a proper type (e.g., `TeamMember`)
   onTaskTitleChange: (value: string) => void;
   onTaskDescriptionChange: (value: string) => void;
   onTaskPriorityChange: (value: string) => void;
@@ -39,6 +40,7 @@ const AddTaskModal = ({
   taskPriority,
   taskDueDate,
   taskAssignedTo,
+  teamMembers,
   onTaskTitleChange,
   onTaskDescriptionChange,
   onTaskPriorityChange,
@@ -90,11 +92,17 @@ const AddTaskModal = ({
           </FormControl>
           <FormControl mt={4}>
             <FormLabel>Assigned To</FormLabel>
-            <Input
-              placeholder="Assigned user ID"
+            <Select
+              placeholder="Select a team member"
               value={taskAssignedTo}
               onChange={(e) => onTaskAssignedToChange(e.target.value)}
-            />
+            >
+              {teamMembers.map((member) => (
+                <option key={member._id} value={member._id}>
+                  {member.name}
+                </option>
+              ))}
+            </Select>
           </FormControl>
         </ModalBody>
         <ModalFooter>

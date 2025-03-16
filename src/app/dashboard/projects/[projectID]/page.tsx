@@ -3,13 +3,11 @@
 import {
   Box,
   Container,
-  Heading,
   Tabs,
   TabList,
   TabPanels,
   Tab,
   TabPanel,
-  useColorModeValue,
   Divider,
   Spinner,
   Center,

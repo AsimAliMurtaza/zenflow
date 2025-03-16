@@ -1,12 +1,16 @@
-// types.ts
+// Enums for status and priority
+export type TaskStatus = "To Do" | "In Progress" | "Completed";
+export type TaskPriority = "Low" | "Medium" | "High";
+
+// Task Type
 export type Task = {
   _id: string;
   title: string;
   description: string;
-  status: string;
-  priority: "Low" | "Medium" | "High";
-  dueDate?: string;
-  assignedTo: { name: string };
+  status: TaskStatus;
+  priority: TaskPriority;
+  dueDate?: string | Date;
+  assignedTo?: TeamMember | null;
 };
 
 export type TaskBoard = {
@@ -15,28 +19,39 @@ export type TaskBoard = {
   Completed: Task[];
 };
 
-// types.ts
+// TeamMember Type
+export type TeamMember = {
+  name: string;
+  email: string;
+  role: string;
+};
+
+// Sprint Type
+export type Sprint = {
+  _id: string;
+  name: string;
+  startDate: string | Date;
+  endDate: string | Date;
+  tasks: Task[];
+};
+
+// Team Type
+export type Team = {
+  _id: string;
+  name: string;
+  members?: string[]; // Added members array (optional)
+};
+// types/types.ts
 export type Project = {
   _id: string;
   name: string;
   description: string;
-  completion: number;
-  status: string;
-  assignedTeam: { _id: string; name: string };
-  dueDate?: string;
-  tasks: Task[];
-  sprints: Sprint[];
-};
-
-export type Team = {
-  _id: string;
-  name: string;
-};
-
-export type Sprint = {
-  _id: string;
-  name: string;
-  startDate: string;
-  endDate: string;
-  tasks: Task[];
+  status: TaskStatus;
+  assignedTeam: Team | null; // Use Team instead of string
+  dueDate: string;
+  completion?: number; // Optional
+  tasks?: Task[]; // Optional
+  sprints?: Sprint[]; // Optional
+  createdAt?: Date; // Optional
+  updatedAt?: Date; // Optional
 };

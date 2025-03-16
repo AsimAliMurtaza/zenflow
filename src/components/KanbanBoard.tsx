@@ -1,13 +1,19 @@
-// components/KanbanBoard.tsx
 "use client";
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { Flex, Spinner, Center, useDisclosure } from "@chakra-ui/react";
+import {
+  Flex,
+  Spinner,
+  Center,
+  useDisclosure,
+  useColorModeValue,
+  Box,
+} from "@chakra-ui/react";
 import { DragDropContext, DropResult } from "@hello-pangea/dnd";
 import TaskColumn from "./ui/TaskColumn";
 import AddTaskModal from "./ui/AddTaskModal";
-import { Task, TaskBoard } from "@/types/types";
+import { Task, TaskBoard, TeamMember } from "@/types/types";
 
 const KanbanBoard = () => {
   const { projectID } = useParams();
@@ -24,14 +30,30 @@ const KanbanBoard = () => {
   const [selectedStatus, setSelectedStatus] =
     useState<keyof TaskBoard>("To Do");
 
-  // Task creation form state
   const [taskTitle, setTaskTitle] = useState("");
   const [taskDescription, setTaskDescription] = useState("");
   const [taskPriority, setTaskPriority] = useState<Task["priority"]>("Medium");
   const [taskDueDate, setTaskDueDate] = useState("");
   const [taskAssignedTo, setTaskAssignedTo] = useState("");
+  const [team, setTeam] = useState<TeamMember[]>([]);
 
-  // Fetch tasks from MongoDB
+  const boardBg = useColorModeValue("gray.50", "gray.800");
+
+  useEffect(() => {
+    const fetchTeamMembers = async () => {
+      try {
+        const response = await fetch(`/api/projects/${projectID}/team`);
+        if (!response.ok) throw new Error("Failed to fetch team members");
+        const teamData = await response.json();
+        setTeam(teamData);
+      } catch (error) {
+        console.error("Failed to fetch team members:", error);
+      }
+    };
+
+    fetchTeamMembers();
+  }, [projectID]);
+
   useEffect(() => {
     const fetchTasks = async () => {
       try {
@@ -45,7 +67,7 @@ const KanbanBoard = () => {
             acc[task.status as keyof TaskBoard].push(task);
             return acc;
           },
-          { "To Do": [], "In Progress": [], "Completed": [] } as TaskBoard
+          { "To Do": [], "In Progress": [], Completed: [] } as TaskBoard
         );
         setTasks(groupedTasks);
       } catch (error) {
@@ -69,7 +91,6 @@ const KanbanBoard = () => {
     const [movedTask] = sourceList.splice(source.index, 1);
     destinationList.splice(destination.index, 0, movedTask);
 
-    // Update the task status in MongoDB
     try {
       await fetch(`/api/projects/${projectID}/tasks`, {
         method: "PUT",
@@ -90,7 +111,6 @@ const KanbanBoard = () => {
     }));
   };
 
-  // Handle adding new tasks
   const addTask = async (status: keyof TaskBoard) => {
     if (!taskTitle) return;
 
@@ -121,7 +141,6 @@ const KanbanBoard = () => {
     }
   };
 
-  // Reset task creation form
   const resetTaskForm = () => {
     setTaskTitle("");
     setTaskDescription("");
@@ -130,7 +149,6 @@ const KanbanBoard = () => {
     setTaskAssignedTo("");
   };
 
-  // Handle deleting tasks
   const deleteTask = async (status: keyof TaskBoard, taskId: string) => {
     try {
       await fetch(`/api/projects/${projectID}/tasks`, {
@@ -148,7 +166,6 @@ const KanbanBoard = () => {
     }
   };
 
-  // Handle editing tasks
   const startEditing = (
     taskId: string,
     title: string,
@@ -195,7 +212,7 @@ const KanbanBoard = () => {
   }
 
   return (
-    <>
+    <Box bg={boardBg} p={4} borderRadius="xl">
       <DragDropContext onDragEnd={onDragEnd}>
         <Flex gap={4} wrap="wrap">
           {Object.entries(tasks).map(([status, taskList]) => (
@@ -228,7 +245,6 @@ const KanbanBoard = () => {
           ))}
         </Flex>
       </DragDropContext>
-
       <AddTaskModal
         isOpen={isOpen}
         onClose={onClose}
@@ -237,6 +253,7 @@ const KanbanBoard = () => {
         taskPriority={taskPriority}
         taskDueDate={taskDueDate}
         taskAssignedTo={taskAssignedTo}
+        teamMembers={team} // Pass team members to the modal
         onTaskTitleChange={setTaskTitle}
         onTaskDescriptionChange={setTaskDescription}
         onTaskPriorityChange={(value: string) =>
@@ -246,7 +263,7 @@ const KanbanBoard = () => {
         onTaskAssignedToChange={setTaskAssignedTo}
         onAddTask={() => addTask(selectedStatus)}
       />
-    </>
+    </Box>
   );
 };
 

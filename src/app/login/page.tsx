@@ -21,21 +21,23 @@ import {
   useColorModeValue,
 } from "@chakra-ui/react";
 import { FcGoogle } from "react-icons/fc";
-import { FaMicrosoft, FaApple, FaSlack, FaGithub } from "react-icons/fa";
+import { FaGithub } from "react-icons/fa";
 
 export default function LoginPage() {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
-  const [userExists, setUserExists] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const toast = useToast();
   const router = useRouter();
 
   // Color mode values
-  const bgColor = useColorModeValue("gray.50", "gray.800");
-  const cardBgColor = useColorModeValue("white", "gray.700");
-  const textColor = useColorModeValue("gray.600", "gray.200");
+  const bgColor = useColorModeValue("gray.50", "gray.900");
+  const cardBgColor = useColorModeValue("white", "gray.800");
+  const textColor = useColorModeValue("gray.700", "gray.200");
   const borderColor = useColorModeValue("gray.300", "gray.600");
+  const inputFocusBorderColor = useColorModeValue("blue.500", "blue.400");
+  const grayTextColor = useColorModeValue("gray.500", "gray.400");
+  const buttonHoverColor = useColorModeValue("blue.600", "blue.300");
 
   const handleLogin = async () => {
     setLoading(true);
@@ -109,7 +111,7 @@ export default function LoginPage() {
                 borderColor={borderColor}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                _focus={{ borderColor: "blue.500", boxShadow: "outline" }}
+                _focus={{ borderColor: inputFocusBorderColor, boxShadow: "outline" }}
               />
             </FormControl>
 
@@ -125,7 +127,7 @@ export default function LoginPage() {
                 borderColor={borderColor}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                _focus={{ borderColor: "blue.500", boxShadow: "outline" }}
+                _focus={{ borderColor: inputFocusBorderColor, boxShadow: "outline" }}
               />
             </FormControl>
 
@@ -135,6 +137,7 @@ export default function LoginPage() {
               w="full"
               size="md"
               isLoading={loading}
+              _hover={{ bg: buttonHoverColor }}
             >
               Continue
             </Button>
@@ -150,6 +153,7 @@ export default function LoginPage() {
                 w="full"
                 leftIcon={<FcGoogle />}
                 onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+                _hover={{ bg: useColorModeValue("gray.100", "gray.700") }}
               >
                 Google
               </Button>
@@ -158,6 +162,7 @@ export default function LoginPage() {
                 w="full"
                 leftIcon={<FaGithub color="#000000" />}
                 onClick={() => signIn("github", { callbackUrl: "/dashboard" })}
+                _hover={{ bg: useColorModeValue("gray.100", "gray.700") }}
               >
                 Github
               </Button>
@@ -179,7 +184,7 @@ export default function LoginPage() {
           </VStack>
 
           {/* 📜 Footer */}
-          <Text fontSize="xs" color={textColor} mt={6}>
+          <Text fontSize="xs" color={grayTextColor} mt={6}>
             One account for Zenflow.{" "}
             <Button variant="link" color="blue.500">
               Learn more

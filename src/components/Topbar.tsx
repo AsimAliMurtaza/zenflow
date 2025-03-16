@@ -21,12 +21,12 @@ const Topbar = () => {
   const router = useRouter();
   const { data: session } = useSession();
 
-  const bgColor = useColorModeValue("rgba(255, 255, 255, 0.8)", "rgba(26, 32, 44, 0.8)");
-  const borderColor = useColorModeValue("gray.300", "gray.700");
-  const inputBg = useColorModeValue("whiteAlpha.800", "gray.700");
+  const bgColor = useColorModeValue("whiteAlpha.900", "gray.800");
+  const borderColor = useColorModeValue("gray.200", "gray.700");
+  const inputBg = useColorModeValue("gray.100", "gray.700");
   const iconColor = useColorModeValue("gray.600", "gray.300");
-  const hoverBg = useColorModeValue("blue.100", "blue.700");
-  const menuBg = useColorModeValue("white", "gray.700");
+  const hoverBg = useColorModeValue("gray.200", "gray.600");
+  const menuBg = useColorModeValue("white", "gray.800");
 
   return (
     <Flex
@@ -38,20 +38,19 @@ const Topbar = () => {
       backdropFilter="blur(10px)"
       position="sticky"
       top={0}
-      zIndex="1100" // Ensures Topbar is always on top
+      zIndex="1100"
+      boxShadow="md"
     >
-      {/* Search Input */}
       <Box flex="1" maxW="280px" mx={2} position="relative">
         <Input
           placeholder="Search..."
           borderRadius="full"
           bg={inputBg}
-          border="1px solid"
-          borderColor={borderColor}
+          border="none"
           px={4}
           py={2}
           maxH="34px"
-          _focus={{ bg: "white", borderColor: "blue.400", shadow: "md" }}
+          _focus={{ bg: useColorModeValue("gray.200", "gray.600"), boxShadow: "md" }}
           _placeholder={{ color: iconColor }}
         />
         <IconButton
@@ -71,7 +70,6 @@ const Topbar = () => {
 
       <Spacer />
 
-      {/* Notifications Icon */}
       <IconButton
         aria-label="Notifications"
         icon={<FiBell />}
@@ -82,7 +80,6 @@ const Topbar = () => {
         _hover={{ bg: hoverBg, transform: "scale(1.1)", transition: "0.2s" }}
       />
 
-      {/* Profile Dropdown Menu */}
       <Menu>
         <MenuButton>
           <Avatar
@@ -96,15 +93,15 @@ const Topbar = () => {
         </MenuButton>
         <MenuList
           bg={menuBg}
-          zIndex="1200" // Ensures MenuList is above everything
+          zIndex="1200"
           borderColor={borderColor}
           shadow="xl"
-          borderRadius="12px"
+          borderRadius="xl"
         >
           <MenuItem
             icon={<FiUser />}
             onClick={() => router.push("/dashboard/profile")}
-            borderRadius="8px"
+            borderRadius="lg"
             _hover={{ bg: hoverBg }}
           >
             Profile
@@ -112,7 +109,7 @@ const Topbar = () => {
           <MenuItem
             icon={<FiLogOut />}
             onClick={() => signOut({ callbackUrl: "/" })}
-            borderRadius="8px"
+            borderRadius="lg"
             _hover={{ bg: hoverBg }}
           >
             Logout

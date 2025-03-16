@@ -5,25 +5,19 @@ import {
   Flex,
   Text,
   Grid,
-  Button,
-  Input,
   VStack,
   Icon,
-  Avatar,
   useColorModeValue,
   Card,
   CardBody,
   HStack,
   Divider,
-  IconButton,
-  Tag,
-  TagLabel,
-  TagLeftIcon,
   Badge,
   Progress,
+  Avatar,
   AvatarGroup,
 } from "@chakra-ui/react";
-import { FiHome, FiCheckCircle, FiClock, FiPlus, FiUser, FiAlertCircle } from "react-icons/fi";
+import { FiHome, FiCheckCircle, FiClock, FiUser, FiAlertCircle } from "react-icons/fi";
 
 const DashboardContent = () => {
   const bgColor = useColorModeValue("gray.50", "gray.900");
@@ -31,6 +25,7 @@ const DashboardContent = () => {
   const borderColor = useColorModeValue("gray.200", "gray.700");
   const textColor = useColorModeValue("gray.800", "gray.100");
   const iconColor = useColorModeValue("gray.600", "gray.300");
+  const statCardHover = useColorModeValue("gray.100", "gray.700");
 
   return (
     <Flex flex="1" flexDir="column" p={8} bg={bgColor} minH="100vh">
@@ -52,8 +47,8 @@ const DashboardContent = () => {
             border="1px solid"
             borderColor={borderColor}
             borderRadius="2xl"
-            transition="all 0.2s"
-            _hover={{ transform: "scale(1.02)", shadow: "lg" }}
+            transition="background-color 0.3s ease"
+            _hover={{ bg: statCardHover }}
           >
             <CardBody>
               <HStack justify="space-between">
@@ -75,36 +70,6 @@ const DashboardContent = () => {
         ))}
       </Grid>
 
-      {/* Task Creation */}
-      <Card
-        bg={cardBg}
-        shadow="md"
-        border="1px solid"
-        borderColor={borderColor}
-        borderRadius="2xl"
-        mb={8}
-        p={6}
-        transition="all 0.2s"
-        _hover={{ shadow: "lg" }}
-      >
-        <CardBody>
-          <Text fontSize="lg" fontWeight="bold" mb={4} color={textColor}>
-            AI Task Creation
-          </Text>
-          <HStack>
-            <Input
-              placeholder="Describe your task..."
-              borderColor={borderColor}
-              borderRadius="lg"
-              _focus={{ borderColor: "blue.400", shadow: "sm" }}
-            />
-            <Button leftIcon={<FiPlus />} colorScheme="blue" borderRadius="full">
-              Create Task
-            </Button>
-          </HStack>
-        </CardBody>
-      </Card>
-
       {/* Recent Activity */}
       <Card
         bg={cardBg}
@@ -113,8 +78,9 @@ const DashboardContent = () => {
         borderColor={borderColor}
         borderRadius="2xl"
         p={6}
-        transition="all 0.2s"
-        _hover={{ shadow: "lg" }}
+        mb={8}
+        transition="background-color 0.3s ease"
+        _hover={{ bg: statCardHover }}
       >
         <CardBody>
           <Text fontSize="lg" fontWeight="bold" mb={4} color={textColor}>
@@ -146,8 +112,8 @@ const DashboardContent = () => {
         borderColor={borderColor}
         borderRadius="2xl"
         p={6}
-        transition="all 0.2s"
-        _hover={{ shadow: "lg" }}
+        transition="background-color 0.3s ease"
+        _hover={{ bg: statCardHover }}
       >
         <CardBody>
           <Text fontSize="lg" fontWeight="bold" mb={4} color={textColor}>

@@ -3,11 +3,20 @@ import Team from "@/models/Team";
 import Member from "@/models/Member";
 import connectDB from "@/lib/mongodb";
 
-// GET all teams with populated members
 export async function GET() {
   await connectDB();
-  const teams = await Team.find().populate("members");
-  return NextResponse.json(teams);
+
+  try {
+    // Fetch teams (no need to populate members)
+    const teams = await Team.find();
+    return NextResponse.json(teams);
+  } catch (error) {
+    console.error("Error fetching teams:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch teams" },
+      { status: 500 }
+    );
+  }
 }
 
 // POST a new team

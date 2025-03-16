@@ -35,8 +35,11 @@ export default function SignUpPage() {
   const bgColor = useColorModeValue("gray.50", "gray.900");
   const boxColor = useColorModeValue("white", "gray.800");
   const textColor = useColorModeValue("gray.700", "gray.200");
-  const buttonHoverColor = useColorModeValue("blue.900", "blue.300");
+  const buttonHoverColor = useColorModeValue("blue.600", "blue.300");
   const inputBgColor = useColorModeValue("white", "gray.700");
+  const inputBorderColor = useColorModeValue("gray.300", "gray.600");
+  const inputFocusBorderColor = useColorModeValue("blue.500", "blue.400");
+  const grayTextColor = useColorModeValue("gray.500", "gray.400");
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
@@ -132,10 +135,10 @@ export default function SignUpPage() {
                   placeholder="you@example.com"
                   bg={inputBgColor}
                   border="1px solid"
-                  borderColor="gray.300"
+                  borderColor={inputBorderColor}
                   onChange={handleInputChange}
                   name="email"
-                  _focus={{ borderColor: "blue.500", boxShadow: "outline" }}
+                  _focus={{ borderColor: inputFocusBorderColor, boxShadow: "outline" }}
                 />
               </FormControl>
 
@@ -149,10 +152,10 @@ export default function SignUpPage() {
                   placeholder="••••••••"
                   bg={inputBgColor}
                   border="1px solid"
-                  borderColor="gray.300"
+                  borderColor={inputBorderColor}
                   onChange={handleInputChange}
                   name="password"
-                  _focus={{ borderColor: "blue.500", boxShadow: "outline" }}
+                  _focus={{ borderColor: inputFocusBorderColor, boxShadow: "outline" }}
                 />
               </FormControl>
 
@@ -161,7 +164,7 @@ export default function SignUpPage() {
                 onClick={handleSignup}
                 bg="blue.500"
                 color="white"
-                _hover={{ bg: "blue.600" }}
+                _hover={{ bg: buttonHoverColor }}
                 isLoading={loading}
                 w="full"
               >
@@ -184,7 +187,7 @@ export default function SignUpPage() {
             </VStack>
 
             {/* 📜 Footer */}
-            <Text fontSize="xs" color="gray.500" mt={6}>
+            <Text fontSize="xs" color={grayTextColor} mt={6}>
               One account for Zenflow.{" "}
               <Button variant="link" color="blue.500">
                 Learn more

@@ -1,18 +1,21 @@
 import Teams from "@/components/Teams";
-import connectDB from "@/lib/mongodb";
-import Team from "@/models/Team";
-import Member from "@/models/Member"; // Ensure this import is correct
-import mongoose from "mongoose";
 
 export default async function TeamsPage() {
-  await connectDB();
+  // Fetch teams from the API
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/teams`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    cache: "no-store", // Ensure fresh data is fetched
+  });
 
-  // Ensure the Member model is registered
-  if (!mongoose.models.Member) {
-    mongoose.model("Member", Member.schema);
+  if (!response.ok) {
+    throw new Error("Failed to fetch teams");
   }
 
-  const teams = await Team.find().populate("members");
+  const teams = await response.json();
+  console.log(teams); // Debugging: Check the fetched data
 
-  return <Teams teams={JSON.parse(JSON.stringify(teams))} />;
+  return <Teams teams={teams} />;
 }

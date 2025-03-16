@@ -1,4 +1,3 @@
-// components/Projects.tsx
 "use client";
 
 import { useState } from "react";
@@ -13,11 +12,16 @@ import {
   useToast,
   useColorMode,
   useColorModeValue,
+  Card,
+  CardHeader,
+  CardBody,
+  Flex,
+  IconButton,
 } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
 import ProjectCard from "./ui/ProjectCard";
 import ProjectModal from "./ui/ProjectModal";
-import { Project, Team } from "@/types/types";
+import { Project, Team, TaskStatus } from "@/types/types";
 
 type ProjectsProps = {
   projects: Project[];
@@ -29,8 +33,8 @@ const Projects = ({ projects: initialProjects, teams }: ProjectsProps) => {
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [projectName, setProjectName] = useState("");
   const [description, setDescription] = useState("");
-  const [status, setStatus] = useState("In Progress");
-  const [assignedTeam, setAssignedTeam] = useState("");
+  const [status, setStatus] = useState<TaskStatus>("In Progress");
+  const [assignedTeam, setAssignedTeam] = useState<Team | null>(null);
   const [dueDate, setDueDate] = useState("");
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
@@ -38,6 +42,7 @@ const Projects = ({ projects: initialProjects, teams }: ProjectsProps) => {
   const router = useRouter();
   const bgColor = useColorModeValue("white", "gray.800");
   const textColor = useColorModeValue("gray.800", "gray.100");
+  const cardBg = useColorModeValue("gray.50", "gray.700");
 
   // Open modal for adding or editing
   const openModal = (project: Project | null = null) => {
@@ -46,21 +51,86 @@ const Projects = ({ projects: initialProjects, teams }: ProjectsProps) => {
       setProjectName(project.name);
       setDescription(project.description);
       setStatus(project.status);
-      setAssignedTeam(project.assignedTeam._id);
+      setAssignedTeam(project.assignedTeam);
+      setDueDate(project.dueDate);
     } else {
       setEditingProject(null);
       setProjectName("");
       setDescription("");
       setStatus("In Progress");
-      setAssignedTeam("");
+      setAssignedTeam(null);
+      setDueDate("");
     }
     onOpen();
   };
 
-  // Add or Update Project
+  // Create a new project
+  const createProject = async (projectData: Omit<Project, "_id">) => {
+    const response = await fetch("/api/projects", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(projectData),
+    });
+
+    if (response.ok) {
+      const newProject: Project = await response.json();
+      setProjects([...projects, newProject]);
+      toast({
+        title: "Project added!",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } else {
+      toast({
+        title: "Failed to create project.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  // Update an existing project
+  const updateProject = async (id: string, projectData: Partial<Project>) => {
+    const response = await fetch(`/api/projects?id=${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(projectData),
+    });
+
+    if (response.ok) {
+      const updatedProject: Project = await response.json();
+      setProjects((prevProjects) =>
+        prevProjects.map((proj) => (proj._id === id ? updatedProject : proj))
+      );
+      toast({
+        title: "Project updated!",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } else {
+      const errorData = await response.json();
+      console.error("Failed to update project:", errorData);
+      toast({
+        title: "Failed to update project.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  // Handle saving a project (create or update)
   const handleSaveProject = async () => {
     if (!projectName.trim() || !description.trim()) {
-      toast({ title: "Name and description are required.", status: "warning" });
+      toast({
+        title: "Name and description are required.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
       return;
     }
 
@@ -70,36 +140,20 @@ const Projects = ({ projects: initialProjects, teams }: ProjectsProps) => {
       status: status,
       assignedTeam: assignedTeam,
       dueDate: dueDate,
+      completion: 0,
+      tasks: [],
+      sprints: [],
     };
 
-    const url = editingProject
-      ? `/api/projects?id=${editingProject._id}`
-      : "/api/projects";
-    const method = editingProject ? "PUT" : "POST";
-
-    const response = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(projectData),
-    });
-
-    if (response.ok) {
-      const updatedProject: Project = await response.json();
-      if (editingProject) {
-        setProjects((prevProjects: Project[]) =>
-          prevProjects.map((proj) =>
-            proj._id === editingProject._id ? updatedProject : proj
-          )
-        );
-        toast({ title: "Project updated!", status: "success" });
-      } else {
-        setProjects([...projects, updatedProject]);
-        toast({ title: "Project added!", status: "success" });
-      }
-      onClose();
+    if (editingProject) {
+      // Update existing project
+      await updateProject(editingProject._id, projectData);
     } else {
-      toast({ title: "Failed to save project.", status: "error" });
+      // Create new project
+      await createProject(projectData);
     }
+
+    onClose();
   };
 
   // Remove Project
@@ -112,7 +166,12 @@ const Projects = ({ projects: initialProjects, teams }: ProjectsProps) => {
 
     if (response.ok) {
       setProjects(projects.filter((proj) => proj._id !== id));
-      toast({ title: "Project deleted.", status: "error" });
+      toast({
+        title: "Project deleted.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     }
   };
 
@@ -122,32 +181,29 @@ const Projects = ({ projects: initialProjects, teams }: ProjectsProps) => {
   };
 
   return (
-    <Box p={8} bg={bgColor} color={textColor} borderRadius="lg">
-      <Heading size="2xl" mb={6} fontWeight="bold">
-        Projects Management
-      </Heading>
-      <Text
-        fontSize="lg"
-        mb={8}
-        color={useColorModeValue("gray.600", "gray.300")}
-      >
-        Manage your projects, track progress, and assign teams.
-      </Text>
-
-      <Button
-        bg={colorMode === "light" ? "gray.700" : "gray.600"}
-        color={"white"}
-        _hover={{
-          bg: colorMode === "light" ? "gray.800" : "gray.500",
-        }}
-        leftIcon={<AddIcon />}
-        onClick={() => openModal()}
-        mb={8}
-        size="lg"
-        borderRadius="full"
-      >
-        Add Project
-      </Button>
+    <Box p={8} bg={bgColor} color={textColor} minH="100vh">
+      <Flex justify="space-between" align="center" mb={8}>
+        <Box>
+          <Heading size="2xl" fontWeight="bold" mb={2}>
+            Projects Management
+          </Heading>
+          <Text fontSize="lg" color={useColorModeValue("gray.600", "gray.300")}>
+            Manage your projects, track progress, and assign teams.
+          </Text>
+        </Box>
+        <Button
+          leftIcon={<AddIcon />}
+          onClick={() => openModal()}
+          size="lg"
+          borderRadius="full"
+          colorScheme="blue"
+          _hover={{ transform: "scale(1.05)" }}
+          _active={{ transform: "scale(0.95)" }}
+          transition="all 0.2s"
+        >
+          Add Project
+        </Button>
+      </Flex>
 
       {/* Projects Grid */}
       <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>

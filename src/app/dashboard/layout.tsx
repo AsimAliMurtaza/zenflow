@@ -16,7 +16,6 @@ import { FiUsers, FiBarChart2, FiSettings } from "react-icons/fi";
 import { GrProjects } from "react-icons/gr";
 import Topbar from "@/components/Topbar";
 
-// Sidebar navigation modules
 const modules = [
   { name: "Overview", icon: BiHome, path: "/dashboard" },
   { name: "Projects", icon: GrProjects, path: "/dashboard/projects" },
@@ -30,15 +29,16 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
 
-  const hoverColor = useColorModeValue("blue.400", "blue.600");
+  const hoverColor = useColorModeValue("blue.500", "blue.600");
   const textColor = useColorModeValue("gray.800", "white");
   const sidebarBg = useColorModeValue("gray.50", "gray.900");
+  const sidebarBorderColor = useColorModeValue("gray.200", "gray.700");
+  const toggleButtonBg = useColorModeValue("gray.100", "gray.800");
 
   const sidebarWidth = collapsed ? "80px" : "250px";
 
   return (
     <Flex h="100vh" overflow="hidden">
-      {/* Sidebar */}
       <Box
         position="fixed"
         left="0"
@@ -49,24 +49,27 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
         color={textColor}
         p={5}
         borderRightWidth="1px"
-        borderColor={useColorModeValue("gray.200", "gray.700")}
+        borderColor={sidebarBorderColor}
         transition="width 0.3s ease-in-out"
         overflow="hidden"
         zIndex="1100"
       >
-        {/* Toggle Button */}
         <Flex justify="space-between" align="center" mb={6}>
           {!collapsed && (
-            <Text fontSize="2xl" fontWeight="bold">
+            <Text fontSize="2xl" fontWeight="semibold">
               ZenFlow
             </Text>
           )}
           <IconButton
             aria-label="Toggle Sidebar"
-            icon={collapsed ? <BiMenu size={24} /> : <BiMenuAltLeft size={24} />}
+            icon={
+              collapsed ? <BiMenu size={24} /> : <BiMenuAltLeft size={24} />
+            }
             variant="ghost"
             borderRadius="full"
             onClick={() => setCollapsed(!collapsed)}
+            bg={toggleButtonBg}
+            _hover={{ bg: useColorModeValue("gray.200", "gray.700") }}
           />
         </Flex>
 
@@ -85,11 +88,10 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
         </VStack>
       </Box>
 
-      {/* Main Content */}
       <Box
         flex="1"
         maxW="100vw"
-        ml={sidebarWidth} // Ensures content starts after sidebar width
+        ml={sidebarWidth}
         transition="margin-left 0.3s ease-in-out"
         overflowY="auto"
       >
@@ -100,7 +102,6 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// Navigation Item Component
 const NavItem = ({
   icon,
   label,
@@ -116,16 +117,24 @@ const NavItem = ({
   onClick: () => void;
   collapsed: boolean;
 }) => {
+  const navItemBg = useColorModeValue("gray.100", "gray.800");
+  const activeNavItemBg = "blue.500";
+
   return (
     <Tooltip label={collapsed ? label : ""} placement="right">
       <Flex
         align="center"
         w="full"
-        borderRadius="50"
+        borderRadius="xl"
         cursor="pointer"
-        bg={isActive ? "blue.500" : "transparent"}
+        bg={isActive ? activeNavItemBg : navItemBg}
         color={isActive ? "white" : "inherit"}
-        _hover={{ bg: hoverColor, color: "white" , transform: "scale(1.05)", transition: "0.2s" }}
+        _hover={{
+          bg: hoverColor,
+          color: "white",
+          transform: "scale(1.05)",
+          transition: "0.2s",
+        }}
         onClick={onClick}
       >
         <IconButton

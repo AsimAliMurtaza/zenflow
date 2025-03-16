@@ -1,44 +1,115 @@
 "use client";
 
-import { 
-  Box, 
-  Heading, 
-  Text, 
-  VStack, 
-  Switch, 
-  FormControl, 
-  FormLabel, 
-  useColorMode 
+import {
+  Box,
+  Heading,
+  Text,
+  VStack,
+  Switch,
+  FormControl,
+  FormLabel,
+  useColorMode,
+  useColorModeValue,
+  Divider,
+  HStack,
+  Select,
+  Slider,
+  SliderTrack,
+  SliderFilledTrack,
+  SliderThumb,
+  SimpleGrid,
 } from "@chakra-ui/react";
+import { useState } from "react";
 
 const Settings = () => {
-  const { colorMode, toggleColorMode } = useColorMode(); // 🌙 Toggle Dark Mode
+  const { colorMode, toggleColorMode } = useColorMode();
+  const [notificationPreference, setNotificationPreference] = useState("all");
+  const [fontSize, setFontSize] = useState(16);
+
+  const cardBg = useColorModeValue("white", "gray.800");
+  const dividerColor = useColorModeValue("gray.200", "gray.700");
+  const labelColor = useColorModeValue("gray.700", "gray.300");
 
   return (
-    <Box p={6}>
-      <Heading size="xl" mb={4}>
-        ⚙️ Settings
+    <Box p={6} maxW="container.lg" mx="auto">
+      <Heading size="2xl" mb={6} fontWeight="semibold">
+      Settings
       </Heading>
-      <Text fontSize="lg" mb={4}>
-        Customize your preferences and application settings.
-      </Text>
-      <VStack spacing={4} align="start">
-        {/* Dark Mode Toggle */}
-        <FormControl display="flex" alignItems="center">
-          <FormLabel mb="0">Enable Dark Mode</FormLabel>
-          <Switch 
-            colorScheme="blue" 
-            isChecked={colorMode === "dark"} // Sync switch with theme
-            onChange={toggleColorMode} // Toggle dark mode
-          />
-        </FormControl>
 
-        {/* Notifications Toggle */}
-        <FormControl display="flex" alignItems="center">
-          <FormLabel mb="0">Receive Notifications</FormLabel>
-          <Switch colorScheme="green" />
-        </FormControl>
-      </VStack>
+      <SimpleGrid columns={{ base: 1, md: 2 }} spacing={8}>
+        {/* Appearance Settings */}
+        <Box p={6} borderRadius="xl" boxShadow="md" bg={cardBg}>
+          <Heading size="md" mb={4} fontWeight="medium">
+            Appearance
+          </Heading>
+          <Divider mb={4} borderColor={dividerColor} />
+
+          <FormControl display="flex" alignItems="center" mb={4}>
+            <FormLabel mb="0" color={labelColor}>
+              Enable Dark Mode
+            </FormLabel>
+            <Switch
+              colorScheme="blue"
+              isChecked={colorMode === "dark"}
+              onChange={toggleColorMode}
+            />
+          </FormControl>
+
+          <FormControl mb={4}>
+            <FormLabel color={labelColor}>Font Size</FormLabel>
+            <HStack>
+              <Slider
+                aria-label="font-size"
+                value={fontSize}
+                onChange={(val) => setFontSize(val)}
+                min={12}
+                max={20}
+                step={1}
+              >
+                <SliderTrack>
+                  <SliderFilledTrack />
+                </SliderTrack>
+                <SliderThumb />
+              </Slider>
+              <Text fontSize="sm" color={labelColor}>
+                {fontSize}px
+              </Text>
+            </HStack>
+          </FormControl>
+        </Box>
+
+        {/* Notification Settings */}
+        <Box p={6} borderRadius="xl" boxShadow="md" bg={cardBg}>
+          <Heading size="md" mb={4} fontWeight="medium">
+            Notifications
+          </Heading>
+          <Divider mb={4} borderColor={dividerColor} />
+
+          <FormControl mb={4}>
+            <FormLabel color={labelColor}>Notification Preferences</FormLabel>
+            <Select
+              value={notificationPreference}
+              onChange={(e) => setNotificationPreference(e.target.value)}
+            >
+              <option value="all">All Notifications</option>
+              <option value="important">Important Only</option>
+              <option value="none">None</option>
+            </Select>
+          </FormControl>
+        </Box>
+
+        {/* Account Settings */}
+        <Box p={6} borderRadius="xl" boxShadow="md" bg={cardBg} gridColumn="1 / -1">
+          <Heading size="md" mb={4} fontWeight="medium">
+            Account
+          </Heading>
+          <Divider mb={4} borderColor={dividerColor} />
+
+          <Text color={labelColor}>
+            Change password, update profile information, etc. (Coming Soon)
+          </Text>
+        </Box>
+      </SimpleGrid>
     </Box>
   );
 };

@@ -10,8 +10,11 @@ import {
   Input,
   Select,
   Button,
+  FormControl,
+  FormLabel,
+  useColorModeValue,
 } from "@chakra-ui/react";
-import { Team } from "@/types/types";
+import { TaskStatus, Team } from "@/types/types";
 
 type ProjectModalProps = {
   isOpen: boolean;
@@ -19,13 +22,13 @@ type ProjectModalProps = {
   projectName: string;
   description: string;
   status: string;
-  assignedTeam: string;
+  assignedTeam: Team | null;
   dueDate: string;
   teams: Team[];
   onProjectNameChange: (value: string) => void;
   onDescriptionChange: (value: string) => void;
-  onStatusChange: (value: string) => void;
-  onAssignedTeamChange: (value: string) => void;
+  onStatusChange: (value: TaskStatus) => void;
+  onAssignedTeamChange: (value: Team) => void;
   onDueDateChange: (value: string) => void;
   onSave: () => void;
   isEditing: boolean;
@@ -48,60 +51,99 @@ const ProjectModal = ({
   onSave,
   isEditing,
 }: ProjectModalProps) => {
+  const modalBg = useColorModeValue("white", "gray.800");
+  const inputBg = useColorModeValue("gray.100", "gray.700");
+
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
-      <ModalContent borderRadius="2xl">
-        <ModalHeader fontSize="2xl" fontWeight="bold">
+      <ModalContent borderRadius="2xl" bg={modalBg} boxShadow="xl">
+        <ModalHeader fontSize="2xl" fontWeight="semibold">
           {isEditing ? "Edit Project" : "Add Project"}
         </ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          <Input
-            placeholder="Project Name"
-            value={projectName}
-            onChange={(e) => onProjectNameChange(e.target.value)}
-            mb={4}
-            borderRadius="lg"
-          />
-          <Input
-            placeholder="Project Description"
-            value={description}
-            onChange={(e) => onDescriptionChange(e.target.value)}
-            mb={4}
-            borderRadius="lg"
-          />
-          <Select
-            value={status}
-            onChange={(e) => onStatusChange(e.target.value)}
-            mb={4}
-            borderRadius="lg"
-          >
-            <option value="In Progress">In Progress</option>
-            <option value="Completed">Completed</option>
-            <option value="Almost Done">Almost Done</option>
-          </Select>
-          <Select
-            placeholder="Assign Team"
-            value={assignedTeam}
-            onChange={(e) => onAssignedTeamChange(e.target.value)}
-            mb={4}
-            borderRadius="lg"
-          >
-            {teams.map((team) => (
-              <option key={team._id} value={team._id}>
-                {team.name}
-              </option>
-            ))}
-          </Select>
-          <Input
-            type="date"
-            placeholder="Due Date"
-            value={dueDate}
-            onChange={(e) => onDueDateChange(e.target.value)}
-            mb={4}
-            borderRadius="lg"
-          />
+          <FormControl mb={4}>
+            <FormLabel>Project Name</FormLabel>
+            <Input
+              placeholder="Project Name"
+              value={projectName}
+              onChange={(e) => onProjectNameChange(e.target.value)}
+              borderRadius="xl"
+              bg={inputBg}
+              border="none"
+              _focus={{ bg: useColorModeValue("gray.200", "gray.600") }}
+            />
+          </FormControl>
+
+          <FormControl mb={4}>
+            <FormLabel>Description</FormLabel>
+            <Input
+              placeholder="Project Description"
+              value={description}
+              onChange={(e) => onDescriptionChange(e.target.value)}
+              borderRadius="xl"
+              bg={inputBg}
+              border="none"
+              _focus={{ bg: useColorModeValue("gray.200", "gray.600") }}
+            />
+          </FormControl>
+
+          <FormControl mb={4}>
+            <FormLabel>Status</FormLabel>
+            <Select
+              value={status}
+              onChange={(e) => onStatusChange(e.target.value as TaskStatus)}
+              borderRadius="xl"
+              bg={inputBg}
+              border="none"
+              _focus={{ bg: useColorModeValue("gray.200", "gray.600") }}
+            >
+              <option value="In Progress">In Progress</option>
+              <option value="Completed">Completed</option>
+              <option value="Almost Done">Almost Done</option>
+            </Select>
+          </FormControl>
+
+          <FormControl mb={4}>
+            <FormLabel>Assign Team</FormLabel>
+            <Select
+              placeholder="Assign Team"
+              value={assignedTeam ? assignedTeam._id : ""}
+              onChange={(e) => {
+                const selectedTeam = teams.find(
+                  (team) => team._id === e.target.value
+                );
+                if (selectedTeam) {
+                  onAssignedTeamChange(selectedTeam);
+                }
+              }}
+              borderRadius="xl"
+              bg={inputBg}
+              border="none"
+              _focus={{ bg: useColorModeValue("gray.200", "gray.600") }}
+            >
+              {teams.map((team) => (
+                <option key={team._id} value={team._id}>
+                  {team.name}
+                </option>
+              ))}
+            </Select>
+          </FormControl>
+
+          <FormControl mb={4}>
+            <FormLabel>Due Date</FormLabel>
+            <Input
+              type="date"
+              placeholder="Due Date"
+              value={dueDate}
+              onChange={(e) => onDueDateChange(e.target.value)}
+              borderRadius="xl"
+              bg={inputBg}
+              border="none"
+              _focus={{ bg: useColorModeValue("gray.200", "gray.600") }}
+            />
+          </FormControl>
         </ModalBody>
         <ModalFooter>
           <Button
@@ -109,10 +151,11 @@ const ProjectModal = ({
             onClick={onSave}
             mr={3}
             borderRadius="full"
+            boxShadow="md"
           >
             {isEditing ? "Update" : "Save"}
           </Button>
-          <Button onClick={onClose} borderRadius="full">
+          <Button onClick={onClose} borderRadius="full" boxShadow="md">
             Cancel
           </Button>
         </ModalFooter>

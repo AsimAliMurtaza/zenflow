@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import Project from "@/models/Project";
 import connectDB from "@/lib/mongodb";
+import mongoose from "mongoose";
+import Task from "@/models/Task";
+import Sprint from "@/models/Sprint";
 
 // GET project details
 export async function GET(
@@ -8,6 +11,17 @@ export async function GET(
   { params }: { params: { projectID: string } }
 ) {
   await connectDB();
+  if (!mongoose.models.Project) {
+    mongoose.model("Project", Project.schema);
+  }
+  if (!mongoose.models.Task) {
+    mongoose.model("Task", Task.schema);
+  }
+
+  if (mongoose.models.Sprint) {
+    mongoose.model("Sprint", Sprint.schema);
+  }
+
   const project = await Project.findById(params.projectID)
     .populate("assignedTeam")
     .populate("tasks.assignedTo")
@@ -32,20 +46,37 @@ export async function POST(
 
   return NextResponse.json(project);
 }
+// PUT update a project
+export async function PUT(request: Request) {
+  try {
+    await connectDB();
 
-// PUT update project status
-export async function PUT(
-  request: Request,
-  { params }: { params: { projectID: string } }
-) {
-  await connectDB();
-  const { status } = await request.json();
+    // Parse the request body
+    const { id, ...updateData } = await request.json();
 
-  const project = await Project.findByIdAndUpdate(
-    params.projectID,
-    { status },
-    { new: true }
-  );
+    // Validate required fields
+    if (!id) {
+      return NextResponse.json(
+        { error: "Project ID is required" },
+        { status: 400 }
+      );
+    }
 
-  return NextResponse.json(project);
+    // Update the project
+    const project = await Project.findByIdAndUpdate(id, updateData, {
+      new: true,
+    }).populate("assignedTeam");
+
+    if (!project) {
+      return NextResponse.json({ error: "Project not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(project);
+  } catch (error) {
+    console.error("Error updating project:", error);
+    return NextResponse.json(
+      { error: "Failed to update project" },
+      { status: 500 }
+    );
+  }
 }
