@@ -10,13 +10,8 @@ import {
   Button,
   useDisclosure,
   useToast,
-  useColorMode,
   useColorModeValue,
-  Card,
-  CardHeader,
-  CardBody,
   Flex,
-  IconButton,
 } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
 import ProjectCard from "./ui/ProjectCard";
@@ -38,11 +33,9 @@ const Projects = ({ projects: initialProjects, teams }: ProjectsProps) => {
   const [dueDate, setDueDate] = useState("");
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
-  const { colorMode } = useColorMode();
   const router = useRouter();
   const bgColor = useColorModeValue("white", "gray.800");
   const textColor = useColorModeValue("gray.800", "gray.100");
-  const cardBg = useColorModeValue("gray.50", "gray.700");
 
   // Open modal for adding or editing
   const openModal = (project: Project | null = null) => {

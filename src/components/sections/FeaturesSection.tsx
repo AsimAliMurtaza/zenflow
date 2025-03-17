@@ -10,7 +10,6 @@ import {
   Icon,
   useColorModeValue,
   Image,
-  Stack,
   Button,
   Flex,
   Divider,
@@ -26,6 +25,7 @@ import {
   FaLightbulb,
 } from "react-icons/fa";
 import { motion } from "framer-motion";
+import { Typewriter } from "react-simple-typewriter";
 
 const MotionBox = motion(Box);
 const MotionVStack = motion(VStack);
@@ -34,7 +34,8 @@ const featureData = [
   {
     icon: FaSearch,
     title: "Product & Issue Tracking",
-    description: "Track and manage your software development projects with ease.",
+    description:
+      "Track and manage your software development projects with ease.",
   },
   {
     icon: FaChartLine,
@@ -69,7 +70,8 @@ const featureData = [
   {
     icon: FaLightbulb,
     title: "Innovation Hub",
-    description: "Discover new ideas and innovative solutions for your business.",
+    description:
+      "Discover new ideas and innovative solutions for your business.",
   },
 ];
 
@@ -121,32 +123,69 @@ const FeaturesSection = () => {
               whileTap={{ scale: 0.95 }}
             >
               <Icon as={feature.icon} boxSize={6} color="blue.400" />
-              <Text as="h3" size="sm" fontWeight="semibold" color={headingColor}>
+              <Text
+                as="h3"
+                size="sm"
+                fontWeight="semibold"
+                color={headingColor}
+              >
                 {feature.title}
               </Text>
-              <Text color={textColor}>
-                {feature.description}
-              </Text>
+              <Text color={textColor}>{feature.description}</Text>
             </MotionVStack>
           ))}
         </SimpleGrid>
 
         {/* Additional Section with Image and Text */}
-        <Flex mt={20} direction={{ base: "column", md: "row" }} align="center" gap={8}>
+        <Flex
+          mt={20}
+          direction={{ base: "column", md: "row" }}
+          align="center"
+          gap={8}
+        >
           <Box flex="1">
             <Image
-              src="/feature-image.svg"
+              _hover={{
+                transform: "scale(1.05)",
+                transition: "transform 0.3s ease",
+              }}
+              src="/images/features.png"
               alt="Feature Illustration"
-              borderRadius="lg"
-              boxShadow="md"
             />
           </Box>
           <VStack flex="1" align="start" spacing={6}>
-            <Heading size="xl" color={headingColor}>
-              Unlock the Potential of Your Team
+            <Heading
+              as="h1"
+              fontSize={{ base: "3xl", md: "4xl", lg: "5xl" }}
+              mb={4}
+              lineHeight="tall"
+            >
+              <Box
+                as="span"
+                px="4"
+                py="1"
+                bg="blue.400"
+                color="white"
+                fontWeight="bold"
+              >
+                <Typewriter
+                  words={[
+                    "Productivity",
+                    "Creativity",
+                    "Collaboration",
+                    "Innovation",
+                  ]}
+                  loop={false}
+                  cursor
+                  cursorStyle="|"
+                  typeSpeed={100}
+                  deleteSpeed={70}
+                  delaySpeed={1000}
+                />
+              </Box>
             </Heading>
             <Text fontSize="lg" color={textColor}>
-              Experience seamless collaboration, enhanced productivity, and
+              Experience seamless collaboration&quot; enhanced productivity&quot; and
               innovative solutions with Zenflow. Our platform is designed to
               empower your team and drive your projects to success.
             </Text>
@@ -163,7 +202,11 @@ const FeaturesSection = () => {
         </Flex>
 
         {/* Divider */}
-        <Divider mt={20} mb={10} borderColor={useColorModeValue("gray.200", "gray.600")} />
+        <Divider
+          mt={20}
+          mb={10}
+          borderColor={useColorModeValue("gray.200", "gray.600")}
+        />
 
         {/* Testimonials or Quotes Section */}
         <VStack spacing={6} align="center" mt={10}>
@@ -171,7 +214,8 @@ const FeaturesSection = () => {
             What Our Users Say
           </Heading>
           <Text fontSize="md" color={textColor} textAlign="center">
-            "Zenflow has transformed our workflow, making project management a breeze."
+          &quot;Zenflow has transformed our workflow, making project
+            management a breeze.&quot;
           </Text>
           <Text fontSize="sm" color={useColorModeValue("gray.500", "gray.400")}>
             - John Doe, Project Manager

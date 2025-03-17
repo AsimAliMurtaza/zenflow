@@ -65,7 +65,7 @@ const CTASection = () => {
               animate={{ opacity: 1, y: 0 }}
               transition="duration: 0.8, ease: easeOut"
             >
-              Unlock Your Team's Potential
+              Unlock Your Teams Potential
             </Heading>
             <Text
               fontSize={{ base: "lg", md: "xl" }}

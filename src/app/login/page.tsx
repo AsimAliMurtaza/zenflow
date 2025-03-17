@@ -17,7 +17,6 @@ import {
   Container,
   Flex,
   Image,
-  Spinner,
   useColorModeValue,
 } from "@chakra-ui/react";
 import { FcGoogle } from "react-icons/fc";
@@ -174,7 +173,7 @@ export default function LoginPage() {
                 variant="link"
                 onClick={() => router.push("/forgot-password")}
               >
-                Can't log in?
+                Can&apos;t log in?
               </Button>{" "}
               •{" "}
               <Button variant="link" onClick={() => router.push("/signup")}>

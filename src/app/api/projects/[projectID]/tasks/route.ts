@@ -37,6 +37,7 @@ export async function PUT(
   { params }: { params: { projectID: string } }
 ) {
   await connectDB();
+  console.log("params", params);
   const { id, title, description, status, priority } = await request.json();
 
   const task = await Task.findByIdAndUpdate(
@@ -54,6 +55,7 @@ export async function DELETE(
   { params }: { params: { projectID: string } }
 ) {
   await connectDB();
+  console.log("params", params);
   const { id } = await request.json();
 
   await Task.findByIdAndDelete(id);

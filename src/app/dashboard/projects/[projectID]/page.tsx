@@ -12,6 +12,7 @@ import {
   Spinner,
   Center,
   Text,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
@@ -38,6 +39,7 @@ const ProjectTabs = () => {
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const tabColor = useColorModeValue("white", "gray.800");
 
   console.log("Project ID:", projectID);
 
@@ -87,8 +89,8 @@ const ProjectTabs = () => {
   return (
     <Container maxW="100vw" p={0}>
       {/* Tab Bar */}
-      <Tabs index={activeTab} onChange={setActiveTab} variant="line">
-        <TabList>
+      <Tabs  index={activeTab} onChange={setActiveTab} variant="line">
+        <TabList position="fixed" bg={tabColor} w="100%" zIndex="1000">
           {tabs.map((tab, index) => (
             <MotionBox key={index} whileTap={{ scale: 0.95 }}>
               <Tab fontSize="lg" fontWeight="semibold" px={6}>
@@ -99,7 +101,7 @@ const ProjectTabs = () => {
         </TabList>
         <Divider />
         {/* Tab Content */}
-        <TabPanels mt={4}>
+        <TabPanels mt={8}>
           <TabPanel>
             <OverviewPage project={project} />
           </TabPanel>

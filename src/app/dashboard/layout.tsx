@@ -15,6 +15,7 @@ import { BiHome, BiMenuAltLeft, BiMenu } from "react-icons/bi";
 import { FiUsers, FiBarChart2, FiSettings } from "react-icons/fi";
 import { GrProjects } from "react-icons/gr";
 import Topbar from "@/components/Topbar";
+import { IconType } from "react-icons/lib";
 
 const modules = [
   { name: "Overview", icon: BiHome, path: "/dashboard" },
@@ -48,6 +49,7 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
         bg={sidebarBg}
         color={textColor}
         p={5}
+        borderRightRadius="xl"
         borderRightWidth="1px"
         borderColor={sidebarBorderColor}
         transition="width 0.3s ease-in-out"
@@ -110,7 +112,7 @@ const NavItem = ({
   onClick,
   collapsed,
 }: {
-  icon: any;
+  icon: IconType;
   label: string;
   isActive: boolean;
   hoverColor: string;
@@ -137,9 +139,9 @@ const NavItem = ({
         }}
         onClick={onClick}
       >
-        <IconButton
+       <IconButton
           aria-label={label}
-          icon={icon({ size: 20 })}
+          icon={<Box as={icon} size={20} />} // Correct usage here
           variant="ghost"
           color="inherit"
           _hover={{ bg: "transparent" }}

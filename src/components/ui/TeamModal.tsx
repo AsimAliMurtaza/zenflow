@@ -38,6 +38,7 @@ import {
   }: TeamModalProps) => {
     const modalBg = useColorModeValue("white", "gray.800");
     const inputBg = useColorModeValue("gray.100", "gray.700");
+    const inputColor = useColorModeValue("gray.200", "gray.600") ;
   
     return (
       <Modal isOpen={isOpen} onClose={onClose}>
@@ -59,7 +60,7 @@ import {
                   borderRadius="xl"
                   bg={inputBg}
                   border="none"
-                  _focus={{ bg: useColorModeValue("gray.200", "gray.600") }}
+                  _focus={{ bg: inputColor}}
                 />
               </FormControl>
             ) : (
@@ -72,7 +73,7 @@ import {
                   borderRadius="xl"
                   bg={inputBg}
                   border="none"
-                  _focus={{ bg: useColorModeValue("gray.200", "gray.600") }}
+                  _focus={{ bg: inputColor}} 
                 />
               </FormControl>
             )}

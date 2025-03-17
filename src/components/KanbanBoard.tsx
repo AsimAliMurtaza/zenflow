@@ -20,7 +20,7 @@ const KanbanBoard = () => {
   const [tasks, setTasks] = useState<TaskBoard>({
     "To Do": [],
     "In Progress": [],
-    Completed: [],
+    "Completed": [],
   });
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
@@ -67,7 +67,7 @@ const KanbanBoard = () => {
             acc[task.status as keyof TaskBoard].push(task);
             return acc;
           },
-          { "To Do": [], "In Progress": [], Completed: [] } as TaskBoard
+          { "To Do": [], "In Progress": [], "Completed": [] } as TaskBoard
         );
         setTasks(groupedTasks);
       } catch (error) {

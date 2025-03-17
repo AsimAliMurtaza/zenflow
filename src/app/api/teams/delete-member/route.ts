@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Team from "@/models/Team";
+import { TeamMember } from "@/types/types";
 
 export async function DELETE(request: Request) {
   try {
@@ -15,7 +16,7 @@ export async function DELETE(request: Request) {
 
     // Filter out the member to be deleted
     team.members = team.members.filter(
-      (member: any) => member._id.toString() !== memberId
+      (member: TeamMember) => member._id.toString() !== memberId
     );
 
     await team.save();

@@ -15,7 +15,6 @@ import {
   IconButton,
   useColorModeValue,
   Flex,
-  Spacer,
   Tooltip,
 } from "@chakra-ui/react";
 import { EditIcon, DeleteIcon, TimeIcon } from "@chakra-ui/icons";
@@ -34,6 +33,9 @@ const ProjectCard = ({
   onDelete,
   onClick,
 }: ProjectCardProps) => {
+  const cardHoverBG = useColorModeValue("gray.50", "gray.700");
+  const cardBG = useColorModeValue("white", "gray.800");
+  const tagColor = useColorModeValue("gray.100", "gray.700");
   if (!project) {
     return (
       <Box p={4} bg="red.50" borderRadius="xl" boxShadow="md">
@@ -48,12 +50,12 @@ const ProjectCard = ({
       p={6}
       borderRadius="2xl"
       shadow="xl"
-      bg={useColorModeValue("white", "gray.800")}
+      bg={cardBG}
       transition="transform 0.2s, box-shadow 0.2s, background-color 0.2s"
       _hover={{
         transform: "translateY(-4px)",
         boxShadow: "2xl",
-        bg: useColorModeValue("gray.50", "gray.700"), // Subtle hover background
+        bg: { cardHoverBG }, // Subtle hover background
       }}
       role="group" // Improve screen reader experience
     >
@@ -104,7 +106,7 @@ const ProjectCard = ({
           hasStripe
           isAnimated
           sx={{
-            '--progress-bar-bg': 'linear-gradient(to right, #63B3ED, #3182CE)', // Subtle gradient
+            "--progress-bar-bg": "linear-gradient(to right, #63B3ED, #3182CE)", // Subtle gradient
           }}
         />
 
@@ -128,7 +130,7 @@ const ProjectCard = ({
             colorScheme={project.dueDate ? "red" : "gray"}
             borderRadius="full"
             variant="subtle"
-            bg={useColorModeValue("gray.100", "gray.700")} // added background
+            bg={tagColor} // added background
           >
             <TagLeftIcon as={TimeIcon} />
             <TagLabel>Due: {project.dueDate || "No due date"}</TagLabel>

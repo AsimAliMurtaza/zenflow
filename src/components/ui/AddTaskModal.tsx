@@ -1,4 +1,5 @@
 // components/ui/AddTaskModal.tsx
+import { TeamMember } from "@/types/types";
 import {
   Modal,
   ModalOverlay,
@@ -23,7 +24,7 @@ type AddTaskModalProps = {
   taskPriority: string;
   taskDueDate: string;
   taskAssignedTo: string;
-  teamMembers: any[]; // Replace `any` with a proper type (e.g., `TeamMember`)
+  teamMembers: TeamMember[]; // Replace `any` with a proper type (e.g., `TeamMember`)
   onTaskTitleChange: (value: string) => void;
   onTaskDescriptionChange: (value: string) => void;
   onTaskPriorityChange: (value: string) => void;

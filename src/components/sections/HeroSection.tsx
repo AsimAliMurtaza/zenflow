@@ -12,12 +12,9 @@ import {
   Icon,
   useColorModeValue,
   Divider,
-  FormControl,
-  FormLabel,
-  Input,
 } from "@chakra-ui/react";
 import { signIn } from "next-auth/react";
-import { FaGithub, FaGithubAlt, FaGoogle, FaMicrosoft } from "react-icons/fa";
+import { FaGithub, FaGoogle } from "react-icons/fa";
 import { Typewriter } from "react-simple-typewriter";
 
 const HeroSection = () => {

@@ -21,6 +21,7 @@ export type TaskBoard = {
 
 // TeamMember Type
 export type TeamMember = {
+  _id: string;
   name: string;
   email: string;
   role: string;

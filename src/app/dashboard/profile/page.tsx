@@ -17,9 +17,6 @@ import {
   Badge,
   Card,
   CardBody,
-  Tag,
-  TagLabel,
-  TagLeftIcon,
   Grid,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";

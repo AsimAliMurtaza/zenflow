@@ -2,13 +2,14 @@
 import {
   VStack,
   Heading,
-  Button,
   Box,
   useColorModeValue,
+  IconButton,
 } from "@chakra-ui/react";
 import { Droppable, Draggable } from "@hello-pangea/dnd";
 import TaskCard from "./TaskCard";
 import { Task } from "@/types/types";
+import { AddIcon } from "@chakra-ui/icons";
 
 type TaskColumnProps = {
   status: string;
@@ -39,7 +40,7 @@ const TaskColumn = ({
 }: TaskColumnProps) => {
   const columnBg = useColorModeValue("gray.100", "gray.700");
   const headingColor = useColorModeValue("blue.500", "blue.400");
-  const buttonBg = useColorModeValue("gray.200", "gray.600");
+  const buttonBg = useColorModeValue("blue.300", "gray.600");
   const buttonHoverBg = useColorModeValue("gray.300", "gray.500");
   const columnShadow = useColorModeValue("md", "md-dark");
 
@@ -93,18 +94,18 @@ const TaskColumn = ({
             </Draggable>
           ))}
           {provided.placeholder}
-          <Button
+          <IconButton
             mt={2}
-            w="full"
-            size="sm"
+            aria-label="Add Task"
+            w="30px"
+            size="md"
             onClick={onAddTask}
             bg={buttonBg}
             _hover={{ bg: buttonHoverBg }}
             borderRadius="full"
+            icon={<AddIcon />}
             boxShadow="md"
-          >
-            Add Task
-          </Button>
+          />
         </VStack>
       )}
     </Droppable>

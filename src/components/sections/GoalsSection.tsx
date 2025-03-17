@@ -19,7 +19,6 @@ import { motion } from "framer-motion";
 import { FaCheckCircle, FaStar, FaBullseye } from "react-icons/fa";
 
 const MotionBox = motion(Box);
-const MotionVStack = motion(VStack);
 const MotionGridItem = motion(GridItem);
 
 const goalsData = [
@@ -164,8 +163,8 @@ const GoalsSection = () => {
             Real Results, Real Stories
           </Heading>
           <Text fontSize="md" color={textColor} textAlign="center">
-            "With Zenflow, we not only met our goals but exceeded them. It's
-            truly transformative."
+          &quot;With Zenflow, we not only met our goals but exceeded them. It&apos;s
+            truly transformative.&quot;
           </Text>
           <Text fontSize="sm" color={useColorModeValue("gray.500", "gray.400")}>
             - Alex Rivera, Growth Strategist

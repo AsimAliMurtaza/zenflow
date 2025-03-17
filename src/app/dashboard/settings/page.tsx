@@ -4,19 +4,13 @@ import {
   Box,
   Heading,
   Text,
-  VStack,
   Switch,
   FormControl,
   FormLabel,
   useColorMode,
   useColorModeValue,
   Divider,
-  HStack,
   Select,
-  Slider,
-  SliderTrack,
-  SliderFilledTrack,
-  SliderThumb,
   SimpleGrid,
 } from "@chakra-ui/react";
 import { useState } from "react";
@@ -24,7 +18,6 @@ import { useState } from "react";
 const Settings = () => {
   const { colorMode, toggleColorMode } = useColorMode();
   const [notificationPreference, setNotificationPreference] = useState("all");
-  const [fontSize, setFontSize] = useState(16);
 
   const cardBg = useColorModeValue("white", "gray.800");
   const dividerColor = useColorModeValue("gray.200", "gray.700");
@@ -33,7 +26,7 @@ const Settings = () => {
   return (
     <Box p={6} maxW="container.lg" mx="auto">
       <Heading size="2xl" mb={6} fontWeight="semibold">
-      Settings
+        Settings
       </Heading>
 
       <SimpleGrid columns={{ base: 1, md: 2 }} spacing={8}>
@@ -53,28 +46,6 @@ const Settings = () => {
               isChecked={colorMode === "dark"}
               onChange={toggleColorMode}
             />
-          </FormControl>
-
-          <FormControl mb={4}>
-            <FormLabel color={labelColor}>Font Size</FormLabel>
-            <HStack>
-              <Slider
-                aria-label="font-size"
-                value={fontSize}
-                onChange={(val) => setFontSize(val)}
-                min={12}
-                max={20}
-                step={1}
-              >
-                <SliderTrack>
-                  <SliderFilledTrack />
-                </SliderTrack>
-                <SliderThumb />
-              </Slider>
-              <Text fontSize="sm" color={labelColor}>
-                {fontSize}px
-              </Text>
-            </HStack>
           </FormControl>
         </Box>
 
@@ -99,7 +70,13 @@ const Settings = () => {
         </Box>
 
         {/* Account Settings */}
-        <Box p={6} borderRadius="xl" boxShadow="md" bg={cardBg} gridColumn="1 / -1">
+        <Box
+          p={6}
+          borderRadius="xl"
+          boxShadow="md"
+          bg={cardBg}
+          gridColumn="1 / -1"
+        >
           <Heading size="md" mb={4} fontWeight="medium">
             Account
           </Heading>

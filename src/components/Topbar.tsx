@@ -26,7 +26,6 @@ const Topbar = () => {
   const inputBg = useColorModeValue("gray.100", "gray.700");
   const iconColor = useColorModeValue("gray.600", "gray.300");
   const hoverBg = useColorModeValue("gray.200", "gray.600");
-  const menuBg = useColorModeValue("white", "gray.800");
 
   return (
     <Flex
@@ -92,7 +91,6 @@ const Topbar = () => {
           />
         </MenuButton>
         <MenuList
-          bg={menuBg}
           zIndex="1200"
           borderColor={borderColor}
           shadow="xl"

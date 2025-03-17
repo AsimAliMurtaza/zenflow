@@ -1,11 +1,12 @@
 "use client";
+
+import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import {
   Button,
-  Box,
   Text,
   Flex,
   Card,
@@ -16,7 +17,7 @@ import {
   useToast,
 } from "@chakra-ui/react";
 
-export default function AcceptInvite() {
+const AcceptInviteComponent = () => {
   const searchParams = useSearchParams();
   const { data: session } = useSession();
   const router = useRouter();
@@ -26,7 +27,7 @@ export default function AcceptInvite() {
 
   useEffect(() => {
     if (!token) router.push("/");
-  }, [token]);
+  }, [router, token]);
 
   const acceptInvite = async () => {
     setLoading(true);
@@ -57,6 +58,8 @@ export default function AcceptInvite() {
         });
       }
     } catch (error) {
+      console.error("Error accepting invite:", error);
+
       toast({
         title: "Error Accepting Invite",
         description: "An unexpected error occurred.",
@@ -70,27 +73,15 @@ export default function AcceptInvite() {
   };
 
   return (
-    <Flex
-      minH="100vh"
-      align="center"
-      justify="center"
-      bg="gray.50"
-      p={4}
-    >
-      <Card
-        maxW="md"
-        w="full"
-        borderRadius="2xl"
-        boxShadow="lg"
-        bg="white"
-      >
+    <Flex minH="100vh" align="center" justify="center" bg="gray.50" p={4}>
+      <Card maxW="md" w="full" borderRadius="2xl" boxShadow="lg" bg="white">
         <CardBody textAlign="center" p={8}>
           <Heading size="lg" mb={4} color="gray.700">
             🎉 Team Invitation
           </Heading>
           <Text fontSize="md" color="gray.600" mb={6}>
-            You have been invited to join a team! Click the button below to accept
-            the invitation.
+            You have been invited to join a team! Click the button below to
+            accept the invitation.
           </Text>
         </CardBody>
         <CardFooter justify="center" p={6}>
@@ -111,4 +102,10 @@ export default function AcceptInvite() {
       </Card>
     </Flex>
   );
-}
+};
+
+const AcceptInvite = dynamic(() => Promise.resolve(AcceptInviteComponent), {
+  ssr: false,
+});
+
+export default AcceptInvite;
