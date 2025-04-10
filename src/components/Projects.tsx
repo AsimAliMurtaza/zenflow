@@ -86,10 +86,13 @@ const Projects = ({ projects: initialProjects, teams }: ProjectsProps) => {
 
   // Update an existing project
   const updateProject = async (id: string, projectData: Partial<Project>) => {
+    
+    const x:any = {...projectData};
+    x.assignedTeam = assignedTeam?._id; 
     const response = await fetch(`/api/projects?id=${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(projectData),
+      body: JSON.stringify(x),
     });
 
     if (response.ok) {
@@ -172,6 +175,7 @@ const Projects = ({ projects: initialProjects, teams }: ProjectsProps) => {
   const handleProjectClick = (id: string) => {
     router.push(`/dashboard/projects/${id}`);
   };
+  console.log("detected: ", projects)
 
   return (
     <Box p={8} bg={bgColor} color={textColor} minH="100vh">
@@ -199,17 +203,19 @@ const Projects = ({ projects: initialProjects, teams }: ProjectsProps) => {
       </Flex>
 
       {/* Projects Grid */}
+      {Array.isArray(projects) && 
       <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
         {projects.map((project) => (
           <ProjectCard
-            key={project._id}
-            project={project}
-            onEdit={() => openModal(project)}
-            onDelete={() => removeProject(project._id)}
-            onClick={() => handleProjectClick(project._id)}
+          key={project._id}
+          project={project}
+          onEdit={() => openModal(project)}
+          onDelete={() => removeProject(project._id)}
+          onClick={() => handleProjectClick(project._id)}
           />
         ))}
       </SimpleGrid>
+      }
 
       {/* Add/Edit Project Modal */}
       <ProjectModal

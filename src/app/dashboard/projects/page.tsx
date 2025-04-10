@@ -17,5 +17,8 @@ export default async function ProjectsPage() {
   );
   const teams = await teamsResponse.json();
 
+  if(!projects || !teams) {
+    return <div>Failed to load data</div>;
+  }
   return <Projects projects={projects} teams={teams} />;
 }

@@ -17,13 +17,14 @@ export async function POST(
   { params }: { params: { projectID: string } }
 ) {
   await connectDB();
-  const { title, description, status, priority } = await request.json();
+  const { title, description, status, priority, dueDate } = await request.json();
 
   const task = new Task({
     title,
     description,
     status,
     priority,
+    dueDate,
     project: params.projectID,
   });
 
