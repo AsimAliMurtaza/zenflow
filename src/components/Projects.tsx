@@ -18,6 +18,8 @@ import ProjectCard from "./ui/ProjectCard";
 import ProjectModal from "./ui/ProjectModal";
 import { Project, Team, TaskStatus } from "@/types/types";
 
+
+
 type ProjectsProps = {
   projects: Project[];
   teams: Team[];
@@ -86,8 +88,9 @@ const Projects = ({ projects: initialProjects, teams }: ProjectsProps) => {
 
   // Update an existing project
   const updateProject = async (id: string, projectData: Partial<Project>) => {
-    
+    /*eslint-disable-next-line @typescript-eslint/no-explicit-any*/
     const x:any = {...projectData};
+    /*eslint-enable-next-line @typescript-eslint/no-explicit-any*/
     x.assignedTeam = assignedTeam?._id; 
     const response = await fetch(`/api/projects?id=${id}`, {
       method: "PUT",
