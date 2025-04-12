@@ -16,6 +16,7 @@ import { FiUsers, FiBarChart2, FiSettings } from "react-icons/fi";
 import { GrProjects } from "react-icons/gr";
 import Topbar from "@/components/Topbar";
 import { IconType } from "react-icons/lib";
+import AIAssistant from "@/components/AIAssistant";
 
 const modules = [
   { name: "Overview", icon: BiHome, path: "/dashboard" },
@@ -99,6 +100,7 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
       >
         <Topbar />
         {children}
+        <AIAssistant />
       </Box>
     </Flex>
   );
@@ -139,7 +141,7 @@ const NavItem = ({
         }}
         onClick={onClick}
       >
-       <IconButton
+        <IconButton
           aria-label={label}
           icon={<Box as={icon} size={20} />} // Correct usage here
           variant="ghost"

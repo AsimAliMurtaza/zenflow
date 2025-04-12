@@ -18,8 +18,6 @@ import ProjectCard from "./ui/ProjectCard";
 import ProjectModal from "./ui/ProjectModal";
 import { Project, Team, TaskStatus } from "@/types/types";
 
-
-
 type ProjectsProps = {
   projects: Project[];
   teams: Team[];
@@ -29,6 +27,7 @@ const Projects = ({ projects: initialProjects, teams }: ProjectsProps) => {
   const [projects, setProjects] = useState<Project[]>(initialProjects);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [projectName, setProjectName] = useState("");
+
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState<TaskStatus>("In Progress");
   const [assignedTeam, setAssignedTeam] = useState<Team | null>(null);
@@ -38,6 +37,13 @@ const Projects = ({ projects: initialProjects, teams }: ProjectsProps) => {
   const router = useRouter();
   const bgColor = useColorModeValue("white", "gray.800");
   const textColor = useColorModeValue("gray.800", "gray.100");
+
+  const {
+    isOpen: isProjectModalOpen,
+    onClose: onProjectModalClose,
+  } = useDisclosure();
+
+  console.log(isOpen);
 
   // Open modal for adding or editing
   const openModal = (project: Project | null = null) => {
@@ -89,9 +95,9 @@ const Projects = ({ projects: initialProjects, teams }: ProjectsProps) => {
   // Update an existing project
   const updateProject = async (id: string, projectData: Partial<Project>) => {
     /*eslint-disable-next-line @typescript-eslint/no-explicit-any*/
-    const x:any = {...projectData};
+    const x: any = { ...projectData };
     /*eslint-enable-next-line @typescript-eslint/no-explicit-any*/
-    x.assignedTeam = assignedTeam?._id; 
+    x.assignedTeam = assignedTeam?._id;
     const response = await fetch(`/api/projects?id=${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -178,10 +184,10 @@ const Projects = ({ projects: initialProjects, teams }: ProjectsProps) => {
   const handleProjectClick = (id: string) => {
     router.push(`/dashboard/projects/${id}`);
   };
-  console.log("detected: ", projects)
-
+  console.log("detected: ", projects);
   return (
-    <Box p={8} bg={bgColor} color={textColor} minH="100vh">
+    <Box p={8} bg={bgColor} color={textColor} minH="100vh" position="relative">
+      {/* Main Content */}
       <Flex justify="space-between" align="center" mb={8}>
         <Box>
           <Heading size="2xl" fontWeight="bold" mb={2}>
@@ -206,24 +212,24 @@ const Projects = ({ projects: initialProjects, teams }: ProjectsProps) => {
       </Flex>
 
       {/* Projects Grid */}
-      {Array.isArray(projects) && 
-      <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
-        {projects.map((project) => (
-          <ProjectCard
-          key={project._id}
-          project={project}
-          onEdit={() => openModal(project)}
-          onDelete={() => removeProject(project._id)}
-          onClick={() => handleProjectClick(project._id)}
-          />
-        ))}
-      </SimpleGrid>
-      }
+      {Array.isArray(projects) && (
+        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+          {projects.map((project) => (
+            <ProjectCard
+              key={project._id}
+              project={project}
+              onEdit={() => openModal(project)}
+              onDelete={() => removeProject(project._id)}
+              onClick={() => handleProjectClick(project._id)}
+            />
+          ))}
+        </SimpleGrid>
+      )}
 
-      {/* Add/Edit Project Modal */}
+      {/* Project Modal */}
       <ProjectModal
-        isOpen={isOpen}
-        onClose={onClose}
+        isOpen={isProjectModalOpen}
+        onClose={onProjectModalClose}
         projectName={projectName}
         description={description}
         status={status}

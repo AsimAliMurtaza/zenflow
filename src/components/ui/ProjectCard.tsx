@@ -34,7 +34,7 @@ const ProjectCard = ({
   onClick,
 }: ProjectCardProps) => {
   const cardHoverBG = useColorModeValue("gray.50", "gray.700");
-  const cardBG = useColorModeValue("white", "gray.800");
+  const cardBG = useColorModeValue("white", "gray.900");
   const tagColor = useColorModeValue("gray.100", "gray.700");
   if (!project) {
     return (
@@ -133,7 +133,7 @@ const ProjectCard = ({
             bg={tagColor} // added background
           >
             <TagLeftIcon as={TimeIcon} />
-            <TagLabel>Due: {project.dueDate || "No due date"}</TagLabel>
+            <TagLabel>Due: {project?.dueDate || "No due date"}</TagLabel>
           </Tag>
         </VStack>
       </CardBody>
