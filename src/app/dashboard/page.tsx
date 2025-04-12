@@ -38,6 +38,8 @@ import { StatsCard } from "@/components/ui/StatsCard";
 import { ProjectListCard } from "@/components/ui/ProjectListCard";
 import { TaskOverviewCard } from "@/components/ui/TaskOverviewCard";
 import { DashboardReports, TaskReport } from "@/types/dashboard";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 const DashboardContent = () => {
   const bgColor = useColorModeValue("gray.50", "gray.900");
@@ -47,13 +49,17 @@ const DashboardContent = () => {
   const iconColor = useColorModeValue("gray.600", "gray.300");
   const statCardHover = useColorModeValue("gray.100", "gray.700");
   const toast = useToast();
+  const router = useRouter();
 
+  const { data: session } = useSession();
   const [reports, setReports] = useState<DashboardReports | null>(null);
   const [taskReports, setTaskReports] = useState<TaskReport[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 2;
+
+  const isAdmin = session?.user?.role === "admin";
 
   useEffect(() => {
     async function fetchAllReports() {
@@ -95,6 +101,10 @@ const DashboardContent = () => {
 
     fetchAllReports();
   }, [toast]);
+
+  if (isAdmin) {
+    router.push("/redirect");
+  }
 
   const formatDate = (dateString: string) => {
     try {
