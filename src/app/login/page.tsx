@@ -26,8 +26,10 @@ export default function LoginPage() {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
+
   const toast = useToast();
   const router = useRouter();
+
 
   // Color mode values
   const bgColor = useColorModeValue("gray.50", "gray.900");
@@ -45,7 +47,7 @@ export default function LoginPage() {
       email,
       password,
       redirect: true,
-      callbackUrl: "/dashboard",
+      callbackUrl: "/redirect", // ⬅ redirect all users here temporarily
     });
 
     setLoading(false);
@@ -56,15 +58,6 @@ export default function LoginPage() {
         description: "Invalid email or password.",
         status: "error",
         duration: 5000,
-        isClosable: true,
-      });
-    } else if (res?.ok) {
-      router.push("/dashboard");
-      toast({
-        title: "Login Successful",
-        description: "Welcome back!",
-        status: "success",
-        duration: 3000,
         isClosable: true,
       });
     }
@@ -110,7 +103,10 @@ export default function LoginPage() {
                 borderColor={borderColor}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                _focus={{ borderColor: inputFocusBorderColor, boxShadow: "outline" }}
+                _focus={{
+                  borderColor: inputFocusBorderColor,
+                  boxShadow: "outline",
+                }}
               />
             </FormControl>
 
@@ -126,7 +122,10 @@ export default function LoginPage() {
                 borderColor={borderColor}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                _focus={{ borderColor: inputFocusBorderColor, boxShadow: "outline" }}
+                _focus={{
+                  borderColor: inputFocusBorderColor,
+                  boxShadow: "outline",
+                }}
               />
             </FormControl>
 

@@ -6,6 +6,7 @@ interface IUser extends Document {
   name?: string;
   image?: string;
   gender?: string;
+  role?: string;
 }
 
 const UserSchema: Schema = new Schema({
@@ -30,6 +31,11 @@ const UserSchema: Schema = new Schema({
   gender: {
     type: String,
     default: "",
+  },
+  role: {
+    type: String,
+    enum: ["admin", "user"],
+    default: "user",
   },
 });
 
