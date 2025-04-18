@@ -1,5 +1,5 @@
 // components/ui/AddTaskModal.tsx
-import { TeamMember } from "@/types/types";
+import { Team } from "@/types/types";
 import {
   Modal,
   ModalOverlay,
@@ -24,14 +24,18 @@ type AddTaskModalProps = {
   taskPriority: string;
   taskDueDate: string;
   taskAssignedTo: string;
-  teamMembers: TeamMember[]; // Replace `any` with a proper type (e.g., `TeamMember`)
+  team: Team; // Replace `any` with a proper type (e.g., `TeamMember`)
   onTaskTitleChange: (value: string) => void;
   onTaskDescriptionChange: (value: string) => void;
   onTaskPriorityChange: (value: string) => void;
   onTaskDueDateChange: (value: string) => void;
   onTaskAssignedToChange: (value: string) => void;
   onAddTask: () => void;
+  taskSprint: string;
+  onTaskSprintChange: (value: string) => void;
+  sprints: { _id: string; name: string }[]; // Replace with your actual sprint type
 };
+
 
 const AddTaskModal = ({
   isOpen,
@@ -41,13 +45,16 @@ const AddTaskModal = ({
   taskPriority,
   taskDueDate,
   taskAssignedTo,
-  teamMembers,
+  team,
   onTaskTitleChange,
   onTaskDescriptionChange,
   onTaskPriorityChange,
   onTaskDueDateChange,
   onTaskAssignedToChange,
   onAddTask,
+  taskSprint,
+  onTaskSprintChange,
+  sprints,
 }: AddTaskModalProps) => {
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -97,10 +104,24 @@ const AddTaskModal = ({
               placeholder="Select a team member"
               value={taskAssignedTo}
               onChange={(e) => onTaskAssignedToChange(e.target.value)}
+            >{(team !== void 0) && (team.members !== void 0) && team.members.map((member:string, index:number) => (
+                <option key={index} value={member}>
+                {member}
+                </option>
+              ))
+            }
+            </Select>
+          </FormControl>
+          <FormControl>
+            <FormLabel>Sprint</FormLabel>
+            <Select
+              placeholder="Select Sprint"
+              value={taskSprint}
+              onChange={(e) => onTaskSprintChange(e.target.value)}
             >
-              {teamMembers.map((member) => (
-                <option key={member._id} value={member._id}>
-                  {member.name}
+              {sprints.map((sprint) => (
+                <option key={sprint._id} value={sprint._id}>
+                  {sprint.name}
                 </option>
               ))}
             </Select>

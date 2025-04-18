@@ -1,23 +1,34 @@
 import { NextResponse } from "next/server";
-import connectDB from "@/lib/mongodb";
 import Task from "@/models/Task";
+import Sprint from "@/models/Sprint";
+import dbConnect from "@/lib/mongodb";
 
 // GET all tasks for a project
 export async function GET(
   request: Request,
   { params }: { params: { projectID: string } }
 ) {
-  await connectDB();
+  await dbConnect();
   const tasks = await Task.find({ project: params.projectID });
   return NextResponse.json(tasks);
 }
-// POST a new task for a project
+
 export async function POST(
   request: Request,
   { params }: { params: { projectID: string } }
 ) {
-  await connectDB();
-  const { title, description, status, priority, dueDate } = await request.json();
+  await dbConnect();
+  const {
+    title,
+    description,
+    status,
+    priority,
+    dueDate,
+    assignedTo,
+    sprint,
+    createdBy,
+    projectID,
+  } = await request.json();
 
   const task = new Task({
     title,
@@ -25,19 +36,49 @@ export async function POST(
     status,
     priority,
     dueDate,
+    assignedTo,
+    sprint,
     project: params.projectID,
+    createdBy,
+    projectID,
   });
 
   await task.save();
+
+  if (sprint) {
+    await Sprint.findByIdAndUpdate(sprint, { $push: { tasks: task._id } });
+  }
+
   return NextResponse.json(task);
 }
+
+// // POST a new task for a project
+// export async function POST(
+//   request: Request,
+//   { params }: { params: { projectID: string } }
+// ) {
+//   await connectDB();
+//   const { title, description, status, priority, dueDate } = await request.json();
+
+//   const task = new Task({
+//     title,
+//     description,
+//     status,
+//     priority,
+//     dueDate,
+//     project: params.projectID,
+//   });
+
+//   await task.save();
+//   return NextResponse.json(task);
+// }
 
 // PUT update a task
 export async function PUT(
   request: Request,
   { params }: { params: { projectID: string } }
 ) {
-  await connectDB();
+  await dbConnect();
   console.log("params", params);
   const { id, title, description, status, priority } = await request.json();
 
@@ -55,7 +96,7 @@ export async function DELETE(
   request: Request,
   { params }: { params: { projectID: string } }
 ) {
-  await connectDB();
+  await dbConnect();
   console.log("params", params);
   const { id } = await request.json();
 

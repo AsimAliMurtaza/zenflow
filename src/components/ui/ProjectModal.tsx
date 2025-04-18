@@ -22,13 +22,13 @@ type ProjectModalProps = {
   projectName: string;
   description: string;
   status: string;
-  assignedTeam: Team | null;
+  assignedTeam: string;
   dueDate: string;
   teams: Team[];
   onProjectNameChange: (value: string) => void;
   onDescriptionChange: (value: string) => void;
   onStatusChange: (value: TaskStatus) => void;
-  onAssignedTeamChange: (value: Team) => void;
+  onAssignedTeamChange: (value: string) => void;
   onDueDateChange: (value: string) => void;
   onSave: () => void;
   isEditing: boolean;
@@ -109,13 +109,14 @@ const ProjectModal = ({
             <FormLabel>Assign Team</FormLabel>
             <Select
               placeholder="Assign Team"
-              value={assignedTeam ? assignedTeam._id : ""}
+              value={assignedTeam !== "" ? (assignedTeam as string) : "No teams found"}
               onChange={(e) => {
                 const selectedTeam = teams.find(
                   (team) => team._id === e.target.value
                 );
                 if (selectedTeam) {
-                  onAssignedTeamChange(selectedTeam);
+
+                  onAssignedTeamChange(selectedTeam._id);
                 }
               }}
               borderRadius="xl"

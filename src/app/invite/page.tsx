@@ -3,7 +3,6 @@
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import {
   Button,
@@ -19,10 +18,10 @@ import {
 
 const AcceptInviteComponent = () => {
   const searchParams = useSearchParams();
-  const { data: session } = useSession();
   const router = useRouter();
   const toast = useToast();
   const token = searchParams.get("token");
+  const email = searchParams.get("email");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -35,7 +34,7 @@ const AcceptInviteComponent = () => {
       const res = await fetch("/api/teams/invite/accept", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, email: session?.user?.email }),
+        body: JSON.stringify({ token, email }),
       });
 
       if (res.ok) {

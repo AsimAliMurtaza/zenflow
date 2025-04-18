@@ -6,11 +6,13 @@ export type TaskPriority = "Low" | "Medium" | "High";
 export type Task = {
   _id: string;
   title: string;
+  sprint: Sprint;
   description: string;
   status: TaskStatus;
   priority: TaskPriority;
   dueDate?: string | Date;
-  assignedTo?: TeamMember | null;
+  assignedTo?: string | null;
+  project: Project;
 };
 
 export type TaskBoard = {
@@ -31,6 +33,7 @@ export type TeamMember = {
 export type Sprint = {
   _id: string;
   name: string;
+  projectId: Project;
   startDate: string | Date;
   endDate: string | Date;
   tasks: Task[];
@@ -48,10 +51,9 @@ export type Project = {
   name: string;
   description: string;
   status: TaskStatus;
-  assignedTeam: Team | null; // Use Team instead of string
+  assignedTeam: string | null; // Use Team instead of string
   dueDate: string;
   completion?: number; // Optional
-  tasks?: Task[]; // Optional
   sprints?: Sprint[]; // Optional
   createdAt?: Date; // Optional
   updatedAt?: Date; // Optional

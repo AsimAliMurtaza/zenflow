@@ -66,20 +66,38 @@ const DashboardContent = () => {
       try {
         setLoading(true);
 
-        const projectResponse = await fetch("/api/projects/reports");
+        const userId = session?.user?.id;
+
+        // 📊 Fetch project reports
+        const projectResponse = await fetch("/api/projects/reports", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${userId}`,
+          },
+        });
+
         if (!projectResponse.ok) {
           throw new Error(
             `Failed to fetch project reports: ${projectResponse.status}`
           );
         }
+
         const projectData: DashboardReports = await projectResponse.json();
 
-        const taskResponse = await fetch("/api/tasks/reports");
+        // ✅ Fetch task reports with same Bearer
+        const taskResponse = await fetch("/api/tasks/reports", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${userId}`,
+          },
+        });
+
         if (!taskResponse.ok) {
           throw new Error(
             `Failed to fetch task reports: ${taskResponse.status}`
           );
         }
+
         const taskData: TaskReport[] = await taskResponse.json();
 
         setReports(projectData);
@@ -100,7 +118,7 @@ const DashboardContent = () => {
     }
 
     fetchAllReports();
-  }, [toast]);
+  }, [toast, session, router]);
 
   if (isAdmin) {
     router.push("/redirect");

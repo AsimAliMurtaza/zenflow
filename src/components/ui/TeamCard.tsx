@@ -9,13 +9,11 @@ import {
   VStack,
   Avatar,
   Text,
-  Tag,
-  TagLabel,
-  Button,
   useColorModeValue,
   Tooltip,
+  Flex,
 } from "@chakra-ui/react";
-import { DeleteIcon, AddIcon } from "@chakra-ui/icons";
+import { DeleteIcon, AddIcon, MinusIcon } from "@chakra-ui/icons";
 import { Team } from "@/types/types";
 
 type TeamCardProps = {
@@ -33,12 +31,14 @@ const TeamCard = ({
 }: TeamCardProps) => {
   const cardBg = useColorModeValue("white", "gray.800");
   const memberBg = useColorModeValue("gray.100", "gray.700");
+  const textColor = useColorModeValue("gray.700", "gray.200");
+  const headingColor = useColorModeValue("gray.900", "gray.100");
 
   return (
-    <Card shadow="xl" borderRadius="2xl" bg={cardBg}>
-      <CardHeader>
-        <HStack justify="space-between">
-          <Heading size="lg" fontWeight="semibold">
+    <Card shadow="md" borderRadius="lg" bg={cardBg} overflow="hidden">
+      <CardHeader p={4}>
+        <Flex align="center" justify="space-between">
+          <Heading size="md" fontWeight="semibold" color={headingColor}>
             {team.name}
           </Heading>
           <Tooltip label="Delete Team">
@@ -47,61 +47,61 @@ const TeamCard = ({
               icon={<DeleteIcon />}
               colorScheme="red"
               variant="ghost"
+              size="sm"
               onClick={() => onDeleteTeam(team._id)}
             />
           </Tooltip>
-        </HStack>
+        </Flex>
       </CardHeader>
-      <CardBody>
+      <CardBody p={4}>
         {team.members && team.members.length > 0 ? (
-          <VStack align="start" spacing={4}>
+          <VStack align="start" spacing={3}>
             {team.members.map((memberEmail: string, index: number) => (
-              <HStack
+              <Flex
                 key={index}
+                align="center"
                 justify="space-between"
                 w="full"
                 p={2}
-                borderRadius="lg"
+                borderRadius="md"
                 bg={memberBg}
               >
-                <HStack>
-                  <Avatar name={memberEmail} size="sm" />
-                  <VStack align="start" spacing={0}>
-                    <Text fontWeight="medium">{memberEmail}</Text>
-                  </VStack>
+                <HStack spacing={2}>
+                  <Avatar name={memberEmail} size="xs" />
+                  <Text fontSize="sm" color={textColor}>
+                    {memberEmail}
+                  </Text>
                 </HStack>
-                <HStack>
-                  <Tag colorScheme="blue" borderRadius="full" size="sm">
-                    <TagLabel>Member</TagLabel>
-                  </Tag>
-                  <Tooltip label="Delete Member">
-                    <IconButton
-                      aria-label="Delete member"
-                      icon={<DeleteIcon />}
-                      colorScheme="red"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onDeleteMember(team._id, memberEmail)}
-                    />
-                  </Tooltip>
-                </HStack>
-              </HStack>
+                <Tooltip label="Remove Member">
+                  <IconButton
+                    aria-label="Remove member"
+                    icon={<MinusIcon />}
+                    colorScheme="red"
+                    variant="ghost"
+                    size="xs"
+                    onClick={() => onDeleteMember(team._id, memberEmail)}
+                  />
+                </Tooltip>
+              </Flex>
             ))}
           </VStack>
         ) : (
-          <Text color="gray.500">No members yet</Text>
+          <Text color="gray.500" fontSize="sm">
+            No members yet.
+          </Text>
         )}
-        <Button
-          mt={4}
-          colorScheme="green"
-          size="sm"
-          borderRadius="full"
-          onClick={() => onAddMember(team._id)}
-          leftIcon={<AddIcon />}
-          boxShadow="md"
-        >
-          Add Member
-        </Button>
+        <Flex justify="end" mt={4}>
+          <Tooltip label="Add Member">
+            <IconButton
+              aria-label="Add member"
+              icon={<AddIcon />}
+              colorScheme="green"
+              size="sm"
+              borderRadius="full"
+              onClick={() => onAddMember(team._id)}
+            />
+          </Tooltip>
+        </Flex>
       </CardBody>
     </Card>
   );
