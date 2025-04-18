@@ -6,7 +6,7 @@ import sendEmail from "@/lib/sendEmail";
 
 export async function POST(req: Request) {
   await dbConnect();
-  const { email, teamId, invitedBy } = await req.json();
+  const { teamId, email, invitedBy } = await req.json();
 
   // Check if the user exists
   const user = await User.findOne({ email });
@@ -27,7 +27,8 @@ export async function POST(req: Request) {
   const invitation = await Invitation.create({ email, teamId, invitedBy });
 
   // Send email with invitation link
-  const inviteLink = `${process.env.NEXT_PUBLIC_API_URL}/invite?token=${invitation._id}`;
+  const inviteLink = `${process.env.NEXT_PUBLIC_API_URL}/invite?token=${invitation._id}&email=${email}`;
+
   await sendEmail(
     email,
     "Team Invitation",

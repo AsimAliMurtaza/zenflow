@@ -23,6 +23,7 @@ import ProjectCard from "./ui/ProjectCard";
 import ProjectModal from "./ui/ProjectModal";
 
 import { Project, Team, TaskStatus } from "@/types/types";
+import { useSession } from "next-auth/react";
 
 type ProjectsProps = {
   projects: Project[];
@@ -32,7 +33,7 @@ type ProjectsProps = {
 
 const Projects = ({ projects: initialProjects, teams }: ProjectsProps) => {
   const [projects, setProjects] = useState<Project[]>(initialProjects);
-
+  const { data: session } = useSession();
   const [editingProject, setEditingProject] = useState<Project | null>(null);
 
   const [projectName, setProjectName] = useState("");
@@ -41,7 +42,7 @@ const Projects = ({ projects: initialProjects, teams }: ProjectsProps) => {
 
   const [status, setStatus] = useState<TaskStatus>("In Progress");
 
-  const [assignedTeam, setAssignedTeam] = useState<Team | null>(null);
+  const [assignedTeam, setAssignedTeam] = useState<string>("");
 
   const [dueDate, setDueDate] = useState("");
 
@@ -67,7 +68,7 @@ const Projects = ({ projects: initialProjects, teams }: ProjectsProps) => {
 
       setStatus(project.status);
 
-      setAssignedTeam(project.assignedTeam);
+      setAssignedTeam(project.assignedTeam as string);
 
       setDueDate(project.dueDate);
     } else {
@@ -79,7 +80,7 @@ const Projects = ({ projects: initialProjects, teams }: ProjectsProps) => {
 
       setStatus("In Progress");
 
-      setAssignedTeam(null);
+      setAssignedTeam("");
 
       setDueDate("");
     }
@@ -132,7 +133,7 @@ const Projects = ({ projects: initialProjects, teams }: ProjectsProps) => {
     const x: any = { ...projectData };
     /*eslint-enable-next-line @typescript-eslint/no-explicit-any*/
 
-    x.assignedTeam = assignedTeam?._id;
+    x.assignedTeam = assignedTeam? assignedTeam : null;
 
     const response = await fetch(`/api/projects?id=${id}`, {
       method: "PUT",
@@ -208,6 +209,7 @@ const Projects = ({ projects: initialProjects, teams }: ProjectsProps) => {
       tasks: [],
 
       sprints: [],
+      createdBy: session?.user?.id,
     };
 
     if (editingProject) {
@@ -295,6 +297,9 @@ const Projects = ({ projects: initialProjects, teams }: ProjectsProps) => {
               onEdit={() => openModal(project)}
               onDelete={() => removeProject(project._id)}
               onClick={() => handleProjectClick(project._id)}
+              assignedTeam={project.assignedTeam as string}
+              teams={teams}
+
             />
           ))}
         </SimpleGrid>

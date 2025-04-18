@@ -53,10 +53,11 @@ const TaskColumn = ({
           bg={columnBg}
           p={4}
           w={{ base: "100%", md: "320px" }}
-          minH="550px"
+          h="80vh"
           borderRadius="xl"
           shadow={columnShadow}
           align="stretch"
+          overflowY={"auto"}
           transition="all 0.3s"
           spacing={3}
         >

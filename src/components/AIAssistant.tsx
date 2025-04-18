@@ -20,6 +20,7 @@ import {
   Flex,
   Code,
   UseToastOptions,
+  VStack,
 } from "@chakra-ui/react";
 import { ChatIcon } from "@chakra-ui/icons";
 import { useCallback, useState, useRef, useEffect } from "react";
@@ -48,21 +49,23 @@ export default function AIAssistant() {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  // Color scheme
-  const assistantBg = useColorModeValue("white", "gray.800");
-  const userBg = useColorModeValue("blue.50", "blue.900");
-  const assistantText = useColorModeValue("gray.800", "gray.100");
-  const userText = useColorModeValue("blue.800", "blue.100");
-  const borderColor = useColorModeValue("gray.200", "gray.600");
-  const inputBg = useColorModeValue("white", "gray.700");
-    const codeColor = useColorModeValue("gray.100", "gray.700");
-    
+  // Material You inspired color scheme (adapt as needed)
+  const surface = useColorModeValue("white", "gray.900");
+  const onSurface = useColorModeValue("gray.800", "gray.100");
+  const primary = useColorModeValue("blue.600", "blue.400");
+  const onPrimary = useColorModeValue("white", "gray.900");
+  const secondary = useColorModeValue("blue.100", "blue.700");
+  const onSecondary = useColorModeValue("blue.800", "blue.200");
+  const outline = useColorModeValue("gray.300", "gray.700");
+  const codeBg = useColorModeValue("gray.100", "gray.800");
 
   // Scroll to bottom of chat on new message
   useEffect(() => {
     if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+      chatContainerRef.current.scrollTop =
+        chatContainerRef.current.scrollHeight;
     }
   }, [conversation]);
 
@@ -75,47 +78,41 @@ export default function AIAssistant() {
     setAiQuery("");
 
     try {
-      const response = await fetch("/api/chat", {
+      const response = await fetch("/api/gemini", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          messages: [...conversation, userMessage],
+          prompt: aiQuery,
         }),
       });
 
-      if (!response.ok) throw new Error("Failed to get response");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData?.error || "Failed to get response from Gemini"
+        );
+      }
 
-      const reader = response.body?.getReader();
-      if (!reader) throw new Error("No reader available");
+      const data = await response.json();
+      const assistantResponse = data?.response;
 
-      let assistantMessage: AIMessage = { role: "assistant", content: "" };
-      setConversation((prev) => [...prev, assistantMessage]);
-
-      const decoder = new TextDecoder();
-      // eslint-disable-next-line no-constant-condition
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value);
-        assistantMessage = {
-          ...assistantMessage,
-          content: assistantMessage.content + chunk,
+      if (assistantResponse) {
+        const assistantMessage: AIMessage = {
+          role: "assistant",
+          content: assistantResponse,
         };
-
-        setConversation((prev) => {
-          const newConv = [...prev];
-          newConv[newConv.length - 1] = assistantMessage;
-          return newConv;
-        });
+        setConversation((prev) => [...prev, assistantMessage]);
+      } else {
+        throw new Error("Empty response from Gemini");
       }
     } catch (error) {
-      console.error("Chat error:", error);
+      console.error("Gemini error:", error);
       const toastOptions: UseToastOptions = {
-        title: "AI Error",
-        description: "Failed to get response from assistant",
+        title: "Gemini Error",
+        description:
+          (error as Error).message || "Failed to get response from Gemini",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -124,12 +121,21 @@ export default function AIAssistant() {
     } finally {
       setIsAiLoading(false);
     }
-  }, [aiQuery, conversation, toast]);
+  }, [aiQuery, toast]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault(); // Prevent newline in input
       handleAskAI();
     }
+  };
+
+  const handleOpenModal = () => {
+    onOpen();
+    // Focus on the input when the modal opens
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 100);
   };
 
   return (
@@ -139,63 +145,54 @@ export default function AIAssistant() {
         aria-label="AI Assistant"
         icon={<ChatIcon />}
         position="fixed"
-        bottom="40px"
-        right="40px"
+        bottom="24px"
+        right="24px"
         size="lg"
         borderRadius="full"
         colorScheme="blue"
-        boxShadow="lg"
+        boxShadow="md"
         zIndex="overlay"
-        onClick={onOpen}
-        _hover={{ transform: "scale(1.1)" }}
+        onClick={handleOpenModal}
+        _hover={{ transform: "scale(1.05)", boxShadow: "lg" }}
         transition="all 0.2s"
       />
 
-      {/* Chat Modal - Positioned on right side */}
+      {/* Chat Modal */}
       <Modal isOpen={isOpen} onClose={onClose} size="xl">
         <ModalOverlay />
         <ModalContent
           position="fixed"
-          right={["20px", "40px"]}
-          bottom={["20px", "40px"]}
-          top={["20px", "auto"]}
-          left="auto"
-          margin="0"
+          bottom={0}
+          left="100v"
+          right={0}
+          m={4}
           borderRadius="xl"
-          maxH={["calc(100vh - 40px)", "70vh"]}
-          minW={["calc(100vw - 40px)", "400px"]}
-          maxW="500px"
+          maxH="80vh"
           display="flex"
           flexDirection="column"
+          bg={surface}
+          color={onSurface}
+          boxShadow="xl"
         >
           <ModalHeader
-            bg={assistantBg}
-            borderTopRadius="xl"
+            p={4}
             borderBottom="1px"
-            borderColor={borderColor}
+            borderColor={outline}
             display="flex"
             alignItems="center"
+            justifyContent="space-between"
           >
             <HStack>
-              <ChatIcon color="blue.500" />
-              <Text fontWeight="semibold">ZenFlow AI</Text>
+              <ChatIcon color={primary} mr={2} />
+              <Text fontWeight="medium">ZenFlow AI</Text>
+              <Text fontSize="sm" color="gray.500">
+                (Powered by Gemini)
+              </Text>
             </HStack>
-            <ModalCloseButton position="absolute" right="12px" top="12px" />
+            <ModalCloseButton aria-label="Close chat" />
           </ModalHeader>
-          <ModalBody
-            p={0}
-            display="flex"
-            flexDirection="column"
-            flex="1"
-            overflow="hidden"
-          >
-            <Flex
-              direction="column"
-              h="full"
-              p={4}
-              overflowY="auto"
-              ref={chatContainerRef}
-            >
+          <ModalBody p={4} flexGrow={1} overflowY="auto" ref={chatContainerRef}>
+            <VStack spacing={4} align="stretch">
               {conversation.length === 0 ? (
                 <Flex
                   align="center"
@@ -204,27 +201,25 @@ export default function AIAssistant() {
                   color="gray.500"
                   textAlign="center"
                 >
-                  <Text>Ask ZenFlow AI...</Text>
+                  <Text>Ask ZenFlow a question...</Text>
                 </Flex>
               ) : (
                 conversation.map((msg, index) => (
                   <Box
                     key={index}
                     alignSelf={msg.role === "user" ? "flex-end" : "flex-start"}
-                    bg={msg.role === "user" ? userBg : assistantBg}
-                    color={msg.role === "user" ? userText : assistantText}
-                    p={6}
+                    bg={msg.role === "user" ? secondary : surface}
+                    color={msg.role === "user" ? onSecondary : onSurface}
+                    p={4}
                     borderRadius="lg"
-                    mb={3}
-                    maxW="90%"
                     boxShadow="sm"
                     border="1px solid"
-                    borderColor={borderColor}
+                    borderColor={outline}
                   >
-                    <Text fontWeight="semibold" mb={1}>
+                    <Text fontWeight="medium" mb={1}>
                       {msg.role === "user" ? "You" : "ZenFlow AI"}
                     </Text>
-                    <Divider mb={2} borderColor={borderColor} />
+                    <Divider mb={2} borderColor={outline} opacity={0.5} />
                     <ReactMarkdown
                       remarkPlugins={[remarkGfm]}
                       components={{
@@ -236,7 +231,14 @@ export default function AIAssistant() {
                         }: CodeProps) {
                           const match = /language-(\w+)/.exec(className || "");
                           return !inline && match ? (
-                            <Box borderRadius="md" overflow="hidden" my={2}>
+                            <Box
+                              borderRadius="md"
+                              overflow="hidden"
+                              my={2}
+                              bg={codeBg}
+                              color={onSurface}
+                              p={2}
+                            >
                               <SyntaxHighlighter
                                 style={materialDark}
                                 language={match[1]}
@@ -248,9 +250,12 @@ export default function AIAssistant() {
                             </Box>
                           ) : (
                             <Code
-                              p={1}
+                              px={2}
+                              py={1}
                               borderRadius="md"
-                              bg={codeColor}
+                              bg={codeBg}
+                              color={onSurface}
+                              fontSize="sm"
                               {...props}
                             >
                               {children}
@@ -266,37 +271,44 @@ export default function AIAssistant() {
               )}
               {isAiLoading && (
                 <HStack alignSelf="flex-start" p={3}>
-                  <Spinner size="sm" />
-                  <Text color="gray.500">generating...</Text>
+                  <Spinner size="sm" color={primary} />
+                  <Text color="gray.500">Generating response...</Text>
                 </HStack>
               )}
-            </Flex>
-            <Box p={4} borderTop="1px solid" borderColor={borderColor}>
-              <HStack>
-                <Input
-                  placeholder="Type your question..."
-                  value={aiQuery}
-                  onChange={(e) => setAiQuery(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  bg={inputBg}
-                  borderRadius="full"
-                  _focus={{
-                    borderColor: "blue.500",
-                    boxShadow: "0 0 0 1px var(--chakra-colors-blue-500)",
-                  }}
-                />
-                <Button
-                  colorScheme="blue"
-                  onClick={handleAskAI}
-                  isLoading={isAiLoading}
-                  borderRadius="full"
-                  px={6}
-                >
-                  Ask
-                </Button>
-              </HStack>
-            </Box>
+            </VStack>
           </ModalBody>
+          <Box p={4} borderTop="1px solid" borderColor={outline}>
+            <HStack spacing={3}>
+              <Input
+                ref={inputRef}
+                placeholder="Ask something..."
+                value={aiQuery}
+                onChange={(e) => setAiQuery(e.target.value)}
+                onKeyDown={handleKeyDown}
+                bg={surface}
+                color={onSurface}
+                borderRadius="full"
+                border="1px solid"
+                borderColor={outline}
+                _focus={{
+                  borderColor: primary,
+                  boxShadow: `0 0 0 1px ${primary}`,
+                }}
+              />
+              <Button
+                colorScheme="blue"
+                onClick={handleAskAI}
+                isLoading={isAiLoading}
+                borderRadius="full"
+                px={6}
+                bg={primary}
+                color={onPrimary}
+                _hover={{ bg: useColorModeValue("blue.700", "blue.500") }}
+              >
+                Ask
+              </Button>
+            </HStack>
+          </Box>
         </ModalContent>
       </Modal>
     </>

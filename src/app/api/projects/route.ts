@@ -5,9 +5,24 @@ import mongoose from "mongoose";
 import Team from "@/models/Team";
 
 // GET all projects
-export async function GET() {
+export async function GET(request: Request) {
   try {
     await connectDB();
+
+    // Extract the Authorization header and get user ID
+    const authHeader = request.headers.get("Authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return NextResponse.json({ error: "hello 1" }, { status: 401 });
+    }
+
+    const userId = authHeader.split(" ")[1];
+    if (!userId) {
+      return NextResponse.json({ error: "hello 2" }, { status: 401 });
+    }
+
+    const createdBy = userId
+
+    console.log("Session user ID:", createdBy);
 
     // Ensure the Project model is registered
     if (!mongoose.models.Project) {
@@ -18,9 +33,11 @@ export async function GET() {
       mongoose.model("Team", Team.schema);
     }
 
-
     // Fetch all projects and populate assignedTeam
-    const projects = await Project.find().populate("assignedTeam");
+    const projects = await Project.find({ createdBy }).populate(
+      "assignedTeam",
+      "name" // Populate only the name field of the assignedTeam
+    );
     return NextResponse.json(projects);
   } catch (error) {
     console.error("Error fetching projects:", error);
@@ -30,15 +47,54 @@ export async function GET() {
     );
   }
 }
+
+// // POST a new project
+// export async function POST(request: Request) {
+//   try {
+//     await connectDB();
+
+//     // Parse the request body
+//     const body = await request.json();
+
+//     // Validate required fields
+//     if (!body.name || !body.description) {
+//       return NextResponse.json(
+//         { error: "Name and description are required" },
+//         { status: 400 }
+//       );
+//     }
+
+//     // Validate assignedTeam (if provided)
+//     if (body.assignedTeam && typeof body.assignedTeam !== "object") {
+//       return NextResponse.json(
+//         { error: "assignedTeam must be a Team object" },
+//         { status: 400 }
+//       );
+//     }
+
+//     // Create a new project
+//     const project = new Project(body);
+//     await project.save();
+
+//     // Return the created project
+//     return NextResponse.json(project, { status: 201 });
+//   } catch (error) {
+//     console.error("Error creating project:", error);
+//     return NextResponse.json(
+//       { error: "Failed to create project" },
+//       { status: 500 }
+//     );
+//   }
+// }
+
+
 // POST a new project
 export async function POST(request: Request) {
   try {
     await connectDB();
 
-    // Parse the request body
     const body = await request.json();
 
-    // Validate required fields
     if (!body.name || !body.description) {
       return NextResponse.json(
         { error: "Name and description are required" },
@@ -46,20 +102,38 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validate assignedTeam (if provided)
-    if (body.assignedTeam && typeof body.assignedTeam !== "object") {
+    if (body.assignedTeam && typeof body.assignedTeam !== "string") {
       return NextResponse.json(
         { error: "assignedTeam must be a Team object" },
         { status: 400 }
       );
     }
 
-    // Create a new project
-    const project = new Project(body);
-    await project.save();
+    // 1. Create the project
+    const newProject = new Project({
+      ...body,
+      sprints: [], // initialize sprints array
+    });
+    await newProject.save();
 
-    // Return the created project
-    return NextResponse.json(project, { status: 201 });
+    // 2. Create Sprint 0
+    const Sprint = (await import("@/models/Sprint")).default;
+    const sprintZero = await Sprint.create({
+      name: "Sprint 0",
+      startDate: new Date(),
+      endDate: new Date(),
+      tasks: [],
+      project: newProject._id,
+    });
+
+    // 3. Add Sprint 0 to project
+    newProject.sprints.push(sprintZero._id);
+    await newProject.save();
+
+    // 4. Populate the assignedTeam and return the result
+    const populatedProject = await Project.findById(newProject._id).populate("assignedTeam");
+
+    return NextResponse.json(populatedProject, { status: 201 });
   } catch (error) {
     console.error("Error creating project:", error);
     return NextResponse.json(

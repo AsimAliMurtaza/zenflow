@@ -13,14 +13,14 @@ import {
 import { DragDropContext, DropResult } from "@hello-pangea/dnd";
 import TaskColumn from "./ui/TaskColumn";
 import AddTaskModal from "./ui/AddTaskModal";
-import { Task, TaskBoard, TeamMember } from "@/types/types";
+import { Task, TaskBoard, Team } from "@/types/types";
 
 const KanbanBoard = () => {
   const { projectID } = useParams();
   const [tasks, setTasks] = useState<TaskBoard>({
     "To Do": [],
     "In Progress": [],
-    "Completed": [],
+    Completed: [],
   });
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
@@ -35,7 +35,9 @@ const KanbanBoard = () => {
   const [taskPriority, setTaskPriority] = useState<Task["priority"]>("Medium");
   const [taskDueDate, setTaskDueDate] = useState("");
   const [taskAssignedTo, setTaskAssignedTo] = useState("");
-  const [team, setTeam] = useState<TeamMember[]>([]);
+  const [team, setTeam] = useState<Team | null>(null);
+  const [sprints, setSprints] = useState([]);
+  const [taskSprint, setTaskSprint] = useState("");
 
   const boardBg = useColorModeValue("gray.50", "gray.800");
 
@@ -55,6 +57,21 @@ const KanbanBoard = () => {
   }, [projectID]);
 
   useEffect(() => {
+    const fetchSprints = async () => {
+      try {
+        const response = await fetch(`/api/projects/${projectID}/sprints`);
+        if (!response.ok) throw new Error("Failed to fetch sprints");
+        const sprintData = await response.json();
+        setSprints(sprintData);
+      } catch (error) {
+        console.error("Failed to fetch sprints:", error);
+      }
+    };
+
+    fetchSprints();
+  }, [projectID]);
+
+  useEffect(() => {
     const fetchTasks = async () => {
       try {
         const response = await fetch(`/api/projects/${projectID}/tasks`);
@@ -67,7 +84,7 @@ const KanbanBoard = () => {
             acc[task.status as keyof TaskBoard].push(task);
             return acc;
           },
-          { "To Do": [], "In Progress": [], "Completed": [] } as TaskBoard
+          { "To Do": [], "In Progress": [], Completed: [] } as TaskBoard
         );
         setTasks(groupedTasks);
       } catch (error) {
@@ -124,7 +141,8 @@ const KanbanBoard = () => {
           status,
           priority: taskPriority,
           dueDate: taskDueDate || undefined,
-          assignedTo: taskAssignedTo || undefined,
+          assignedTo: taskAssignedTo,
+          sprint: taskSprint || undefined,
           project: projectID,
         }),
       });
@@ -147,6 +165,7 @@ const KanbanBoard = () => {
     setTaskPriority("Medium");
     setTaskDueDate("");
     setTaskAssignedTo("");
+    setTaskSprint("");
   };
 
   const deleteTask = async (status: keyof TaskBoard, taskId: string) => {
@@ -245,7 +264,9 @@ const KanbanBoard = () => {
           ))}
         </Flex>
       </DragDropContext>
-      <AddTaskModal
+      {
+        team && 
+        <AddTaskModal
         isOpen={isOpen}
         onClose={onClose}
         taskTitle={taskTitle}
@@ -253,7 +274,7 @@ const KanbanBoard = () => {
         taskPriority={taskPriority}
         taskDueDate={taskDueDate}
         taskAssignedTo={taskAssignedTo}
-        teamMembers={team} // Pass team members to the modal
+        team={team} // Pass team members to the modal
         onTaskTitleChange={setTaskTitle}
         onTaskDescriptionChange={setTaskDescription}
         onTaskPriorityChange={(value: string) =>
@@ -262,7 +283,11 @@ const KanbanBoard = () => {
         onTaskDueDateChange={setTaskDueDate}
         onTaskAssignedToChange={setTaskAssignedTo}
         onAddTask={() => addTask(selectedStatus)}
-      />
+        taskSprint={taskSprint}
+        onTaskSprintChange={setTaskSprint}
+        sprints={sprints}
+        />
+      }
     </Box>
   );
 };

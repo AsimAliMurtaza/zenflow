@@ -10,7 +10,7 @@ export default async function RedirectPage() {
     redirect("/auth/signin");
   }
 
-  if (session.user.role === "admin") {
+  if (session?.user?.role === "admin") {
     redirect("/admin/dashboard");
   } else {
     redirect("/dashboard");

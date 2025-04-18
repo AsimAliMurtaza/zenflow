@@ -14,8 +14,12 @@ const TaskSchema = new Schema({
     default: "Medium",
   },
   dueDate: { type: Date },
-  assignedTo: { type: Schema.Types.ObjectId, ref: "Member" },
-  project: { type: Schema.Types.ObjectId, ref: "Project", required: true },
+  // assignedTo: { type: Schema.Types.ObjectId, ref: "Member" },
+  assignedTo: [{ type: String }], // Reference to the Member model
+  sprint: { type: Schema.Types.ObjectId, ref: "Sprint" },
+  project: { type: Schema.Types.ObjectId, ref: "Project" }, // Reference to the Project model
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
 });
 
 const Task = mongoose.models.Task || mongoose.model("Task", TaskSchema);

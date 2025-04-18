@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Team from "@/models/Team";
+import Project from "@/models/Project";
 
 export async function GET(
   request: Request,
@@ -9,9 +10,12 @@ export async function GET(
   try {
     await connectDB(); // Ensure DB connection
 
-    const team = await Team.find({ project: params.projectID });
+    const teamIds = await Project.find({ _id: params.projectID }).select("assignedTeam");
+    console.log(teamIds)
+    const team = await Team.find({ _id: { $in: teamIds[0].assignedTeam } });
+    console.log(team)
 
-    return NextResponse.json(team, { status: 200 });
+    return NextResponse.json(team[0], { status: 200 });
   } catch (error) {
     console.error("Error fetching team:", error);
     return NextResponse.json(

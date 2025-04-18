@@ -75,6 +75,8 @@ export const authOptions: NextAuthOptions = {
       // On initial sign in
       if (user) {
         token.id = user.id;
+        token.email = user.email;
+        token.image = user.image;
 
         await dbConnect();
         const dbUser = await User.findOne({ email: user.email });
@@ -94,6 +96,8 @@ export const authOptions: NextAuthOptions = {
           ...session.user,
           id: token.id as string,
           role: token.role as string,
+          email: token.email as string,
+          image: token.image as string,
         },
       };
     },

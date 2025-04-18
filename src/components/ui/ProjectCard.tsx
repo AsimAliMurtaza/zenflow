@@ -18,13 +18,16 @@ import {
   Tooltip,
 } from "@chakra-ui/react";
 import { EditIcon, DeleteIcon, TimeIcon } from "@chakra-ui/icons";
-import { Project } from "@/types/types";
+import { Project, Team } from "@/types/types";
+import { useEffect, useState } from "react";
 
 type ProjectCardProps = {
   project: Project | null;
   onEdit: () => void;
   onDelete: () => void;
   onClick: () => void;
+  assignedTeam: string;
+  teams: Team[];
 };
 
 const ProjectCard = ({
@@ -32,10 +35,21 @@ const ProjectCard = ({
   onEdit,
   onDelete,
   onClick,
+  assignedTeam,
+  teams,
 }: ProjectCardProps) => {
+  const [isTeamName, setIsTeamName] = useState("");
   const cardHoverBG = useColorModeValue("gray.50", "gray.700");
   const cardBG = useColorModeValue("white", "gray.900");
   const tagColor = useColorModeValue("gray.100", "gray.700");
+
+  useEffect(() => {
+    const assignedTeamName = teams.find((team) => team._id === assignedTeam);
+    if (assignedTeamName) {
+      setIsTeamName(assignedTeamName.name);
+    }
+  }, [assignedTeam, teams]);
+
   if (!project) {
     return (
       <Box p={4} bg="red.50" borderRadius="xl" boxShadow="md">
@@ -55,9 +69,9 @@ const ProjectCard = ({
       _hover={{
         transform: "translateY(-4px)",
         boxShadow: "2xl",
-        bg: { cardHoverBG }, // Subtle hover background
+        bg: cardHoverBG,
       }}
-      role="group" // Improve screen reader experience
+      role="group"
     >
       <CardBody>
         <Flex align="center" mb={4}>
@@ -106,7 +120,7 @@ const ProjectCard = ({
           hasStripe
           isAnimated
           sx={{
-            "--progress-bar-bg": "linear-gradient(to right, #63B3ED, #3182CE)", // Subtle gradient
+            "--progress-bar-bg": "linear-gradient(to right, #63B3ED, #3182CE)",
           }}
         />
 
@@ -124,16 +138,16 @@ const ProjectCard = ({
             Completion: {project.completion}%
           </Text>
           <Text fontSize="sm" fontWeight="medium">
-            Team: {project.assignedTeam?.name || "Not Assigned"}
+            Team: {isTeamName || "N/A"}
           </Text>
           <Tag
             colorScheme={project.dueDate ? "red" : "gray"}
             borderRadius="full"
             variant="subtle"
-            bg={tagColor} // added background
+            bg={tagColor}
           >
             <TagLeftIcon as={TimeIcon} />
-            <TagLabel>Due: {project?.dueDate || "No due date"}</TagLabel>
+            <TagLabel>Due: {project.dueDate || "No due date"}</TagLabel>
           </Tag>
         </VStack>
       </CardBody>

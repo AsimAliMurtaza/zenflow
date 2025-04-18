@@ -13,7 +13,7 @@ import {
 } from "@chakra-ui/react";
 import { BiHome, BiMenuAltLeft, BiMenu } from "react-icons/bi";
 import { FiUsers, FiBarChart2, FiSettings } from "react-icons/fi";
-import { GrProjects } from "react-icons/gr";
+import { GrProjects, GrRobot } from "react-icons/gr";
 import Topbar from "@/components/Topbar";
 import { IconType } from "react-icons/lib";
 import AIAssistant from "@/components/AIAssistant";
@@ -22,6 +22,7 @@ const modules = [
   { name: "Overview", icon: BiHome, path: "/dashboard" },
   { name: "Projects", icon: GrProjects, path: "/dashboard/projects" },
   { name: "Teams", icon: FiUsers, path: "/dashboard/teams" },
+  { name: "AI Tasks", icon: GrRobot, path: "/dashboard/generate-task" },
   { name: "Reports", icon: FiBarChart2, path: "/dashboard/reports" },
   { name: "Settings", icon: FiSettings, path: "/dashboard/settings" },
 ];

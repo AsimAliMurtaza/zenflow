@@ -10,6 +10,7 @@ import {
   useDisclosure,
   useToast,
   useColorModeValue,
+  SimpleGrid,
 } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
 import TeamCard from "@/components/ui/TeamCard";
@@ -31,7 +32,11 @@ const Teams = ({ teams: initialTeams }: TeamsProps) => {
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
-  const bg = useColorModeValue("gray.50", "gray.800");
+  const bg = useColorModeValue("gray.50", "gray.900");
+  const textColor = useColorModeValue("gray.700", "gray.200");
+  const headingColor = useColorModeValue("gray.900", "gray.100");
+  const buttonBg = useColorModeValue("blue.500", "blue.600");
+  const buttonColor = useColorModeValue("white", "white");
 
   const addTeam = async () => {
     if (!teamName.trim()) {
@@ -157,43 +162,57 @@ const Teams = ({ teams: initialTeams }: TeamsProps) => {
   };
 
   return (
-    <Box p={8} bg={bg} borderRadius="xl" boxShadow="md">
-      <Heading size="2xl" mb={6} fontWeight="semibold">
-        Teams Management
-      </Heading>
-      <Text fontSize="lg" mb={8} color="gray.600">
-        Manage your teams and invite members.
-      </Text>
+    <Box h="90vh" p={6} bg={bg} borderRadius="xl">
+      <VStack spacing={6} align="start">
+        <Heading size="xl" fontWeight="semibold" color={headingColor}>
+          Teams
+        </Heading>
+        <Text fontSize="lg" color={textColor} fontWeight="medium">
+          Collaborate efficiently with your teams. Manage members and create new
+          spaces.
+        </Text>
 
-      <Button
-        colorScheme="blue"
-        leftIcon={<AddIcon />}
-        onClick={() => {
-          setSelectedTeamId(null);
-          onOpen();
-        }}
-        mb={8}
-        size="lg"
-        borderRadius="full"
-        isLoading={isLoading}
-        boxShadow="md"
-      >
-        Create Team
-      </Button>
+        <Button
+          leftIcon={<AddIcon />}
+          onClick={() => {
+            setSelectedTeamId(null);
+            onOpen();
+          }}
+          size="lg"
+          borderRadius="full"
+          bg={buttonBg}
+          color={buttonColor}
+          _hover={{ bg: useColorModeValue("blue.600", "blue.700") }}
+          isLoading={isLoading}
+          boxShadow="md"
+        >
+          Create New Team
+        </Button>
 
-      <VStack spacing={6} align="stretch">
-        {teams.map((team) => (
-          <TeamCard
-            key={team._id}
-            team={team}
-            onDeleteTeam={deleteTeam}
-            onAddMember={(teamId) => {
-              setSelectedTeamId(teamId);
-              onOpen();
-            }}
-            onDeleteMember={deleteMember}
-          />
-        ))}
+        {teams.length > 0 ? (
+          <SimpleGrid
+            columns={{ base: 1, md: 2, lg: 3 }}
+            spacing={8}
+            width="full"
+          >
+            {teams.map((team) => (
+              <TeamCard
+                key={team._id}
+                team={team}
+                onDeleteTeam={deleteTeam}
+                onAddMember={(teamId) => {
+                  setSelectedTeamId(teamId);
+                  onOpen();
+                }}
+                onDeleteMember={deleteMember}
+              />
+            ))}
+          </SimpleGrid>
+        ) : (
+          <Text fontSize="xl" color="gray.500" mt={6}>
+            No teams created yet. Start by creating one!
+          </Text>
+        )}
       </VStack>
 
       <TeamModal
