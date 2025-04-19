@@ -14,20 +14,18 @@ import {
   FormLabel,
   useColorModeValue,
 } from "@chakra-ui/react";
-import { TaskStatus, Team } from "@/types/types";
+import { Team } from "@/types/types";
 
 type ProjectModalProps = {
   isOpen: boolean;
   onClose: () => void;
   projectName: string;
   description: string;
-  status: string;
   assignedTeam: string;
   dueDate: string;
   teams: Team[];
   onProjectNameChange: (value: string) => void;
   onDescriptionChange: (value: string) => void;
-  onStatusChange: (value: TaskStatus) => void;
   onAssignedTeamChange: (value: string) => void;
   onDueDateChange: (value: string) => void;
   onSave: () => void;
@@ -39,13 +37,11 @@ const ProjectModal = ({
   onClose,
   projectName,
   description,
-  status,
   assignedTeam,
   dueDate,
   teams,
   onProjectNameChange,
   onDescriptionChange,
-  onStatusChange,
   onAssignedTeamChange,
   onDueDateChange,
   onSave,
@@ -89,7 +85,7 @@ const ProjectModal = ({
             />
           </FormControl>
 
-          <FormControl mb={4}>
+          {/* <FormControl mb={4}>
             <FormLabel>Status</FormLabel>
             <Select
               value={status}
@@ -103,7 +99,7 @@ const ProjectModal = ({
               <option value="Completed">Completed</option>
               <option value="Almost Done">Almost Done</option>
             </Select>
-          </FormControl>
+          </FormControl> */}
 
           <FormControl mb={4}>
             <FormLabel>Assign Team</FormLabel>

@@ -6,5 +6,5 @@ const TeamSchema = new Schema({
   members: [{ type: String }], // Array of strings (emails)
 });
 
-const Team = mongoose.models.Team || mongoose.model("Team", TeamSchema);
+const Team = mongoose.models?.Team || mongoose.model("Team", TeamSchema);
 export default Team;

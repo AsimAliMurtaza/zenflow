@@ -16,7 +16,7 @@ import {
   useColorModeValue,
   useToast,
 } from "@chakra-ui/react";
-import { Project } from "@/types/types";
+import { Project, Sprint } from "@/types/types";
 
 interface GenerateTasksProps {
   projects: Project[];
@@ -25,8 +25,11 @@ interface GenerateTasksProps {
 const GenerateTasks: React.FC<GenerateTasksProps> = ({ projects }) => {
   const [prompt, setPrompt] = useState("");
   const [selectedProjectId, setSelectedProjectId] = useState("");
+  const [selectedSprintId, setSelectedSprintId] = useState("");
   const [loading, setLoading] = useState(false);
   const toast = useToast();
+  const selectedProject = projects.find((p) => p._id === selectedProjectId);
+  const availableSprints = selectedProject?.sprints || [];
 
   const bg = useColorModeValue("white", "gray.800");
   const border = useColorModeValue("gray.200", "gray.700");
@@ -35,7 +38,7 @@ const GenerateTasks: React.FC<GenerateTasksProps> = ({ projects }) => {
   const descColor = useColorModeValue("gray.600", "gray.400");
 
   const handleGenerateTasks = async () => {
-    if (!prompt.trim() || !selectedProjectId) {
+    if (!prompt.trim() || !selectedProjectId || !selectedSprintId) {
       toast({
         title: "Missing Information",
         description: "Please enter a prompt and select a project.",
@@ -51,7 +54,11 @@ const GenerateTasks: React.FC<GenerateTasksProps> = ({ projects }) => {
       const response = await fetch("/api/tasks/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt, projectId: selectedProjectId }),
+        body: JSON.stringify({
+          prompt,
+          projectId: selectedProjectId,
+          sprintId: selectedSprintId,
+        }),
       });
 
       if (response.ok) {
@@ -147,6 +154,23 @@ const GenerateTasks: React.FC<GenerateTasksProps> = ({ projects }) => {
             {projects.map((project) => (
               <option key={project._id} value={project._id}>
                 {project.name}
+              </option>
+            ))}
+          </Select>
+        </FormControl>
+        <FormControl id="sprint" isRequired>
+          <FormLabel color={labelColor}>Select Sprint</FormLabel>
+          <Select
+            placeholder="Select a Sprint"
+            value={selectedSprintId}
+            onChange={(e) => setSelectedSprintId(e.target.value)}
+            bg={inputBg}
+            borderRadius="md"
+            _focusVisible={{ borderColor: "blue.500", boxShadow: "sm" }}
+          >
+            {availableSprints.map((sprint: Sprint) => (
+              <option key={sprint._id} value={sprint._id}>
+                {sprint.name}
               </option>
             ))}
           </Select>

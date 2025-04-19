@@ -35,7 +35,7 @@ const TeamCard = ({
   const headingColor = useColorModeValue("gray.900", "gray.100");
 
   return (
-    <Card shadow="md" borderRadius="lg" bg={cardBg} overflow="hidden">
+    <Card shadow="lg" borderRadius="2xl" bg={cardBg} boxShadow="lg" overflow="hidden">
       <CardHeader p={4}>
         <Flex align="center" justify="space-between">
           <Heading size="md" fontWeight="semibold" color={headingColor}>

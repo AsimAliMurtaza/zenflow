@@ -39,7 +39,7 @@ const KanbanBoard = () => {
   const [sprints, setSprints] = useState([]);
   const [taskSprint, setTaskSprint] = useState("");
 
-  const boardBg = useColorModeValue("gray.50", "gray.800");
+  const boardBg = useColorModeValue("white", "gray.900");
 
   useEffect(() => {
     const fetchTeamMembers = async () => {
@@ -115,6 +115,7 @@ const KanbanBoard = () => {
         body: JSON.stringify({
           id: movedTask._id,
           status: destination.droppableId,
+          sprint: movedTask.sprint._id,
         }),
       });
     } catch (error) {
@@ -264,30 +265,29 @@ const KanbanBoard = () => {
           ))}
         </Flex>
       </DragDropContext>
-      {
-        team && 
+      {team && (
         <AddTaskModal
-        isOpen={isOpen}
-        onClose={onClose}
-        taskTitle={taskTitle}
-        taskDescription={taskDescription}
-        taskPriority={taskPriority}
-        taskDueDate={taskDueDate}
-        taskAssignedTo={taskAssignedTo}
-        team={team} // Pass team members to the modal
-        onTaskTitleChange={setTaskTitle}
-        onTaskDescriptionChange={setTaskDescription}
-        onTaskPriorityChange={(value: string) =>
-          setTaskPriority(value as Task["priority"])
-        }
-        onTaskDueDateChange={setTaskDueDate}
-        onTaskAssignedToChange={setTaskAssignedTo}
-        onAddTask={() => addTask(selectedStatus)}
-        taskSprint={taskSprint}
-        onTaskSprintChange={setTaskSprint}
-        sprints={sprints}
+          isOpen={isOpen}
+          onClose={onClose}
+          taskTitle={taskTitle}
+          taskDescription={taskDescription}
+          taskPriority={taskPriority}
+          taskDueDate={taskDueDate}
+          taskAssignedTo={taskAssignedTo}
+          team={team} // Pass team members to the modal
+          onTaskTitleChange={setTaskTitle}
+          onTaskDescriptionChange={setTaskDescription}
+          onTaskPriorityChange={(value: string) =>
+            setTaskPriority(value as Task["priority"])
+          }
+          onTaskDueDateChange={setTaskDueDate}
+          onTaskAssignedToChange={setTaskAssignedTo}
+          onAddTask={() => addTask(selectedStatus)}
+          taskSprint={taskSprint}
+          onTaskSprintChange={setTaskSprint}
+          sprints={sprints}
         />
-      }
+      )}
     </Box>
   );
 };

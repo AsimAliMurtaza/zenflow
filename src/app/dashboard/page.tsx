@@ -42,7 +42,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 const DashboardContent = () => {
-  const bgColor = useColorModeValue("gray.50", "gray.900");
+  const bgColor = useColorModeValue("white", "gray.900");
   const cardBg = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
   const textColor = useColorModeValue("gray.800", "gray.100");
@@ -152,8 +152,7 @@ const DashboardContent = () => {
         justify="center"
         align="center"
       >
-        <Spinner size="xl" />
-        <Text mt={4}>Loading dashboard reports...</Text>
+        <Spinner colorScheme="blue" size="xl" />
       </Flex>
     );
   }
