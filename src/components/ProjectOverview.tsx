@@ -36,8 +36,9 @@ const ProjectOverview = ({ project }: { project: Project | null }) => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [projectStatus, setProjectStatus] =
-    useState<keyof typeof badgeColorSchemes>("In Progress");
+  const [projectStatus, setProjectStatus] = useState<
+    "Completed" | "In Progress"
+  >("In Progress");
   const [newSprint, setNewSprint] = useState({
     name: "",
     startDate: "",
@@ -54,7 +55,7 @@ const ProjectOverview = ({ project }: { project: Project | null }) => {
 
   // Color mode values
   const cardBg = useColorModeValue("white", "gray.800");
-  const surfaceBg = useColorModeValue("gray.50", "gray.900");
+  const surfaceBg = useColorModeValue("white", "gray.900");
   const textColor = useColorModeValue("gray.600", "gray.300");
   const headingColor = useColorModeValue("gray.800", "white");
   const dividerColor = useColorModeValue("gray.200", "gray.700");
@@ -76,9 +77,11 @@ const ProjectOverview = ({ project }: { project: Project | null }) => {
         const data = await response.json();
         setTasks(data);
 
-        const allTasksCompleted = data.every(
-          (task: Task) => task.status === "Completed"
-        );
+        // Calculate project status
+        const hasTasks = data.length > 0;
+        const allTasksCompleted =
+          hasTasks && data.every((task: Task) => task.status === "Completed");
+
         setProjectStatus(allTasksCompleted ? "Completed" : "In Progress");
       } catch (error) {
         console.error("Failed to fetch tasks:", error);
@@ -272,7 +275,7 @@ const ProjectOverview = ({ project }: { project: Project | null }) => {
     <Box p={{ base: 4, md: 6 }} bg={surfaceBg} borderRadius="2xl">
       <VStack align="start" spacing={6}>
         {/* Project Header */}
-        <Box w="full">
+        <Box boxShadow="lg" w="full" p="4" borderRadius="xl">
           <Heading size="xl" mb={2} fontWeight="semibold" color={headingColor}>
             {project.name}
           </Heading>
@@ -293,7 +296,7 @@ const ProjectOverview = ({ project }: { project: Project | null }) => {
         </Box>
 
         {/* Progress Section */}
-        <Card w="full" bg={cardBg} borderRadius="xl" boxShadow="sm">
+        <Card w="full" bg={cardBg} borderRadius="xl" boxShadow="lg">
           <CardHeader pb={0}>
             <Heading size="md">Project Progress</Heading>
           </CardHeader>
@@ -391,6 +394,7 @@ const ProjectOverview = ({ project }: { project: Project | null }) => {
                       p={4}
                       borderRadius="lg"
                       borderWidth="1px"
+                      boxShadow="lg"
                       borderColor={dividerColor}
                     >
                       <Flex justify="space-between" align="start">
@@ -402,16 +406,28 @@ const ProjectOverview = ({ project }: { project: Project | null }) => {
                             {task.description}
                           </Text>
                         </Box>
-                        <Badge
-                          colorScheme={badgeColorSchemes[task.status]}
-                          borderRadius="full"
-                          px={3}
-                          py={1}
-                          fontSize="xs"
-                          variant="subtle"
-                        >
-                          {task.status}
-                        </Badge>
+                        <Box display="flex" flexDirection="column" gap="2">
+                          <Badge
+                            colorScheme={badgeColorSchemes[task.status]}
+                            borderRadius="full"
+                            px={3}
+                            py={1}
+                            fontSize="xs"
+                            variant="subtle"
+                          >
+                            {task.status}
+                          </Badge>
+                          <Badge
+                            colorScheme={"orange"}
+                            borderRadius="full"
+                            px={3}
+                            py={1}
+                            fontSize="xs"
+                            variant="subtle"
+                          >
+                            {task.sprint.name}
+                          </Badge>
+                        </Box>
                       </Flex>
 
                       <HStack mt={3} spacing={4}>
@@ -532,6 +548,7 @@ const ProjectOverview = ({ project }: { project: Project | null }) => {
                       key={sprint._id}
                       p={4}
                       borderRadius="lg"
+                      boxShadow="lg"
                       borderWidth="1px"
                       borderColor={dividerColor}
                     >

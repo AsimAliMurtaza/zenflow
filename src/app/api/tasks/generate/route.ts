@@ -8,11 +8,11 @@ import { Task as TaskType } from "@/types/types";
 
 export async function POST(req: NextRequest) {
   try {
-    const { prompt, projectId } = await req.json();
+    const { prompt, projectId, sprintId } = await req.json();
 
-    if (!prompt || !projectId) {
+    if (!prompt || !projectId || !sprintId) {
       return NextResponse.json(
-        { message: "Missing prompt or projectId" },
+        { message: "Missing prompt or projectId, or sprintId" },
         { status: 400 }
       );
     }
@@ -20,6 +20,13 @@ export async function POST(req: NextRequest) {
     if (!mongoose.isValidObjectId(projectId)) {
       return NextResponse.json(
         { message: "Invalid projectId" },
+        { status: 400 }
+      );
+    }
+
+    if (!mongoose.isValidObjectId(sprintId)) {
+      return NextResponse.json(
+        { message: "Invalid sprintId" },
         { status: 400 }
       );
     }
@@ -54,6 +61,7 @@ export async function POST(req: NextRequest) {
             priority: task.priority,
             dueDate: new Date(), // Convert dueDate string to Date object
             project: projectId,
+            sprint: sprintId,
           };
           const newTask = new Task(newTaskData);
           return await newTask.save();

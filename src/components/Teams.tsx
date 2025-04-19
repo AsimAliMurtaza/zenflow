@@ -32,7 +32,7 @@ const Teams = ({ teams: initialTeams }: TeamsProps) => {
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
-  const bg = useColorModeValue("gray.50", "gray.900");
+  const bg = useColorModeValue("white", "gray.900");
   const textColor = useColorModeValue("gray.700", "gray.200");
   const headingColor = useColorModeValue("gray.900", "gray.100");
   const buttonBg = useColorModeValue("blue.500", "blue.600");

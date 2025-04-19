@@ -7,7 +7,6 @@ import {
   Card,
   CardBody,
   VStack,
-  Badge,
   HStack,
   Tag,
   TagLabel,
@@ -125,7 +124,7 @@ const ProjectCard = ({
         />
 
         <VStack align="start" spacing={3}>
-          <Badge
+          {/* <Badge
             colorScheme={project.status === "Completed" ? "green" : "yellow"}
             borderRadius="full"
             px={3}
@@ -133,7 +132,7 @@ const ProjectCard = ({
             variant="solid"
           >
             {project.status}
-          </Badge>
+          </Badge> */}
           <Text fontSize="sm" color="gray.600">
             Completion: {project.completion}%
           </Text>

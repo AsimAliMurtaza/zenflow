@@ -3,12 +3,24 @@ import Project from "@/models/Project";
 import connectDB from "@/lib/mongodb";
 import mongoose from "mongoose";
 import Team from "@/models/Team";
+import Task from "@/models/Task";
+import Sprint from "@/models/Sprint";
 
 // GET all projects
 export async function GET(request: Request) {
   try {
     await connectDB();
-
+    if (!mongoose.models.Project) {
+      mongoose.model("Project", Project.schema);
+    }
+    if (!mongoose.models.Task) {
+      mongoose.model("Task", Task.schema);
+    }
+  
+    if (mongoose.models.Sprint) {
+      mongoose.model("Sprint", Sprint.schema);
+    }
+  
     // Extract the Authorization header and get user ID
     const authHeader = request.headers.get("Authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -37,7 +49,7 @@ export async function GET(request: Request) {
     const projects = await Project.find({ createdBy }).populate(
       "assignedTeam",
       "name" // Populate only the name field of the assignedTeam
-    );
+    ).populate("sprints").exec();
     return NextResponse.json(projects);
   } catch (error) {
     console.error("Error fetching projects:", error);

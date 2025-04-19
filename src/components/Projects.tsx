@@ -312,13 +312,11 @@ const Projects = ({ projects: initialProjects, teams }: ProjectsProps) => {
         onClose={onClose}
         projectName={projectName}
         description={description}
-        status={status}
         assignedTeam={assignedTeam}
         dueDate={dueDate}
         teams={teams}
         onProjectNameChange={setProjectName}
         onDescriptionChange={setDescription}
-        onStatusChange={setStatus}
         onAssignedTeamChange={setAssignedTeam}
         onDueDateChange={setDueDate}
         onSave={handleSaveProject}

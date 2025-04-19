@@ -37,6 +37,7 @@ export type Sprint = {
   startDate: string | Date;
   endDate: string | Date;
   tasks: Task[];
+  completion: number; // represents percent completion of tasks
 };
 
 // Team Type
@@ -57,4 +58,5 @@ export type Project = {
   sprints?: Sprint[]; // Optional
   createdAt?: Date; // Optional
   updatedAt?: Date; // Optional
+  createdBy?: string; // Optional
 };

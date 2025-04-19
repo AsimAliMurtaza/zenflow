@@ -22,5 +22,5 @@ const TaskSchema = new Schema({
   updatedAt: { type: Date, default: Date.now },
 });
 
-const Task = mongoose.models.Task || mongoose.model("Task", TaskSchema);
+const Task = mongoose.models?.Task || mongoose.model("Task", TaskSchema);
 export default Task;
