@@ -4,6 +4,7 @@ import Sprint from "@/models/Sprint";
 import dbConnect from "@/lib/mongodb";
 import Project from "@/models/Project";
 import { Task as TaskType } from "@/types/types";
+import { calculateCompletion } from "@/lib/calculateCompletion";
 
 // GET all tasks for a project
 export async function GET(
@@ -19,42 +20,77 @@ export async function GET(
 }
 
 export async function POST(
-  request: Request,
+  req: Request,
   { params }: { params: { projectID: string } }
 ) {
-  await dbConnect();
   const {
     title,
     description,
     status,
     priority,
-    dueDate,
     assignedTo,
-    sprint,
-    createdBy,
-    projectID,
-  } = await request.json();
-
-  const task = new Task({
-    title,
-    description,
-    status,
-    priority,
     dueDate,
-    assignedTo,
-    sprint,
-    project: params.projectID,
+    sprintID,
     createdBy,
-    projectID,
-  });
+  } = await req.json();
 
-  await task.save();
+  try {
+    // Create the task
+    const task = await Task.create({
+      title,
+      description,
+      status,
+      sprint: sprintID,
+      assignedTo,
+      priority,
+      createdBy,
+      dueDate,
+      project: params.projectID, // Use the projectID from params
+    });
 
-  if (sprint) {
-    await Sprint.findByIdAndUpdate(sprint, { $push: { tasks: task._id } });
+    // Update the sprint to include this new task in the sprint's tasks array
+    await Sprint.findByIdAndUpdate(sprintID, {
+      $push: { tasks: task._id }, // Add the task to the sprint's tasks array
+    });
+
+    // Update sprint completion
+    const sprintTasks = await Task.find({ sprint: sprintID });
+    const sprintCompleted = sprintTasks.filter(
+      (t) => t.status === "Completed"
+    ).length;
+    const sprintCompletion = calculateCompletion(
+      sprintCompleted,
+      sprintTasks.length
+    );
+    await Sprint.findByIdAndUpdate(sprintID, { completion: sprintCompletion });
+
+    // Update project completion
+    const sprint = await Sprint.findById(sprintID).populate("project");
+    const project = sprint?.project;
+    if (project) {
+      const allSprints = await Sprint.find({ project: project._id });
+      const allSprintIds = allSprints.map((s) => s._id);
+
+      const allTasks = await Task.find({ sprint: { $in: allSprintIds } });
+      const completedTasks = allTasks.filter(
+        (t) => t.status === "Completed"
+      ).length;
+
+      const projectCompletion = calculateCompletion(
+        completedTasks,
+        allTasks.length
+      );
+      await Project.findByIdAndUpdate(project._id, {
+        completion: projectCompletion,
+        status: projectCompletion === 100 ? "Completed" : "In Progress",
+      });
+    }
+
+    return Response.json({ task });
+  } catch (err) {
+    console.error(err);
+    return new Response("Failed to create task", { status: 500 });
   }
-
-  return NextResponse.json(task);
 }
 
 export async function PUT(
@@ -83,7 +119,7 @@ export async function PUT(
   if (sprint) {
     const sprintTasks = await Task.find({ _id: { $in: sprint.tasks } });
     const completedCount = sprintTasks.filter(
-      (t:TaskType) => t.status === "Completed"
+      (t: TaskType) => t.status === "Completed"
     ).length;
     const sprintCompletion = (completedCount / sprintTasks.length) * 100;
 
@@ -102,11 +138,10 @@ export async function PUT(
     }
 
     const completedCount = allTasks.filter(
-      (t:TaskType) => t.status === "Completed"
+      (t: TaskType) => t.status === "Completed"
     ).length;
-    const projectCompletion = allTasks.length > 0 
-      ? (completedCount / allTasks.length) * 100 
-      : 0;
+    const projectCompletion =
+      allTasks.length > 0 ? (completedCount / allTasks.length) * 100 : 0;
 
     project.completion = Math.round(projectCompletion);
     await project.save();
@@ -114,7 +149,6 @@ export async function PUT(
 
   return NextResponse.json(task);
 }
-
 
 // DELETE a task
 export async function DELETE(

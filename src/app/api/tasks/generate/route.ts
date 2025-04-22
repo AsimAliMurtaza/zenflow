@@ -1,7 +1,7 @@
-// /app/api/tasks/generate/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Task from "@/models/Task";
+import Sprint from "@/models/Sprint";
 import { generateGeminiContent } from "@/lib/gemini"; // Your Gemini API wrapper
 import mongoose from "mongoose";
 import { Task as TaskType } from "@/types/types";
@@ -52,9 +52,10 @@ export async function POST(req: NextRequest) {
         );
       }
 
+      // Save the tasks and link them to the sprint
       const savedTasks = await Promise.all(
         generatedTasks.map(async (task: TaskType) => {
-          const newTaskData: Partial< TaskType> = {
+          const newTaskData: Partial<TaskType> = {
             title: task.title,
             description: task.description,
             status: task.status,
@@ -64,7 +65,14 @@ export async function POST(req: NextRequest) {
             sprint: sprintId,
           };
           const newTask = new Task(newTaskData);
-          return await newTask.save();
+          await newTask.save();
+
+          // Update the sprint's tasks array with the new task ID
+          await Sprint.findByIdAndUpdate(sprintId, {
+            $push: { tasks: newTask._id },
+          });
+
+          return newTask; // Return the task object
         })
       );
 
