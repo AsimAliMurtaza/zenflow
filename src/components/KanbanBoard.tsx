@@ -143,8 +143,7 @@ const KanbanBoard = () => {
           priority: taskPriority,
           dueDate: taskDueDate || undefined,
           assignedTo: taskAssignedTo,
-          sprint: taskSprint || undefined,
-          project: projectID,
+          sprintID: taskSprint || undefined,
         }),
       });
 

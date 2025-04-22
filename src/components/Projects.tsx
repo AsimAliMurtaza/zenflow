@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useRouter } from "next/navigation";
 
@@ -55,6 +55,24 @@ const Projects = ({ projects: initialProjects, teams }: ProjectsProps) => {
   const bgColor = useColorModeValue("white", "gray.800");
 
   const textColor = useColorModeValue("gray.800", "gray.100");
+
+  useEffect(() => {
+    const eventSource = new EventSource("/api/changes");
+
+    eventSource.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      console.log("Change stream data:", data);
+    };
+
+    eventSource.onerror = (err) => {
+      console.error("SSE error", err);
+      eventSource.close();
+    };
+
+    return () => {
+      eventSource.close();
+    };
+  }, []);
 
   // Open modal for adding or editing
 
@@ -133,7 +151,7 @@ const Projects = ({ projects: initialProjects, teams }: ProjectsProps) => {
     const x: any = { ...projectData };
     /*eslint-enable-next-line @typescript-eslint/no-explicit-any*/
 
-    x.assignedTeam = assignedTeam? assignedTeam : null;
+    x.assignedTeam = assignedTeam ? assignedTeam : null;
 
     const response = await fetch(`/api/projects?id=${id}`, {
       method: "PUT",
@@ -182,43 +200,29 @@ const Projects = ({ projects: initialProjects, teams }: ProjectsProps) => {
     if (!projectName.trim() || !description.trim()) {
       toast({
         title: "Name and description are required.",
-
         status: "warning",
-
         duration: 3000,
-
         isClosable: true,
       });
-
       return;
     }
 
     const projectData = {
       name: projectName,
-
       description: description,
-
       status: status,
-
       assignedTeam: assignedTeam,
-
       dueDate: dueDate,
-
-      completion: 0,
-
-      tasks: [],
-
-      sprints: [],
+      sprints: [], // Assuming you add sprints later
       createdBy: session?.user?.id,
+      completion: 0, // Default completion
     };
 
     if (editingProject) {
-      // Update existing project
-
+      // Don't reset the completion here
+      projectData.completion = editingProject.completion ?? 0; // Preserve the old completion or default to 0
       await updateProject(editingProject._id, projectData);
     } else {
-      // Create new project
-
       await createProject(projectData);
     }
 
@@ -299,7 +303,6 @@ const Projects = ({ projects: initialProjects, teams }: ProjectsProps) => {
               onClick={() => handleProjectClick(project._id)}
               assignedTeam={project.assignedTeam as string}
               teams={teams}
-
             />
           ))}
         </SimpleGrid>

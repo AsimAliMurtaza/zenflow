@@ -60,45 +60,6 @@ export async function GET(request: Request) {
   }
 }
 
-// // POST a new project
-// export async function POST(request: Request) {
-//   try {
-//     await connectDB();
-
-//     // Parse the request body
-//     const body = await request.json();
-
-//     // Validate required fields
-//     if (!body.name || !body.description) {
-//       return NextResponse.json(
-//         { error: "Name and description are required" },
-//         { status: 400 }
-//       );
-//     }
-
-//     // Validate assignedTeam (if provided)
-//     if (body.assignedTeam && typeof body.assignedTeam !== "object") {
-//       return NextResponse.json(
-//         { error: "assignedTeam must be a Team object" },
-//         { status: 400 }
-//       );
-//     }
-
-//     // Create a new project
-//     const project = new Project(body);
-//     await project.save();
-
-//     // Return the created project
-//     return NextResponse.json(project, { status: 201 });
-//   } catch (error) {
-//     console.error("Error creating project:", error);
-//     return NextResponse.json(
-//       { error: "Failed to create project" },
-//       { status: 500 }
-//     );
-//   }
-// }
-
 
 // POST a new project
 export async function POST(request: Request) {

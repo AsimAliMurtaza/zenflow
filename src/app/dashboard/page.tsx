@@ -73,6 +73,7 @@ const DashboardContent = () => {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${userId}`,
+            cache: "no-store",
           },
         });
 
@@ -89,6 +90,7 @@ const DashboardContent = () => {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${userId}`,
+            cache: "no-store",
           },
         });
 
