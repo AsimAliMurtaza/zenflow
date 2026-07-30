@@ -9,3 +9,4 @@ declare module "react-icons/lib" {
   export default content;
 }
 declare module "react-icons/*";
+declare module "nodemailer";

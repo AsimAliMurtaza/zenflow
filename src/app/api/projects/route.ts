@@ -1,60 +1,25 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getAuthenticatedUserId, getUserTeamIds } from "@/lib/authHelpers";
 
-// Helper: recalculate sprint and project completion after task changes
-async function recalculateCompletion(sprintId: string, projectId: string) {
-  // Sprint completion
-  const sprintTasks = await prisma.task.findMany({ where: { sprintId } });
-  const sprintCompleted = sprintTasks.filter(
-    (t) => t.status === "Completed"
-  ).length;
-  const sprintCompletion =
-    sprintTasks.length > 0
-      ? Math.round((sprintCompleted / sprintTasks.length) * 100)
-      : 0;
-  await prisma.sprint.update({
-    where: { id: sprintId },
-    data: { completion: sprintCompletion },
-  });
-
-  // Project completion (across all sprints)
-  const projectTasks = await prisma.task.findMany({ where: { projectId } });
-  const projectCompleted = projectTasks.filter(
-    (t) => t.status === "Completed"
-  ).length;
-  const projectCompletion =
-    projectTasks.length > 0
-      ? Math.round((projectCompleted / projectTasks.length) * 100)
-      : 0;
-  await prisma.project.update({
-    where: { id: projectId },
-    data: {
-      completion: projectCompletion,
-      status:
-        projectCompletion === 100
-          ? "Completed"
-          : projectCompletion > 0
-          ? "In Progress"
-          : "Not Started",
-    },
-  });
-}
-
-// GET all projects for the authenticated user
+// GET all projects accessible by the authenticated user
 export async function GET(request: Request) {
   try {
-    const authHeader = request.headers.get("Authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const userId = authHeader.split(" ")[1];
+    const userId = await getAuthenticatedUserId(request);
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const teamIds = await getUserTeamIds(userId);
+
+    // Isolated Projects query: Created by user OR assigned to a team user is a member of
     const projects = await prisma.project.findMany({
-      where: { createdById: userId },
+      where: {
+        OR: [
+          { createdById: userId },
+          { assignedTeamId: { in: teamIds } },
+        ],
+      },
       include: {
         assignedTeam: { select: { id: true, name: true } },
         sprints: {
@@ -81,8 +46,10 @@ export async function GET(request: Request) {
 // POST a new project (auto-creates Sprint 0)
 export async function POST(request: Request) {
   try {
+    const userId = await getAuthenticatedUserId(request);
     const body = await request.json();
-    const { name, description, assignedTeamId, dueDate, createdById } = body;
+    const { name, description, assignedTeamId, dueDate } = body;
+    const createdById = body.createdById || userId;
 
     if (!name || !description) {
       return NextResponse.json(
@@ -152,7 +119,6 @@ export async function PUT(request: Request) {
     }
 
     const updateData = await request.json();
-    // Strip non-updatable fields
     const { id: _id, createdById: _c, createdAt: _ca, ...safeData } = updateData;
     void _id; void _c; void _ca;
 
@@ -197,5 +163,3 @@ export async function DELETE(request: Request) {
     );
   }
 }
-
-export { recalculateCompletion };

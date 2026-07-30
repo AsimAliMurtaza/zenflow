@@ -1,8 +1,24 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getAuthenticatedUserId, getUserTeamIds } from "@/lib/authHelpers";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const userId = await getAuthenticatedUserId(request);
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const teamIds = await getUserTeamIds(userId);
+
+    // Isolated Project Filter
+    const projectWhere = {
+      OR: [
+        { createdById: userId },
+        { assignedTeamId: { in: teamIds } },
+      ],
+    };
+
     const now = new Date();
     const todayStr = now.toISOString().split("T")[0];
 
@@ -10,18 +26,19 @@ export async function GET() {
     sevenDaysLater.setUTCDate(sevenDaysLater.getUTCDate() + 7);
     const sevenDaysLaterStr = sevenDaysLater.toISOString().split("T")[0];
 
-    // Count stats
-    const totalProjects = await prisma.project.count();
+    // Count stats for user's accessible projects
+    const totalProjects = await prisma.project.count({ where: projectWhere });
     const completedProjects = await prisma.project.count({
-      where: { status: "Completed" },
+      where: { ...projectWhere, status: "Completed" },
     });
     const inProgressProjects = await prisma.project.count({
-      where: { status: "In Progress" },
+      where: { ...projectWhere, status: "In Progress" },
     });
 
-    // All non-completed projects with due dates
+    // All non-completed accessible projects with due dates
     const allProjects = await prisma.project.findMany({
       where: {
+        ...projectWhere,
         status: { not: "Completed" },
         dueDate: { not: null },
       },
@@ -42,8 +59,9 @@ export async function GET() {
       }
     }
 
-    // Project completion percentages
+    // Project completion percentages for user's projects
     const projectCompletions = await prisma.project.findMany({
+      where: projectWhere,
       select: { name: true, completion: true },
     });
 

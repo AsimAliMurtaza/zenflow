@@ -425,7 +425,7 @@ const ProjectOverview = ({ project }: { project: Project | null }) => {
                             fontSize="xs"
                             variant="subtle"
                           >
-                            {task.sprint.name}
+                            {task.sprint?.name ?? "Sprint"}
                           </Badge>
                         </Box>
                       </Flex>

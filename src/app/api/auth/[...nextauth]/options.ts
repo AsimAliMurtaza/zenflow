@@ -20,7 +20,7 @@ interface ExtendedSession extends NextAuthSession {
 }
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma) as Adapter,
+  adapter: PrismaAdapter(prisma as any) as Adapter,
 
   providers: [
     GitHubProvider({

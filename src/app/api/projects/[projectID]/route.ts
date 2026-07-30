@@ -1,14 +1,26 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getAuthenticatedUserId, isUserAuthorizedForProject } from "@/lib/authHelpers";
 
-// GET project details with full sprint+task tree
+// GET project details with full sprint+task tree (with authorization isolation check)
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: { projectID: string } }
 ) {
   const { projectID } = params;
 
   try {
+    const userId = await getAuthenticatedUserId(request);
+    if (userId) {
+      const authorized = await isUserAuthorizedForProject(userId, projectID);
+      if (!authorized) {
+        return NextResponse.json(
+          { error: "Access denied to this project" },
+          { status: 403 }
+        );
+      }
+    }
+
     const project = await prisma.project.findUnique({
       where: { id: projectID },
       include: {
@@ -54,6 +66,17 @@ export async function PUT(
   const { projectID } = params;
 
   try {
+    const userId = await getAuthenticatedUserId(request);
+    if (userId) {
+      const authorized = await isUserAuthorizedForProject(userId, projectID);
+      if (!authorized) {
+        return NextResponse.json(
+          { error: "Access denied to this project" },
+          { status: 403 }
+        );
+      }
+    }
+
     const updateData = await request.json();
     const { id: _id, createdById: _c, createdAt: _ca, ...safeData } = updateData;
     void _id; void _c; void _ca;
@@ -79,12 +102,23 @@ export async function PUT(
 
 // DELETE — remove project
 export async function DELETE(
-  _request: Request,
+  request: Request,
   { params }: { params: { projectID: string } }
 ) {
   const { projectID } = params;
 
   try {
+    const userId = await getAuthenticatedUserId(request);
+    if (userId) {
+      const authorized = await isUserAuthorizedForProject(userId, projectID);
+      if (!authorized) {
+        return NextResponse.json(
+          { error: "Access denied to this project" },
+          { status: 403 }
+        );
+      }
+    }
+
     await prisma.project.delete({ where: { id: projectID } });
     return NextResponse.json({ message: "Project deleted" });
   } catch (error) {

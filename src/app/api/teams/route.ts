@@ -1,10 +1,22 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getAuthenticatedUserId, getUserTeamIds } from "@/lib/authHelpers";
 
-// GET all teams with their members
-export async function GET() {
+// GET teams accessible by the authenticated user
+export async function GET(request: Request) {
   try {
+    const userId = await getAuthenticatedUserId(request);
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const teamIds = await getUserTeamIds(userId);
+
+    // Isolated Teams query: Only teams the user is a member of
     const teams = await prisma.team.findMany({
+      where: {
+        id: { in: teamIds },
+      },
       include: {
         members: {
           include: {
@@ -12,6 +24,9 @@ export async function GET() {
               select: { id: true, name: true, email: true, image: true },
             },
           },
+        },
+        projects: {
+          select: { id: true, name: true, status: true },
         },
       },
       orderBy: { createdAt: "asc" },
@@ -27,10 +42,12 @@ export async function GET() {
   }
 }
 
-// POST — create a new team
+// POST — create a new team (auto-adds creator as owner)
 export async function POST(request: Request) {
   try {
-    const { name } = await request.json();
+    const userId = await getAuthenticatedUserId(request);
+    const { name, creatorId } = await request.json();
+    const activeUserId = creatorId || userId;
 
     if (!name) {
       return NextResponse.json(
@@ -39,9 +56,34 @@ export async function POST(request: Request) {
       );
     }
 
-    const team = await prisma.team.create({
-      data: { name },
-      include: { members: true },
+    const team = await prisma.$transaction(async (tx) => {
+      const newTeam = await tx.team.create({
+        data: { name },
+      });
+
+      if (activeUserId) {
+        await tx.teamMember.create({
+          data: {
+            teamId: newTeam.id,
+            userId: activeUserId,
+            role: "owner",
+          },
+        });
+      }
+
+      return tx.team.findUnique({
+        where: { id: newTeam.id },
+        include: {
+          members: {
+            include: {
+              user: {
+                select: { id: true, name: true, email: true, image: true },
+              },
+            },
+          },
+          projects: { select: { id: true, name: true, status: true } },
+        },
+      });
     });
 
     return NextResponse.json(team, { status: 201 });

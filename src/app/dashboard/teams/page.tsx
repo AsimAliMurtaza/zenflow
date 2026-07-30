@@ -1,21 +1,24 @@
 import Teams from "@/components/Teams";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/options";
 
 export default async function TeamsPage() {
-  // Fetch teams from the API
+  const session = await getServerSession(authOptions);
+
   const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/teams`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
+      Authorization: `Bearer ${session?.user?.id}`,
     },
-    cache: "no-store", // Ensure fresh data is fetched
+    cache: "no-store",
   });
 
   if (!response.ok) {
-    throw new Error("Failed to fetch teams");
+    return <div>Failed to load teams</div>;
   }
 
   const teams = await response.json();
-  console.log(teams); // Debugging: Check the fetched data
 
-  return <Teams teams={teams} />;
+  return <Teams teams={Array.isArray(teams) ? teams : []} />;
 }

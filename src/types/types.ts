@@ -1,6 +1,7 @@
 // Enums for status and priority
 export type TaskStatus = "To Do" | "In Progress" | "Completed";
 export type TaskPriority = "Low" | "Medium" | "High";
+export type SprintStatus = "Active" | "Planned" | "Completed";
 
 // Assignee type (join table row)
 export type TaskAssignee = {
@@ -13,17 +14,17 @@ export type TaskAssignee = {
 export type Task = {
   id: string;
   title: string;
-  sprint: Sprint;
+  sprint?: Sprint;
   sprintId: string;
-  description: string;
+  description?: string | null;
   status: TaskStatus;
   priority: TaskPriority;
   dueDate?: string | Date | null;
   assignees?: TaskAssignee[];
   projectId: string;
   project?: Project;
-  createdAt?: Date;
-  updatedAt?: Date;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
 };
 
 export type TaskBoard = {
@@ -38,7 +39,7 @@ export type TeamMember = {
   teamId: string;
   userId: string;
   role: string;
-  joinedAt?: Date;
+  joinedAt?: Date | string;
   user?: {
     id: string;
     name?: string | null;
@@ -54,9 +55,11 @@ export type Sprint = {
   projectId: string;
   startDate: string | Date;
   endDate: string | Date;
-  tasks: Task[];
+  status?: SprintStatus;
+  tasks?: Task[];
   completion: number;
-  createdAt?: Date;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
 };
 
 // Team Type
@@ -64,7 +67,7 @@ export type Team = {
   id: string;
   name: string;
   members?: TeamMember[];
-  createdAt?: Date;
+  createdAt?: Date | string;
 };
 
 // Project Type
@@ -78,7 +81,7 @@ export type Project = {
   dueDate?: string | null;
   completion?: number;
   sprints?: Sprint[];
-  createdAt?: Date;
-  updatedAt?: Date;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
   createdById?: string;
 };

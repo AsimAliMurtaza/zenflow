@@ -1,139 +1,135 @@
-// components/TaskCard.tsx
+"use client";
+
 import {
   Box,
   Text,
   Badge,
   Flex,
-  IconButton,
-  Input,
-  Select,
-  Button,
+  HStack,
+  Avatar,
+  AvatarGroup,
+  Icon,
   useColorModeValue,
   Tooltip,
 } from "@chakra-ui/react";
-import { EditIcon, DeleteIcon } from "@chakra-ui/icons";
+import { FiCalendar, FiCheckSquare } from "react-icons/fi";
 import { Task } from "@/types/types";
 
 type TaskCardProps = {
   task: Task;
-  isEditing: boolean;
-  editTitle: string;
-  editPriority: Task["priority"];
-  onEditTitleChange: (value: string) => void;
-  onEditPriorityChange: (value: Task["priority"]) => void;
-  onSaveEdit: () => void;
-  onStartEditing: () => void;
-  onDeleteTask: () => void;
+  onSelectTask: (task: Task) => void;
 };
 
-const TaskCard = ({
-  task,
-  isEditing,
-  editTitle,
-  editPriority,
-  onEditTitleChange,
-  onEditPriorityChange,
-  onSaveEdit,
-  onStartEditing,
-  onDeleteTask,
-}: TaskCardProps) => {
+const TaskCard = ({ task, onSelectTask }: TaskCardProps) => {
   const cardBg = useColorModeValue("white", "gray.800");
-  const hoverBg = useColorModeValue("gray.100", "gray.700");
-  const inputBg = useColorModeValue("gray.100", "gray.700");
-  const inputFocusBg = useColorModeValue("gray.200", "gray.600");
-  const textColor = useColorModeValue("gray.800", "white");
-  const badgeColorSchemes = {
+  const cardBorder = useColorModeValue("gray.200", "gray.700");
+  const hoverBg = useColorModeValue("gray.50", "gray.750");
+  const textColor = useColorModeValue("gray.900", "white");
+  const subTextColor = useColorModeValue("gray.500", "gray.400");
+
+  const priorityColorMap = {
     High: "red",
-    Medium: "yellow",
+    Medium: "orange",
     Low: "green",
   };
+
+  const priorityStripeMap = {
+    High: "red.500",
+    Medium: "orange.400",
+    Low: "green.400",
+  };
+
+  const formattedDueDate = task.dueDate
+    ? typeof task.dueDate === "string"
+      ? new Date(task.dueDate).toLocaleDateString(undefined, { month: "short", day: "numeric" })
+      : new Date(task.dueDate).toLocaleDateString(undefined, { month: "short", day: "numeric" })
+    : null;
+
+  const isOverdue =
+    task.dueDate &&
+    new Date(task.dueDate) < new Date() &&
+    task.status !== "Completed";
 
   return (
     <Box
       bg={cardBg}
       p={4}
       borderRadius="xl"
-      shadow="md"
+      borderWidth="1px"
+      borderColor={cardBorder}
+      borderLeftWidth="4px"
+      borderLeftColor={priorityStripeMap[task.priority] || "gray.300"}
+      shadow="sm"
       w="full"
-      transition="all 0.2s"
-      _hover={{ bg: hoverBg }}
-      display="flex"
-      flexDirection="column"
-      gap={2}
+      cursor="pointer"
+      transition="all 0.2s ease"
+      _hover={{
+        shadow: "md",
+        bg: hoverBg,
+        transform: "translateY(-2px)",
+      }}
+      onClick={() => onSelectTask(task)}
     >
-      {isEditing ? (
-        <>
-          <Input
-            value={editTitle}
-            onChange={(e) => onEditTitleChange(e.target.value)}
-            borderRadius="xl"
-            bg={inputBg}
-            border="none"
-            _focus={{ bg: inputFocusBg }}
-          />
-          <Select
-            value={editPriority}
-            onChange={(e) =>
-              onEditPriorityChange(e.target.value as Task["priority"])
-            }
-            borderRadius="xl"
-            bg={inputBg}
-            border="none"
-            _focus={{ bg: inputFocusBg }}
-          >
-            <option value="Low">Low</option>
-            <option value="Medium">Medium</option>
-            <option value="High">High</option>
-          </Select>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={onSaveEdit}
-            borderRadius="full"
-            boxShadow="md"
-          >
-            Save
-          </Button>
-        </>
-      ) : (
-        <>
-          <Text fontSize="md" fontWeight="semibold" color={textColor}>
-            {task.title}
-          </Text>
+      <Flex direction="column" gap={3}>
+        {/* Header Badges */}
+        <Flex justify="space-between" align="center">
           <Badge
-            colorScheme={badgeColorSchemes[task.priority]}
+            colorScheme={priorityColorMap[task.priority]}
+            variant="subtle"
             borderRadius="full"
-            px={2}
-            py={1}
-            variant="solid"
+            px={2.5}
+            py={0.5}
+            fontSize="xs"
+            fontWeight="semibold"
           >
             {task.priority} Priority
           </Badge>
-          <Flex gap={2} mt={2}>
-            <Tooltip label="Edit Task">
-              <IconButton
-                icon={<EditIcon />}
-                size="sm"
-                variant="ghost"
-                aria-label="Edit Task"
-                onClick={onStartEditing}
-                borderRadius="full"
-              />
-            </Tooltip>
-            <Tooltip label="Delete Task">
-              <IconButton
-                icon={<DeleteIcon />}
-                size="sm"
-                variant="ghost"
-                colorScheme="red"
-                aria-label="Delete Task"
-                onClick={onDeleteTask}
-                borderRadius="full"
-              />
-            </Tooltip>
-          </Flex>
-        </>
-      )}
+          {task.sprint && (
+            <Text fontSize="xs" color="blue.400" fontWeight="medium">
+              {task.sprint.name}
+            </Text>
+          )}
+        </Flex>
+
+        {/* Task Title */}
+        <Text fontSize="sm" fontWeight="bold" color={textColor} lineHeight="snug" noOfLines={2}>
+          {task.title}
+        </Text>
+
+        {/* Task Description Snippet if present */}
+        {task.description && (
+          <Text fontSize="xs" color={subTextColor} noOfLines={2}>
+            {task.description}
+          </Text>
+        )}
+
+        {/* Footer: Due Date & Assignee Avatars */}
+        <Flex justify="space-between" align="center" mt={1}>
+          {formattedDueDate ? (
+            <HStack spacing={1} color={isOverdue ? "red.500" : subTextColor}>
+              <Icon as={FiCalendar} boxSize={3.5} />
+              <Text fontSize="xs" fontWeight={isOverdue ? "bold" : "medium"}>
+                {formattedDueDate}
+              </Text>
+            </HStack>
+          ) : (
+            <HStack spacing={1} color={subTextColor}>
+              <Icon as={FiCheckSquare} boxSize={3.5} />
+              <Text fontSize="xs">Task</Text>
+            </HStack>
+          )}
+
+          {task.assignees && task.assignees.length > 0 && (
+            <AvatarGroup size="xs" max={3} spacing={-1}>
+              {task.assignees.map((assignee, idx) => (
+                <Tooltip key={idx} label={assignee.userEmail}>
+                  <Avatar name={assignee.userEmail} size="xs" />
+                </Tooltip>
+              ))}
+            </AvatarGroup>
+          )}
+        </Flex>
+      </Flex>
     </Box>
   );
 };

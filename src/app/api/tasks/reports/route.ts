@@ -1,10 +1,24 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getAuthenticatedUserId, getUserTeamIds } from "@/lib/authHelpers";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    // Get all projects with their tasks grouped by status/priority
+    const userId = await getAuthenticatedUserId(request);
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const teamIds = await getUserTeamIds(userId);
+
+    // Isolated Projects query for Task Reports
     const projects = await prisma.project.findMany({
+      where: {
+        OR: [
+          { createdById: userId },
+          { assignedTeamId: { in: teamIds } },
+        ],
+      },
       select: {
         id: true,
         name: true,
