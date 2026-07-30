@@ -1,45 +1,62 @@
-// app/api/projects/[projectID]/sprints/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/lib/mongodb";
-import Sprint from "@/models/Sprint";
-import Project from "@/models/Project";
+import { prisma } from "@/lib/prisma";
 
-export async function POST(
-  req: NextRequest,
+// GET all sprints for a project
+export async function GET(
+  _req: NextRequest,
   { params }: { params: { projectID: string } }
 ) {
   try {
-    await dbConnect();
-    const projectID = params.projectID;
-    const { name, startDate, endDate } = await req.json();
-
-    const newSprint = await Sprint.create({
-      name,
-      startDate,
-      endDate,
-      project: projectID,
+    const sprints = await prisma.sprint.findMany({
+      where: { projectId: params.projectID },
+      include: {
+        tasks: {
+          include: { assignees: true },
+        },
+      },
+      orderBy: { createdAt: "asc" },
     });
 
-    await Project.findByIdAndUpdate(projectID, {
-      $push: { sprints: newSprint._id },
-    });
-
-    return NextResponse.json({ sprint: newSprint }, { status: 201 });
+    return NextResponse.json(sprints);
   } catch (error) {
-    console.error("Error creating sprint:", error);
+    console.error("GET sprints error:", error);
     return NextResponse.json(
-      { error: "Failed to create sprint" },
+      { error: "Failed to fetch sprints" },
       { status: 500 }
     );
   }
 }
 
-export async function GET(
+// POST — create a new sprint in a project
+export async function POST(
   req: NextRequest,
   { params }: { params: { projectID: string } }
 ) {
-  await dbConnect();
-  const projectID = params.projectID;
-  const sprints = await Sprint.find({ project: projectID });
-  return NextResponse.json(sprints);
+  try {
+    const { name, startDate, endDate } = await req.json();
+
+    if (!name || !startDate || !endDate) {
+      return NextResponse.json(
+        { error: "name, startDate and endDate are required" },
+        { status: 400 }
+      );
+    }
+
+    const sprint = await prisma.sprint.create({
+      data: {
+        name,
+        startDate: new Date(startDate),
+        endDate: new Date(endDate),
+        projectId: params.projectID,
+      },
+    });
+
+    return NextResponse.json({ sprint }, { status: 201 });
+  } catch (error) {
+    console.error("POST sprint error:", error);
+    return NextResponse.json(
+      { error: "Failed to create sprint" },
+      { status: 500 }
+    );
+  }
 }

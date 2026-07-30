@@ -87,7 +87,7 @@ const Teams = ({ teams: initialTeams }: TeamsProps) => {
         body: JSON.stringify({
           teamId: selectedTeamId,
           email: inviteEmail,
-          invitedBy: session?.user?.email,
+          invitedById: session?.user?.id,
         }),
       });
 
@@ -120,7 +120,7 @@ const Teams = ({ teams: initialTeams }: TeamsProps) => {
       });
 
       if (response.ok) {
-        setTeams(teams.filter((team) => team._id !== teamId));
+        setTeams(teams.filter((team) => team.id !== teamId));
         toast({ title: "Team deleted successfully.", status: "success" });
       } else {
         toast({ title: "Failed to delete team.", status: "error" });
@@ -146,7 +146,7 @@ const Teams = ({ teams: initialTeams }: TeamsProps) => {
         const updatedTeam = await response.json();
         setTeams((prevTeams) =>
           prevTeams.map((team) =>
-            team._id === updatedTeam.team._id ? updatedTeam.team : team
+            team.id === updatedTeam.team.id ? updatedTeam.team : team
           )
         );
         toast({ title: "Member deleted successfully.", status: "success" });
@@ -197,7 +197,7 @@ const Teams = ({ teams: initialTeams }: TeamsProps) => {
           >
             {teams.map((team) => (
               <TeamCard
-                key={team._id}
+                key={team.id}
                 team={team}
                 onDeleteTeam={deleteTeam}
                 onAddMember={(teamId) => {

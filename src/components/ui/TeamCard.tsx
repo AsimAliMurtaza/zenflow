@@ -48,7 +48,7 @@ const TeamCard = ({
               colorScheme="red"
               variant="ghost"
               size="sm"
-              onClick={() => onDeleteTeam(team._id)}
+              onClick={() => onDeleteTeam(team.id)}
             />
           </Tooltip>
         </Flex>
@@ -56,7 +56,7 @@ const TeamCard = ({
       <CardBody p={4}>
         {team.members && team.members.length > 0 ? (
           <VStack align="start" spacing={3}>
-            {team.members.map((memberEmail: string, index: number) => (
+            {team.members.map((member, index) => (
               <Flex
                 key={index}
                 align="center"
@@ -67,9 +67,9 @@ const TeamCard = ({
                 bg={memberBg}
               >
                 <HStack spacing={2}>
-                  <Avatar name={memberEmail} size="xs" />
+                  <Avatar name={member.user?.name ?? member.user?.email ?? "?"} size="xs" />
                   <Text fontSize="sm" color={textColor}>
-                    {memberEmail}
+                    {member.user?.name ?? member.user?.email ?? "Unknown"}
                   </Text>
                 </HStack>
                 <Tooltip label="Remove Member">
@@ -79,7 +79,7 @@ const TeamCard = ({
                     colorScheme="red"
                     variant="ghost"
                     size="xs"
-                    onClick={() => onDeleteMember(team._id, memberEmail)}
+                    onClick={() => onDeleteMember(team.id, member.id)}
                   />
                 </Tooltip>
               </Flex>
@@ -98,7 +98,7 @@ const TeamCard = ({
               colorScheme="green"
               size="sm"
               borderRadius="full"
-              onClick={() => onAddMember(team._id)}
+              onClick={() => onAddMember(team.id)}
             />
           </Tooltip>
         </Flex>

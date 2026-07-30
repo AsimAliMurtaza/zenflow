@@ -72,7 +72,7 @@ const TaskColumn = ({
             {status}
           </Heading>
           {tasks.map((task, index) => (
-            <Draggable key={task._id} draggableId={task._id} index={index}>
+            <Draggable key={task.id} draggableId={task.id} index={index}>
               {(provided) => (
                 <Box
                   ref={provided.innerRef}
@@ -81,14 +81,14 @@ const TaskColumn = ({
                 >
                   <TaskCard
                     task={task}
-                    isEditing={editingTaskId === task._id}
+                    isEditing={editingTaskId === task.id}
                     editTitle={editTitle}
                     editPriority={editPriority}
                     onEditTitleChange={onEditTitleChange}
                     onEditPriorityChange={onEditPriorityChange}
                     onSaveEdit={onSaveEdit}
-                    onStartEditing={() => onEditTask(task._id)}
-                    onDeleteTask={() => onDeleteTask(task._id)}
+                    onStartEditing={() => onEditTask(task.id)}
+                    onDeleteTask={() => onDeleteTask(task.id)}
                   />
                 </Box>
               )}

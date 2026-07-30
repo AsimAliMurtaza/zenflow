@@ -1,28 +1,45 @@
 import { NextResponse } from "next/server";
-import connectDB from "@/lib/mongodb";
-import Team from "@/models/Team";
-import { TeamMember } from "@/types/types";
+import { prisma } from "@/lib/prisma";
 
+// DELETE — remove a member from a team
 export async function DELETE(request: Request) {
   try {
-    await connectDB();
     const { teamId, memberId } = await request.json();
 
-    // Find the team and remove the member
-    const team = await Team.findById(teamId);
-    if (!team) {
-      return NextResponse.json({ message: "Team not found" }, { status: 404 });
+    if (!teamId || !memberId) {
+      return NextResponse.json(
+        { message: "teamId and memberId are required" },
+        { status: 400 }
+      );
     }
 
-    // Filter out the member to be deleted
-    team.members = team.members.filter(
-      (member: TeamMember) => member._id.toString() !== memberId
-    );
+    // memberId here is the TeamMember.id
+    const member = await prisma.teamMember.findUnique({
+      where: { id: memberId },
+    });
 
-    await team.save();
+    if (!member || member.teamId !== teamId) {
+      return NextResponse.json(
+        { message: "Member not found in this team" },
+        { status: 404 }
+      );
+    }
+
+    await prisma.teamMember.delete({ where: { id: memberId } });
+
+    const updatedTeam = await prisma.team.findUnique({
+      where: { id: teamId },
+      include: {
+        members: {
+          include: {
+            user: { select: { id: true, name: true, email: true, image: true } },
+          },
+        },
+      },
+    });
 
     return NextResponse.json(
-      { message: "Member deleted successfully", team },
+      { message: "Member deleted successfully", team: updatedTeam },
       { status: 200 }
     );
   } catch (error) {

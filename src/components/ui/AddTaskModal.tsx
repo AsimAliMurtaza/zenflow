@@ -33,7 +33,7 @@ type AddTaskModalProps = {
   onAddTask: () => void;
   taskSprint: string;
   onTaskSprintChange: (value: string) => void;
-  sprints: { _id: string; name: string }[]; // Replace with your actual sprint type
+  sprints: { id: string; name: string }[]; // Sprint type
 };
 
 
@@ -104,9 +104,9 @@ const AddTaskModal = ({
               placeholder="Select a team member"
               value={taskAssignedTo}
               onChange={(e) => onTaskAssignedToChange(e.target.value)}
-            >{(team !== void 0) && (team.members !== void 0) && team.members.map((member:string, index:number) => (
-                <option key={index} value={member}>
-                {member}
+            >{(team !== void 0) && (team.members !== void 0) && team.members.map((member, index) => (
+                <option key={index} value={member.user?.email ?? ""}>
+                  {member.user?.name ?? member.user?.email ?? "Unknown"}
                 </option>
               ))
             }
@@ -120,7 +120,7 @@ const AddTaskModal = ({
               onChange={(e) => onTaskSprintChange(e.target.value)}
             >
               {sprints.map((sprint) => (
-                <option key={sprint._id} value={sprint._id}>
+                <option key={sprint.id} value={sprint.id}>
                   {sprint.name}
                 </option>
               ))}

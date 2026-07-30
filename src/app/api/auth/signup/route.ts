@@ -1,14 +1,19 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import dbConnect from "@/lib/mongodb";
-import User from "@/models/User";
+import { prisma } from "@/lib/prisma";
+
 export async function POST(req: Request) {
   try {
-    await dbConnect();
-    const { email, password } = await req.json();
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const { email, password, name } = await req.json();
 
-    const existingUser = await User.findOne({ email });
+    if (!email || !password) {
+      return NextResponse.json(
+        { error: "Email and password are required" },
+        { status: 400 }
+      );
+    }
+
+    const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
       return NextResponse.json(
         { error: "User already exists" },
@@ -16,8 +21,16 @@ export async function POST(req: Request) {
       );
     }
 
-    const newUser = new User({ email, password: hashedPassword });
-    await newUser.save();
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await prisma.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+        name: name ?? "",
+        role: "user",
+      },
+    });
 
     return NextResponse.json({ message: "User created" }, { status: 201 });
   } catch (error) {

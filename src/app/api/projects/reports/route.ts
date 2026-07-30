@@ -1,61 +1,51 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/mongodb";
-import Project from "@/models/Project";
+import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   try {
-    await dbConnect();
-
-    // Get current date in YYYY-MM-DD format (UTC)
     const now = new Date();
-    const todayUTC = now.toISOString().split("T")[0]; // Format: "2025-04-18"
+    const todayStr = now.toISOString().split("T")[0];
 
-    // Calculate 7 days from now in YYYY-MM-DD format
     const sevenDaysLater = new Date(now);
     sevenDaysLater.setUTCDate(sevenDaysLater.getUTCDate() + 7);
-    const sevenDaysLaterUTC = sevenDaysLater.toISOString().split("T")[0];
+    const sevenDaysLaterStr = sevenDaysLater.toISOString().split("T")[0];
 
-    // Total Projects
-    const totalProjects = await Project.countDocuments();
-
-    // Completed Projects
-    const completedProjects = await Project.find({
-      status: { $eq: "Completed" },
-    }).countDocuments();
-
-    // In Progress Projects
-    const inProgressProjects = await Project.countDocuments({
-      status: "In Progress",
+    // Count stats
+    const totalProjects = await prisma.project.count();
+    const completedProjects = await prisma.project.count({
+      where: { status: "Completed" },
+    });
+    const inProgressProjects = await prisma.project.count({
+      where: { status: "In Progress" },
     });
 
-    // Get all non-completed projects with due dates
-    const allProjects = await Project.find({
-      status: { $ne: "Completed" },
-      dueDate: { $ne: "" }, // Exclude empty/null due dates
-    }).select("name dueDate -_id");
+    // All non-completed projects with due dates
+    const allProjects = await prisma.project.findMany({
+      where: {
+        status: { not: "Completed" },
+        dueDate: { not: null },
+      },
+      select: { name: true, dueDate: true },
+    });
 
-    // Categorize projects
     const overdueProjects = [];
     const approachingDeadlineProjects = [];
 
     for (const project of allProjects) {
       const dueDate = project.dueDate;
-
       if (!dueDate) continue;
 
-      if (dueDate < todayUTC) {
-        // Overdue (due date is before today)
+      if (dueDate < todayStr) {
         overdueProjects.push(project);
-      } else if (dueDate <= sevenDaysLaterUTC) {
-        // Approaching deadline (due date is today or within 7 days)
+      } else if (dueDate <= sevenDaysLaterStr) {
         approachingDeadlineProjects.push(project);
       }
     }
 
-    // Completion Percentages
-    const projectCompletions = await Project.find({}).select(
-      "name completion -_id"
-    );
+    // Project completion percentages
+    const projectCompletions = await prisma.project.findMany({
+      select: { name: true, completion: true },
+    });
 
     return NextResponse.json({
       totalProjects,

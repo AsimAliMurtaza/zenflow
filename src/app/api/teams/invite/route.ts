@@ -1,39 +1,70 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/mongodb";
-import User from "@/models/User";
-import Invitation from "@/models/Invitation";
+import { prisma } from "@/lib/prisma";
 import sendEmail from "@/lib/sendEmail";
 
 export async function POST(req: Request) {
-  await dbConnect();
-  const { teamId, email, invitedBy } = await req.json();
+  try {
+    const { teamId, email, invitedById } = await req.json();
 
-  // Check if the user exists
-  const user = await User.findOne({ email });
-  if (!user) {
-    return NextResponse.json({ error: "User not found" }, { status: 404 });
-  }
+    if (!teamId || !email || !invitedById) {
+      return NextResponse.json(
+        { error: "teamId, email, and invitedById are required" },
+        { status: 400 }
+      );
+    }
 
-  // Check if already invited
-  const existingInvite = await Invitation.findOne({ email, teamId });
-  if (existingInvite) {
+    // Check if the user exists in our system
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // Check if already a member
+    const existingMember = await prisma.teamMember.findUnique({
+      where: { teamId_userId: { teamId, userId: user.id } },
+    });
+    if (existingMember) {
+      return NextResponse.json(
+        { error: "User is already a member of this team" },
+        { status: 400 }
+      );
+    }
+
+    // Check if already invited (upsert to avoid duplicate)
+    const existingInvite = await prisma.invitation.findUnique({
+      where: { teamId_email: { teamId, email } },
+    });
+    if (existingInvite) {
+      return NextResponse.json(
+        { error: "User already has a pending invitation" },
+        { status: 400 }
+      );
+    }
+
+    // Create invitation
+    const invitation = await prisma.invitation.create({
+      data: {
+        teamId,
+        email,
+        invitedById,
+        status: "pending",
+      },
+    });
+
+    // Send invite email
+    const inviteLink = `${process.env.NEXT_PUBLIC_API_URL}/invite?token=${invitation.id}&email=${email}`;
+    await sendEmail(
+      email,
+      "Team Invitation — ZenFlow",
+      `You have been invited to join a team on ZenFlow. Accept here: ${inviteLink}`
+    );
+
+    return NextResponse.json({ message: "Invitation sent successfully" });
+  } catch (error) {
+    console.error("Invite error:", error);
     return NextResponse.json(
-      { error: "User already invited" },
-      { status: 400 }
+      { error: "Failed to send invitation" },
+      { status: 500 }
     );
   }
-
-  // Create invitation
-  const invitation = await Invitation.create({ email, teamId, invitedBy });
-
-  // Send email with invitation link
-  const inviteLink = `${process.env.NEXT_PUBLIC_API_URL}/invite?token=${invitation._id}&email=${email}`;
-
-  await sendEmail(
-    email,
-    "Team Invitation",
-    `You have been invited to join a team. Accept here: ${inviteLink}`
-  );
-
-  return NextResponse.json({ message: "Invitation sent successfully" });
 }

@@ -1,51 +1,51 @@
 import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/lib/mongodb";
-import Project from "@/models/Project";
-import { Sprint } from "@/types/types";
+import { prisma } from "@/lib/prisma";
 
+// PUT — update a sprint's name/dates
 export async function PUT(
   req: NextRequest,
   { params }: { params: { projectID: string; sprintID: string } }
 ) {
-  await dbConnect();
-  const { projectID, sprintID } = params;
-  const updates = await req.json();
+  const { sprintID } = params;
 
-  const project = await Project.findById(projectID).populate("sprints");
-  if (!project)
-    return NextResponse.json({ error: "Project not found" }, { status: 404 });
+  try {
+    const { name, startDate, endDate } = await req.json();
 
-  const sprint = project.sprints.find(
-    (s: Sprint) => s._id.toString() === sprintID
-  );
-  if (!sprint)
-    return NextResponse.json({ error: "Sprint not found" }, { status: 404 });
+    const sprint = await prisma.sprint.update({
+      where: { id: sprintID },
+      data: {
+        name,
+        startDate: startDate ? new Date(startDate) : undefined,
+        endDate: endDate ? new Date(endDate) : undefined,
+      },
+      include: { tasks: true },
+    });
 
-  // Update fields
-  sprint.name = updates.name;
-  sprint.startDate = updates.startDate;
-  sprint.endDate = updates.endDate;
-
-  await sprint.save(); // Save the Sprint document directly
-
-  return NextResponse.json(sprint);
+    return NextResponse.json(sprint);
+  } catch (error) {
+    console.error("PUT sprint error:", error);
+    return NextResponse.json(
+      { error: "Failed to update sprint" },
+      { status: 500 }
+    );
+  }
 }
 
+// DELETE — remove a sprint and its tasks (cascade via schema)
 export async function DELETE(
-  req: NextRequest,
+  _req: NextRequest,
   { params }: { params: { projectID: string; sprintID: string } }
 ) {
-  await dbConnect();
-  const { projectID, sprintID } = params;
+  const { sprintID } = params;
 
-  const project = await Project.findById(projectID);
-  if (!project)
-    return NextResponse.json({ error: "Project not found" }, { status: 404 });
-
-  project.sprints = project.sprints.filter(
-    (s: Sprint) => s._id.toString() !== sprintID
-  );
-  await project.save();
-
-  return NextResponse.json({ message: "Sprint deleted" });
+  try {
+    await prisma.sprint.delete({ where: { id: sprintID } });
+    return NextResponse.json({ message: "Sprint deleted" });
+  } catch (error) {
+    console.error("DELETE sprint error:", error);
+    return NextResponse.json(
+      { error: "Failed to delete sprint" },
+      { status: 500 }
+    );
+  }
 }

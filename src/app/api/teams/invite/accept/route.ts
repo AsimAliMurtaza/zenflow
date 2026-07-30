@@ -1,17 +1,16 @@
-// app/api/invitations/accept/route.ts
 import { NextResponse } from "next/server";
-import connectDB from "@/lib/mongodb";
-import Invitation from "@/models/Invitation";
-import Team from "@/models/Team";
+import { prisma } from "@/lib/prisma";
 
+// POST — accept a team invitation using the token (invitation.id) and email
 export async function POST(req: Request) {
-  await connectDB();
-
-  const { token, email } = await req.json(); // Use email instead of userId
+  const { token, email } = await req.json();
 
   try {
-    // Find the invitation
-    const invitation = await Invitation.findById(token);
+    // Find the invitation by id
+    const invitation = await prisma.invitation.findUnique({
+      where: { id: token },
+    });
+
     if (!invitation || invitation.status !== "pending") {
       return NextResponse.json(
         { error: "Invalid or expired invitation" },
@@ -19,22 +18,44 @@ export async function POST(req: Request) {
       );
     }
 
-    // Add the user's email to the team
-    const team = await Team.findByIdAndUpdate(
-      invitation.teamId,
-      { $push: { members: email } },
-      { new: true }
-    );
-
-    if (!team) {
+    if (invitation.email !== email) {
       return NextResponse.json(
-        { error: "Team not found" },
-        { status: 404 }
+        { error: "Email does not match invitation" },
+        { status: 400 }
       );
     }
 
-    // Mark the invitation as accepted
-    await Invitation.findByIdAndUpdate(token, { status: "accepted" });
+    // Look up user by email
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // Add user as team member (upsert to avoid duplicates)
+    await prisma.teamMember.upsert({
+      where: {
+        teamId_userId: { teamId: invitation.teamId, userId: user.id },
+      },
+      create: { teamId: invitation.teamId, userId: user.id, role: "member" },
+      update: {},
+    });
+
+    // Mark invitation as accepted
+    await prisma.invitation.update({
+      where: { id: token },
+      data: { status: "accepted" },
+    });
+
+    const team = await prisma.team.findUnique({
+      where: { id: invitation.teamId },
+      include: {
+        members: {
+          include: {
+            user: { select: { id: true, name: true, email: true } },
+          },
+        },
+      },
+    });
 
     return NextResponse.json(
       { message: "Invitation accepted successfully", team },

@@ -2,17 +2,28 @@
 export type TaskStatus = "To Do" | "In Progress" | "Completed";
 export type TaskPriority = "Low" | "Medium" | "High";
 
+// Assignee type (join table row)
+export type TaskAssignee = {
+  id: string;
+  taskId: string;
+  userEmail: string;
+};
+
 // Task Type
 export type Task = {
-  _id: string;
+  id: string;
   title: string;
   sprint: Sprint;
+  sprintId: string;
   description: string;
   status: TaskStatus;
   priority: TaskPriority;
-  dueDate?: string | Date;
-  assignedTo?: string | null;
-  project: Project;
+  dueDate?: string | Date | null;
+  assignees?: TaskAssignee[];
+  projectId: string;
+  project?: Project;
+  createdAt?: Date;
+  updatedAt?: Date;
 };
 
 export type TaskBoard = {
@@ -21,42 +32,53 @@ export type TaskBoard = {
   Completed: Task[];
 };
 
-// TeamMember Type
+// TeamMember Type (join table row with nested user)
 export type TeamMember = {
-  _id: string;
-  name: string;
-  email: string;
+  id: string;
+  teamId: string;
+  userId: string;
   role: string;
+  joinedAt?: Date;
+  user?: {
+    id: string;
+    name?: string | null;
+    email: string;
+    image?: string | null;
+  };
 };
 
 // Sprint Type
 export type Sprint = {
-  _id: string;
+  id: string;
   name: string;
-  projectId: Project;
+  projectId: string;
   startDate: string | Date;
   endDate: string | Date;
   tasks: Task[];
-  completion: number; // represents percent completion of tasks
+  completion: number;
+  createdAt?: Date;
 };
 
 // Team Type
 export type Team = {
-  _id: string;
+  id: string;
   name: string;
-  members?: string[]; // Added members array (optional)
+  members?: TeamMember[];
+  createdAt?: Date;
 };
-// types/types.ts
+
+// Project Type
 export type Project = {
-  _id: string;
+  id: string;
   name: string;
   description: string;
-  status: TaskStatus;
-  assignedTeam: string | null; // Use Team instead of string
-  dueDate: string;
-  completion?: number; // Optional
-  sprints?: Sprint[]; // Optional
-  createdAt?: Date; // Optional
-  updatedAt?: Date; // Optional
-  createdBy?: string; // Optional
+  status: string;
+  assignedTeamId?: string | null;
+  assignedTeam?: Team | null;
+  dueDate?: string | null;
+  completion?: number;
+  sprints?: Sprint[];
+  createdAt?: Date;
+  updatedAt?: Date;
+  createdById?: string;
 };

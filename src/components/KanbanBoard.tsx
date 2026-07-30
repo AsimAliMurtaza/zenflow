@@ -113,9 +113,9 @@ const KanbanBoard = () => {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          id: movedTask._id,
+          id: movedTask.id,
           status: destination.droppableId,
-          sprint: movedTask.sprint._id,
+          sprint: movedTask.sprint?.id,
         }),
       });
     } catch (error) {
@@ -143,7 +143,7 @@ const KanbanBoard = () => {
           priority: taskPriority,
           dueDate: taskDueDate || undefined,
           assignedTo: taskAssignedTo,
-          sprintID: taskSprint || undefined,
+          sprintId: taskSprint || undefined,
         }),
       });
 
@@ -178,7 +178,7 @@ const KanbanBoard = () => {
 
       setTasks((prevTasks) => ({
         ...prevTasks,
-        [status]: prevTasks[status].filter((task) => task._id !== taskId),
+        [status]: prevTasks[status].filter((task) => task.id !== taskId),
       }));
     } catch (error) {
       console.error("Failed to delete task:", error);
@@ -214,7 +214,7 @@ const KanbanBoard = () => {
         ...prevTasks,
         [updatedTask.status]: prevTasks[
           updatedTask.status as keyof TaskBoard
-        ].map((task) => (task._id === updatedTask._id ? updatedTask : task)),
+        ].map((task) => (task.id === updatedTask.id ? updatedTask : task)),
       }));
       setEditingTaskId(null);
     } catch (error) {
@@ -246,8 +246,8 @@ const KanbanBoard = () => {
               onEditTask={(taskId) =>
                 startEditing(
                   taskId,
-                  taskList.find((task) => task._id === taskId)?.title || "",
-                  taskList.find((task) => task._id === taskId)?.priority ||
+                  taskList.find((task) => task.id === taskId)?.title || "",
+                  taskList.find((task) => task.id === taskId)?.priority ||
                     "Medium"
                 )
               }

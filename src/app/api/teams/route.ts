@@ -1,14 +1,22 @@
 import { NextResponse } from "next/server";
-import Team from "@/models/Team";
-import Member from "@/models/Member";
-import connectDB from "@/lib/mongodb";
+import { prisma } from "@/lib/prisma";
 
+// GET all teams with their members
 export async function GET() {
-  await connectDB();
-
   try {
-    // Fetch teams (no need to populate members)
-    const teams = await Team.find();
+    const teams = await prisma.team.findMany({
+      include: {
+        members: {
+          include: {
+            user: {
+              select: { id: true, name: true, email: true, image: true },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: "asc" },
+    });
+
     return NextResponse.json(teams);
   } catch (error) {
     console.error("Error fetching teams:", error);
@@ -19,45 +27,52 @@ export async function GET() {
   }
 }
 
-// POST a new team
+// POST — create a new team
 export async function POST(request: Request) {
-  await connectDB();
-  const { name } = await request.json();
+  try {
+    const { name } = await request.json();
 
-  // Create a new team
-  const team = new Team({ name });
-  await team.save();
+    if (!name) {
+      return NextResponse.json(
+        { error: "Team name is required" },
+        { status: 400 }
+      );
+    }
 
-  return NextResponse.json(team);
+    const team = await prisma.team.create({
+      data: { name },
+      include: { members: true },
+    });
+
+    return NextResponse.json(team, { status: 201 });
+  } catch (error) {
+    console.error("Error creating team:", error);
+    return NextResponse.json(
+      { error: "Failed to create team" },
+      { status: 500 }
+    );
+  }
 }
 
-// PUT add members to a team
-export async function PUT(request: Request) {
-  await connectDB();
-  const { teamId, name, role } = await request.json();
-
-  // Create a new member
-  const member = new Member({ name, role });
-  await member.save();
-
-  // Add the member to the team
-  const team = await Team.findByIdAndUpdate(
-    teamId,
-    { $push: { members: member._id } },
-    { new: true }
-  ).populate("members");
-
-  return NextResponse.json(team);
-}
-
-// DELETE a team
+// DELETE — remove a team (members cascade via schema)
 export async function DELETE(request: Request) {
-  await connectDB();
-  const { id } = await request.json();
+  try {
+    const { id } = await request.json();
 
-  // Delete the team and its members
-  const team = await Team.findByIdAndDelete(id);
-  await Member.deleteMany({ _id: { $in: team.members } });
+    if (!id) {
+      return NextResponse.json(
+        { error: "Team ID is required" },
+        { status: 400 }
+      );
+    }
 
-  return NextResponse.json({ message: "Team deleted" });
+    await prisma.team.delete({ where: { id } });
+    return NextResponse.json({ message: "Team deleted" });
+  } catch (error) {
+    console.error("Error deleting team:", error);
+    return NextResponse.json(
+      { error: "Failed to delete team" },
+      { status: 500 }
+    );
+  }
 }

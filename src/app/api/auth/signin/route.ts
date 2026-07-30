@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import dbConnect from "@/lib/mongodb";
-import User from "@/models/User";
-import { signJwtToken } from "@/lib/jwt";
+import { prisma } from "@/lib/prisma";
 
+// This custom signin route is kept for backward compatibility
+// Primary sign-in is handled by NextAuth CredentialsProvider
 export async function POST(req: Request) {
   try {
-    await dbConnect();
-
     const { email, password } = await req.json();
 
     if (!email || !password) {
@@ -17,10 +15,17 @@ export async function POST(req: Request) {
       );
     }
 
-    const user = await User.findOne({ email });
+    const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
       return NextResponse.json(
         { error: "Invalid email or password" },
+        { status: 401 }
+      );
+    }
+
+    if (!user.password) {
+      return NextResponse.json(
+        { error: "Please sign in with your OAuth provider" },
         { status: 401 }
       );
     }
@@ -33,13 +38,10 @@ export async function POST(req: Request) {
       );
     }
 
-    const token = signJwtToken({ id: user._id, email: user.email });
-
     return NextResponse.json(
       {
         message: "Login successful",
-        user: { id: user._id, name: user.name, email: user.email },
-        token,
+        user: { id: user.id, name: user.name, email: user.email },
       },
       { status: 200 }
     );

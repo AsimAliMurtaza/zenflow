@@ -11,6 +11,10 @@ export interface ProjectReport {
     totalTasks: number;
     completedTasks: number;
     pendingTasks: number;
+    highPriorityTasks?: number;
+    mediumPriorityTasks?: number;
+    lowPriorityTasks?: number;
+    overdueTasks?: number;
   }
   
   export interface DashboardReports {

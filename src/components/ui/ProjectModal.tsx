@@ -108,11 +108,10 @@ const ProjectModal = ({
               value={assignedTeam !== "" ? (assignedTeam as string) : "No teams found"}
               onChange={(e) => {
                 const selectedTeam = teams.find(
-                  (team) => team._id === e.target.value
+                  (team) => team.id === e.target.value
                 );
                 if (selectedTeam) {
-
-                  onAssignedTeamChange(selectedTeam._id);
+                  onAssignedTeamChange(selectedTeam.id);
                 }
               }}
               borderRadius="xl"
@@ -121,7 +120,7 @@ const ProjectModal = ({
               _focus={{ bg: useColorModeValue("gray.200", "gray.600") }}
             >
               {teams.map((team) => (
-                <option key={team._id} value={team._id}>
+                <option key={team.id} value={team.id}>
                   {team.name}
                 </option>
               ))}

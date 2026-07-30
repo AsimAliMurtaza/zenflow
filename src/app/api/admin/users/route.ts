@@ -1,27 +1,28 @@
-// app/api/admin/users/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/options"; // Make sure this exists and exports your authOptions
-import dbConnect from "@/lib/mongodb";
-import User from "@/models/User"; // Your Mongoose User model
+import { authOptions } from "@/app/api/auth/[...nextauth]/options";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
+  void req;
 
-  console.log(req);
   // Allow only admins
   if (session?.user?.role !== "admin") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
   try {
-    await dbConnect();
-
-    const users = await User.find(
-      {},
-      "id name email role image createdAt"
-    ).sort({
-      createdAt: -1,
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        image: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: "desc" },
     });
 
     return NextResponse.json({ users }, { status: 200 });

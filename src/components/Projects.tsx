@@ -40,7 +40,7 @@ const Projects = ({ projects: initialProjects, teams }: ProjectsProps) => {
 
   const [description, setDescription] = useState("");
 
-  const [status, setStatus] = useState<TaskStatus>("In Progress");
+  const [status, setStatus] = useState<string>("In Progress");
 
   const [assignedTeam, setAssignedTeam] = useState<string>("");
 
@@ -86,9 +86,8 @@ const Projects = ({ projects: initialProjects, teams }: ProjectsProps) => {
 
       setStatus(project.status);
 
-      setAssignedTeam(project.assignedTeam as string);
-
-      setDueDate(project.dueDate);
+      setAssignedTeam(project.assignedTeamId ?? "");
+      setDueDate(project.dueDate ?? "");
     } else {
       setEditingProject(null);
 
@@ -108,7 +107,7 @@ const Projects = ({ projects: initialProjects, teams }: ProjectsProps) => {
 
   // Create a new project
 
-  const createProject = async (projectData: Omit<Project, "_id">) => {
+  const createProject = async (projectData: Omit<Project, "id">) => {
     const response = await fetch("/api/projects", {
       method: "POST",
 
@@ -165,7 +164,7 @@ const Projects = ({ projects: initialProjects, teams }: ProjectsProps) => {
       const updatedProject: Project = await response.json();
 
       setProjects((prevProjects) =>
-        prevProjects.map((proj) => (proj._id === id ? updatedProject : proj))
+        prevProjects.map((proj) => (proj.id === id ? updatedProject : proj))
       );
 
       toast({
@@ -211,17 +210,16 @@ const Projects = ({ projects: initialProjects, teams }: ProjectsProps) => {
       name: projectName,
       description: description,
       status: status,
-      assignedTeam: assignedTeam,
+      assignedTeamId: assignedTeam || null,
       dueDate: dueDate,
-      sprints: [], // Assuming you add sprints later
-      createdBy: session?.user?.id,
-      completion: 0, // Default completion
+      createdById: session?.user?.id,
+      completion: 0,
     };
 
     if (editingProject) {
       // Don't reset the completion here
-      projectData.completion = editingProject.completion ?? 0; // Preserve the old completion or default to 0
-      await updateProject(editingProject._id, projectData);
+      projectData.completion = editingProject.completion ?? 0;
+      await updateProject(editingProject.id, projectData);
     } else {
       await createProject(projectData);
     }
@@ -241,7 +239,7 @@ const Projects = ({ projects: initialProjects, teams }: ProjectsProps) => {
     });
 
     if (response.ok) {
-      setProjects(projects.filter((proj) => proj._id !== id));
+      setProjects(projects.filter((proj) => proj.id !== id));
 
       toast({
         title: "Project deleted.",
@@ -296,12 +294,12 @@ const Projects = ({ projects: initialProjects, teams }: ProjectsProps) => {
         <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
           {projects.map((project) => (
             <ProjectCard
-              key={project._id}
+              key={project.id}
               project={project}
               onEdit={() => openModal(project)}
-              onDelete={() => removeProject(project._id)}
-              onClick={() => handleProjectClick(project._id)}
-              assignedTeam={project.assignedTeam as string}
+              onDelete={() => removeProject(project.id)}
+              onClick={() => handleProjectClick(project.id)}
+              assignedTeam={project.assignedTeamId ?? ""}
               teams={teams}
             />
           ))}
