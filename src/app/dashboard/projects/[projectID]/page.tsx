@@ -14,9 +14,7 @@ import {
   Progress,
   Tabs,
   TabList,
-  TabPanels,
   Tab,
-  TabPanel,
   Button,
   Spinner,
   Center,
@@ -29,14 +27,12 @@ import {
   Icon,
   Flex,
 } from "@chakra-ui/react";
-import { ChevronRightIcon, AddIcon } from "@chakra-ui/icons";
-import {
-  FiGrid,
-  FiList,
-  FiSettings,
-  FiPieChart,
-} from "react-icons/fi";
+import { ChevronRightIcon } from "@chakra-ui/icons";
+import { FiGrid, FiList, FiSettings, FiPieChart, FiCalendar, FiActivity, FiDownload } from "react-icons/fi";
 import { Project } from "@/types/types";
+import { ProjectRoadmap } from "@/components/ProjectRoadmap";
+import { AIHealthCheckModal } from "@/components/ui/AIHealthCheckModal";
+import { ExportModal } from "@/components/ui/ExportModal";
 
 const OverviewPage = dynamic(() => import("@/components/ProjectOverview"), {
   ssr: false,
@@ -46,7 +42,7 @@ const BoardPage = dynamic(() => import("@/components/KanbanBoard"), {
 });
 const BacklogPage = dynamic(
   () => import("@/components/BacklogView").then((mod) => mod.BacklogView),
-  { ssr: false }
+  { ssr: false },
 );
 const SettingsPage = dynamic(() => import("@/components/ProjectSettings"), {
   ssr: false,
@@ -59,6 +55,9 @@ const ProjectDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState(0);
+
+  const [isHealthCheckOpen, setIsHealthCheckOpen] = useState(false);
+  const [isExportOpen, setIsExportOpen] = useState(false);
 
   const headerBg = useColorModeValue("white", "gray.900");
   const borderColor = useColorModeValue("gray.200", "gray.800");
@@ -108,6 +107,7 @@ const ProjectDetailPage = () => {
 
   const allSprints = project.sprints || [];
   const allTasks = allSprints.flatMap((s) => s.tasks || []);
+  const pIdStr = Array.isArray(projectID) ? projectID[0] : projectID || "";
 
   return (
     <Box minH="calc(100vh - 60px)" bg={mainBg}>
@@ -137,7 +137,13 @@ const ProjectDetailPage = () => {
         </Breadcrumb>
 
         {/* Project Meta Bar */}
-        <Flex justify="space-between" align="center" flexWrap="wrap" pb={4} gap={4}>
+        <Flex
+          justify="space-between"
+          align="center"
+          flexWrap="wrap"
+          pb={4}
+          gap={4}
+        >
           <HStack spacing={4}>
             <Avatar
               name={project.name}
@@ -156,8 +162,8 @@ const ProjectDetailPage = () => {
                     project.status === "Completed"
                       ? "green"
                       : project.status === "In Progress"
-                      ? "blue"
-                      : "gray"
+                        ? "blue"
+                        : "gray"
                   }
                   borderRadius="full"
                   px={3}
@@ -173,7 +179,7 @@ const ProjectDetailPage = () => {
             </VStack>
           </HStack>
 
-          <HStack spacing={6} align="center">
+          <HStack spacing={4} align="center" flexWrap="wrap">
             {/* Completion */}
             <VStack align="start" spacing={0.5}>
               <Text fontSize="xs" color={textColor}>
@@ -216,6 +222,31 @@ const ProjectDetailPage = () => {
                 </HStack>
               </VStack>
             )}
+
+            {/* AI Risk Analysis & Export Action Buttons */}
+            <HStack spacing={2}>
+              <Button
+                leftIcon={<FiActivity />}
+                colorScheme="purple"
+                size="sm"
+                borderRadius="full"
+                px={4}
+                onClick={() => setIsHealthCheckOpen(true)}
+              >
+                AI Health Check
+              </Button>
+              <Button
+                leftIcon={<FiDownload />}
+                variant="outline"
+                colorScheme="blue"
+                size="sm"
+                borderRadius="full"
+                px={4}
+                onClick={() => setIsExportOpen(true)}
+              >
+                Export
+              </Button>
+            </HStack>
           </HStack>
         </Flex>
 
@@ -234,6 +265,9 @@ const ProjectDetailPage = () => {
               <Icon as={FiList} mr={2} /> Backlog & Sprints
             </Tab>
             <Tab fontWeight="bold" fontSize="sm">
+              <Icon as={FiCalendar} mr={2} /> Roadmap
+            </Tab>
+            <Tab fontWeight="bold" fontSize="sm">
               <Icon as={FiPieChart} mr={2} /> Summary
             </Tab>
             <Tab fontWeight="bold" fontSize="sm">
@@ -245,9 +279,7 @@ const ProjectDetailPage = () => {
 
       {/* Main Tab Content */}
       <Container maxW="100vw" p={{ base: 4, md: 6 }}>
-        {activeTab === 0 && (
-          <BoardPage onRefreshProject={fetchProject} />
-        )}
+        {activeTab === 0 && <BoardPage onRefreshProject={fetchProject} />}
         {activeTab === 1 && (
           <BacklogPage
             project={project}
@@ -256,18 +288,27 @@ const ProjectDetailPage = () => {
             onRefresh={fetchProject}
             onSelectTask={() => {}}
             onOpenCreateTask={() => setActiveTab(0)}
-            onOpenCreateSprint={() => setActiveTab(2)}
+            onOpenCreateSprint={() => setActiveTab(3)}
           />
         )}
-        {activeTab === 2 && <OverviewPage project={project} />}
-        {activeTab === 3 && (
-          <SettingsPage
-            projectID={
-              Array.isArray(projectID) ? projectID[0] : projectID || ""
-            }
-          />
-        )}
+        {activeTab === 2 && <ProjectRoadmap projectId={pIdStr} />}
+        {activeTab === 3 && <OverviewPage project={project} />}
+        {activeTab === 4 && <SettingsPage projectID={pIdStr} />}
       </Container>
+
+      {/* AI Health Check & Export Modals */}
+      <AIHealthCheckModal
+        isOpen={isHealthCheckOpen}
+        onClose={() => setIsHealthCheckOpen(false)}
+        projectId={pIdStr}
+        projectName={project.name}
+      />
+      <ExportModal
+        isOpen={isExportOpen}
+        onClose={() => setIsExportOpen(false)}
+        projectId={pIdStr}
+        projectName={project.name}
+      />
     </Box>
   );
 };

@@ -2,7 +2,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/options";
 import { prisma } from "@/lib/prisma";
 
-export async function getAuthenticatedUserId(req?: Request): Promise<string | null> {
+export async function getAuthenticatedUserId(
+  req?: Request,
+): Promise<string | null> {
   // 1. Try NextAuth session
   try {
     const session = await getServerSession(authOptions);
@@ -10,6 +12,7 @@ export async function getAuthenticatedUserId(req?: Request): Promise<string | nu
       return session.user.id;
     }
   } catch (err) {
+    console.log(err);
     // ignore
   }
 
@@ -37,7 +40,7 @@ export async function getUserTeamIds(userId: string): Promise<string[]> {
 
 export async function isUserAuthorizedForProject(
   userId: string,
-  projectId: string
+  projectId: string,
 ): Promise<boolean> {
   const project = await prisma.project.findUnique({
     where: { id: projectId },

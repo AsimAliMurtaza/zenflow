@@ -19,7 +19,6 @@ import {
   TagLabel,
 } from "@chakra-ui/react";
 import { DeleteIcon, AddIcon, MinusIcon } from "@chakra-ui/icons";
-import { FiUsers, FiFolder } from "react-icons/fi";
 import { Team } from "@/types/types";
 
 type TeamCardProps = {
@@ -71,9 +70,13 @@ const TeamCard = ({
                 {team.name}
               </Heading>
               <HStack spacing={2} fontSize="xs" color={subTextColor}>
-                <Text>{memberCount} {memberCount === 1 ? "member" : "members"}</Text>
+                <Text>
+                  {memberCount} {memberCount === 1 ? "member" : "members"}
+                </Text>
                 <Text>•</Text>
-                <Text>{projectCount} {projectCount === 1 ? "project" : "projects"}</Text>
+                <Text>
+                  {projectCount} {projectCount === 1 ? "project" : "projects"}
+                </Text>
               </HStack>
             </VStack>
           </HStack>
@@ -96,12 +99,22 @@ const TeamCard = ({
         {/* Assigned Projects Badges if any */}
         {team.projects && team.projects.length > 0 && (
           <VStack align="start" spacing={1.5} mb={3}>
-            <Text fontSize="xs" fontWeight="bold" color={subTextColor} textTransform="uppercase">
+            <Text
+              fontSize="xs"
+              fontWeight="bold"
+              color={subTextColor}
+              textTransform="uppercase"
+            >
               Assigned Projects
             </Text>
             <Flex wrap="wrap" gap={1.5}>
               {team.projects.map((proj) => (
-                <Tag key={proj.id} size="sm" colorScheme="blue" borderRadius="full">
+                <Tag
+                  key={proj.id}
+                  size="sm"
+                  colorScheme="blue"
+                  borderRadius="full"
+                >
                   <TagLabel>{proj.name}</TagLabel>
                 </Tag>
               ))}
@@ -114,7 +127,12 @@ const TeamCard = ({
         {/* Member List */}
         <VStack align="stretch" spacing={2}>
           <Flex justify="space-between" align="center">
-            <Text fontSize="xs" fontWeight="bold" color={subTextColor} textTransform="uppercase">
+            <Text
+              fontSize="xs"
+              fontWeight="bold"
+              color={subTextColor}
+              textTransform="uppercase"
+            >
               Members
             </Text>
             <Tooltip label="Add Member">
@@ -146,7 +164,12 @@ const TeamCard = ({
                     size="xs"
                   />
                   <VStack align="start" spacing={0} overflow="hidden">
-                    <Text fontSize="xs" fontWeight="semibold" color={textColor} noOfLines={1}>
+                    <Text
+                      fontSize="xs"
+                      fontWeight="semibold"
+                      color={textColor}
+                      noOfLines={1}
+                    >
                       {member.user?.name || member.user?.email || "Unknown"}
                     </Text>
                     {member.user?.name && (

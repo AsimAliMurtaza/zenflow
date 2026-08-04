@@ -25,7 +25,7 @@ import {
   TagLeftIcon,
   Tooltip,
 } from "@chakra-ui/react";
-import { ChatIcon, SmallCloseIcon } from "@chakra-ui/icons";
+import { ChatIcon } from "@chakra-ui/icons";
 import { useCallback, useState, useRef, useEffect } from "react";
 import { useToast } from "@chakra-ui/react";
 import { useSession } from "next-auth/react";
@@ -33,7 +33,13 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { materialDark } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { FiZap, FiPieChart, FiAlertCircle, FiUsers, FiTrash2 } from "react-icons/fi";
+import {
+  FiZap,
+  FiPieChart,
+  FiAlertCircle,
+  FiUsers,
+  FiTrash2,
+} from "react-icons/fi";
 
 interface AIMessage {
   role: "user" | "assistant";
@@ -48,10 +54,27 @@ interface CodeProps {
 }
 
 const promptChips = [
-  { label: "My Pending Tasks", icon: FiZap, query: "What tasks are assigned to me across all projects?" },
-  { label: "Project Summaries", icon: FiPieChart, query: "Give me a summary of all accessible projects, their statuses, and completions." },
-  { label: "High Priority Issues", icon: FiAlertCircle, query: "List all high priority and overdue tasks in my workspace." },
-  { label: "Team Members", icon: FiUsers, query: "List all teams I belong to and their members." },
+  {
+    label: "My Pending Tasks",
+    icon: FiZap,
+    query: "What tasks are assigned to me across all projects?",
+  },
+  {
+    label: "Project Summaries",
+    icon: FiPieChart,
+    query:
+      "Give me a summary of all accessible projects, their statuses, and completions.",
+  },
+  {
+    label: "High Priority Issues",
+    icon: FiAlertCircle,
+    query: "List all high priority and overdue tasks in my workspace.",
+  },
+  {
+    label: "Team Members",
+    icon: FiUsers,
+    query: "List all teams I belong to and their members.",
+  },
 ];
 
 export default function AIAssistant() {
@@ -66,8 +89,6 @@ export default function AIAssistant() {
 
   const surface = useColorModeValue("white", "gray.900");
   const onSurface = useColorModeValue("gray.800", "gray.100");
-  const primary = useColorModeValue("blue.600", "blue.400");
-  const onPrimary = useColorModeValue("white", "gray.900");
   const userBg = useColorModeValue("blue.50", "blue.900");
   const assistantBg = useColorModeValue("gray.50", "gray.800");
   const outline = useColorModeValue("gray.200", "gray.700");
@@ -75,7 +96,8 @@ export default function AIAssistant() {
 
   useEffect(() => {
     if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+      chatContainerRef.current.scrollTop =
+        chatContainerRef.current.scrollHeight;
     }
   }, [conversation, isAiLoading]);
 
@@ -105,7 +127,9 @@ export default function AIAssistant() {
 
         if (!response.ok) {
           const errorData = await response.json();
-          throw new Error(errorData?.error || "Failed to get response from Gemini");
+          throw new Error(
+            errorData?.error || "Failed to get response from Gemini",
+          );
         }
 
         const data = await response.json();
@@ -133,7 +157,7 @@ export default function AIAssistant() {
         setIsAiLoading(false);
       }
     },
-    [aiQuery, conversation, session, toast]
+    [aiQuery, conversation, session, toast],
   );
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -187,10 +211,7 @@ export default function AIAssistant() {
                 </Flex>
                 <VStack align="start" spacing={0}>
                   <Text fontWeight="bold" fontSize="md">
-                    ZenFlow AI Copilot
-                  </Text>
-                  <Text fontSize="xs" color="gray.500">
-                    Workspace-aware RAG Assistant
+                    ZenFlow AI
                   </Text>
                 </VStack>
               </HStack>
@@ -214,10 +235,21 @@ export default function AIAssistant() {
           </DrawerHeader>
 
           {/* Chat Body */}
-          <DrawerBody p={4} display="flex" flexDirection="column" ref={chatContainerRef}>
+          <DrawerBody
+            p={4}
+            display="flex"
+            flexDirection="column"
+            ref={chatContainerRef}
+          >
             {/* Quick Prompt Chips */}
             <Box mb={4}>
-              <Text fontSize="xs" fontWeight="bold" color="gray.500" mb={2} textTransform="uppercase">
+              <Text
+                fontSize="xs"
+                fontWeight="bold"
+                color="gray.500"
+                mb={2}
+                textTransform="uppercase"
+              >
                 Quick Commands
               </Text>
               <Flex wrap="wrap" gap={2}>
@@ -258,7 +290,8 @@ export default function AIAssistant() {
                     Ask ZenFlow AI anything about your workspace!
                   </Text>
                   <Text fontSize="xs" color="gray.500" maxW="300px" mt={1}>
-                    I have full real-time knowledge of your projects, tasks, sprints, deadlines, and teams.
+                    I have full real-time knowledge of your projects, tasks,
+                    sprints, deadlines, and teams.
                   </Text>
                 </Flex>
               ) : (
@@ -275,7 +308,12 @@ export default function AIAssistant() {
                     borderWidth="1px"
                     borderColor={outline}
                   >
-                    <Text fontSize="xs" fontWeight="bold" color={msg.role === "user" ? "blue.500" : "purple.500"} mb={1}>
+                    <Text
+                      fontSize="xs"
+                      fontWeight="bold"
+                      color={msg.role === "user" ? "blue.500" : "purple.500"}
+                      mb={1}
+                    >
                       {msg.role === "user" ? "You" : "ZenFlow AI"}
                     </Text>
                     <ReactMarkdown
@@ -327,7 +365,12 @@ export default function AIAssistant() {
               )}
 
               {isAiLoading && (
-                <HStack alignSelf="flex-start" p={3} bg={assistantBg} borderRadius="xl">
+                <HStack
+                  alignSelf="flex-start"
+                  p={3}
+                  bg={assistantBg}
+                  borderRadius="xl"
+                >
                   <Spinner size="xs" color="blue.500" />
                   <Text fontSize="xs" color="gray.500">
                     ZenFlow AI is thinking...

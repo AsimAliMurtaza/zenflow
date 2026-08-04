@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import {
   Box,
   Heading,
@@ -10,21 +9,17 @@ import {
   Button,
   Badge,
   Progress,
-  IconButton,
   Card,
   CardBody,
   Divider,
-  Tag,
   Flex,
-  Avatar,
-  AvatarGroup,
   useColorModeValue,
   useToast,
   Select,
   Icon,
 } from "@chakra-ui/react";
-import { AddIcon, DeleteIcon, EditIcon } from "@chakra-ui/icons";
-import { FiCalendar, FiPlay, FiCheckCircle } from "react-icons/fi";
+import { AddIcon } from "@chakra-ui/icons";
+import { FiCalendar } from "react-icons/fi";
 import { Project, Sprint, Task } from "@/types/types";
 
 interface BacklogViewProps {
@@ -55,7 +50,7 @@ export const BacklogView = ({
 
   // Tasks with no sprint or sprintId
   const backlogTasks = tasks.filter(
-    (t) => !t.sprintId || !sprints.some((s) => s.id === t.sprintId)
+    (t) => !t.sprintId || !sprints.some((s) => s.id === t.sprintId),
   );
 
   const handleMoveTaskSprint = async (taskId: string, newSprintId: string) => {
@@ -116,7 +111,7 @@ export const BacklogView = ({
       {sprints.map((sprint) => {
         const sprintTasks = tasks.filter((t) => t.sprintId === sprint.id);
         const completedTasks = sprintTasks.filter(
-          (t) => t.status === "Completed"
+          (t) => t.status === "Completed",
         ).length;
         const progress =
           sprintTasks.length > 0
@@ -136,12 +131,22 @@ export const BacklogView = ({
             <CardBody p={5}>
               <VStack align="stretch" spacing={4}>
                 {/* Sprint Title Bar */}
-                <Flex justify="space-between" align="center" flexWrap="wrap" gap={2}>
+                <Flex
+                  justify="space-between"
+                  align="center"
+                  flexWrap="wrap"
+                  gap={2}
+                >
                   <HStack spacing={3}>
                     <Heading size="md" fontWeight="bold">
                       {sprint.name}
                     </Heading>
-                    <Badge colorScheme="blue" borderRadius="full" px={2.5} py={0.5}>
+                    <Badge
+                      colorScheme="blue"
+                      borderRadius="full"
+                      px={2.5}
+                      py={0.5}
+                    >
                       {sprintTasks.length} Tasks
                     </Badge>
                     <HStack fontSize="xs" color={subTextColor}>
@@ -173,8 +178,16 @@ export const BacklogView = ({
 
                 {/* Progress bar */}
                 <Box>
-                  <Flex justify="space-between" fontSize="xs" color={subTextColor} mb={1}>
-                    <Text>Progress: {completedTasks} / {sprintTasks.length} tasks completed</Text>
+                  <Flex
+                    justify="space-between"
+                    fontSize="xs"
+                    color={subTextColor}
+                    mb={1}
+                  >
+                    <Text>
+                      Progress: {completedTasks} / {sprintTasks.length} tasks
+                      completed
+                    </Text>
                     <Text fontWeight="bold">{progress}%</Text>
                   </Flex>
                   <Progress
@@ -190,8 +203,14 @@ export const BacklogView = ({
                 {/* Sprint Task Rows */}
                 <VStack align="stretch" spacing={2}>
                   {sprintTasks.length === 0 ? (
-                    <Text fontSize="sm" color="gray.400" py={2} textAlign="center">
-                      No tasks in this sprint. Drag or move tasks from backlog here.
+                    <Text
+                      fontSize="sm"
+                      color="gray.400"
+                      py={2}
+                      textAlign="center"
+                    >
+                      No tasks in this sprint. Drag or move tasks from backlog
+                      here.
                     </Text>
                   ) : (
                     sprintTasks.map((task) => (
@@ -216,12 +235,19 @@ export const BacklogView = ({
                           >
                             {task.priority}
                           </Badge>
-                          <Text fontWeight="semibold" fontSize="sm" noOfLines={1}>
+                          <Text
+                            fontWeight="semibold"
+                            fontSize="sm"
+                            noOfLines={1}
+                          >
                             {task.title}
                           </Text>
                         </HStack>
 
-                        <HStack spacing={4} onClick={(e) => e.stopPropagation()}>
+                        <HStack
+                          spacing={4}
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <Select
                             size="xs"
                             value={task.sprintId || ""}
@@ -244,8 +270,8 @@ export const BacklogView = ({
                               task.status === "Completed"
                                 ? "green"
                                 : task.status === "In Progress"
-                                ? "blue"
-                                : "purple"
+                                  ? "blue"
+                                  : "purple"
                             }
                             fontSize="xs"
                             borderRadius="full"
@@ -279,7 +305,12 @@ export const BacklogView = ({
                 <Heading size="md" fontWeight="bold">
                   Backlog (Unassigned Tasks)
                 </Heading>
-                <Badge colorScheme="purple" borderRadius="full" px={2.5} py={0.5}>
+                <Badge
+                  colorScheme="purple"
+                  borderRadius="full"
+                  px={2.5}
+                  py={0.5}
+                >
                   {backlogTasks.length} Tasks
                 </Badge>
               </HStack>
@@ -300,7 +331,8 @@ export const BacklogView = ({
             <VStack align="stretch" spacing={2}>
               {backlogTasks.length === 0 ? (
                 <Text fontSize="sm" color="gray.400" py={3} textAlign="center">
-                  Backlog is empty! Create tasks to start planning upcoming sprints.
+                  Backlog is empty! Create tasks to start planning upcoming
+                  sprints.
                 </Text>
               ) : (
                 backlogTasks.map((task) => (
@@ -353,8 +385,8 @@ export const BacklogView = ({
                           task.status === "Completed"
                             ? "green"
                             : task.status === "In Progress"
-                            ? "blue"
-                            : "purple"
+                              ? "blue"
+                              : "purple"
                         }
                         fontSize="xs"
                         borderRadius="full"

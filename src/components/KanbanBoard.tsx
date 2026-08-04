@@ -19,7 +19,6 @@ import {
   AvatarGroup,
   Tooltip,
   Text,
-  Badge,
 } from "@chakra-ui/react";
 import { AddIcon, SearchIcon } from "@chakra-ui/icons";
 import { DragDropContext, DropResult } from "@hello-pangea/dnd";

@@ -19,7 +19,6 @@ import {
   VStack,
   Badge,
   Text,
-  Box,
   Tag,
   TagLabel,
   TagCloseButton,
@@ -28,8 +27,15 @@ import {
   useColorModeValue,
   useToast,
   Divider,
+  Checkbox,
+  Progress,
+  Box,
+  Flex,
+  IconButton,
+  Avatar,
 } from "@chakra-ui/react";
-import { Task, TaskPriority, TaskStatus, Sprint, Team } from "@/types/types";
+import { FiTrash2 } from "react-icons/fi";
+import { Task, TaskPriority, TaskStatus, Sprint, Team, Subtask, Comment } from "@/types/types";
 
 interface TaskDetailModalProps {
   isOpen: boolean;
@@ -60,11 +66,38 @@ export const TaskDetailModal = ({
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Subtasks & Comments State
+  const [subtasks, setSubtasks] = useState<Subtask[]>([]);
+  const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [newCommentText, setNewCommentText] = useState("");
+  const [isPostingComment, setIsPostingComment] = useState(false);
+
   const toast = useToast();
 
   const bg = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
   const inputBg = useColorModeValue("gray.50", "gray.700");
+  const textColor = useColorModeValue("gray.800", "gray.100");
+
+  const fetchTaskDetails = async (taskId: string) => {
+    try {
+      const [subRes, comRes] = await Promise.all([
+        fetch(`/api/tasks/${taskId}/subtasks`),
+        fetch(`/api/tasks/${taskId}/comments`),
+      ]);
+      if (subRes.ok) {
+        const subData = await subRes.json();
+        setSubtasks(subData);
+      }
+      if (comRes.ok) {
+        const comData = await comRes.json();
+        setComments(comData);
+      }
+    } catch (err) {
+      console.error("Error fetching subtasks/comments:", err);
+    }
+  };
 
   useEffect(() => {
     if (task) {
@@ -83,10 +116,91 @@ export const TaskDetailModal = ({
       setAssignedEmails(
         task.assignees ? task.assignees.map((a) => a.userEmail) : []
       );
+      setSubtasks(task.subtasks || []);
+      setComments(task.comments || []);
+      fetchTaskDetails(task.id);
     }
   }, [task]);
 
   if (!task) return null;
+
+  const handleAddSubtask = async () => {
+    if (!newSubtaskTitle.trim()) return;
+    try {
+      const res = await fetch(`/api/tasks/${task.id}/subtasks`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: newSubtaskTitle }),
+      });
+      if (res.ok) {
+        const created = await res.json();
+        setSubtasks((prev) => [...prev, created]);
+        setNewSubtaskTitle("");
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleToggleSubtask = async (subtaskId: string, isCompleted: boolean) => {
+    setSubtasks((prev) =>
+      prev.map((st) => (st.id === subtaskId ? { ...st, isCompleted } : st))
+    );
+    try {
+      await fetch(`/api/tasks/${task.id}/subtasks`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subtaskId, isCompleted }),
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDeleteSubtask = async (subtaskId: string) => {
+    setSubtasks((prev) => prev.filter((st) => st.id !== subtaskId));
+    try {
+      await fetch(`/api/tasks/${task.id}/subtasks?subtaskId=${subtaskId}`, {
+        method: "DELETE",
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleAddComment = async () => {
+    if (!newCommentText.trim()) return;
+    setIsPostingComment(true);
+    try {
+      const res = await fetch(`/api/tasks/${task.id}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: newCommentText }),
+      });
+      if (res.ok) {
+        const created = await res.json();
+        setComments((prev) => [...prev, created]);
+        setNewCommentText("");
+      } else {
+        toast({ title: "Failed to post comment", status: "error", duration: 3000 });
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsPostingComment(false);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    setComments((prev) => prev.filter((c) => c.id !== commentId));
+    try {
+      await fetch(`/api/tasks/${task.id}/comments?commentId=${commentId}`, {
+        method: "DELETE",
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const handleToggleAssignee = (email: string) => {
     if (assignedEmails.includes(email)) {
@@ -316,6 +430,151 @@ export const TaskDetailModal = ({
                 </Text>
               )}
             </FormControl>
+
+            <Divider borderColor={borderColor} />
+
+            {/* Subtasks / Checklist Section */}
+            <VStack align="stretch" spacing={3}>
+              <Flex justify="space-between" align="center">
+                <Text fontWeight="semibold" fontSize="sm">
+                  Subtasks & Checklist
+                </Text>
+                {subtasks.length > 0 && (
+                  <Text fontSize="xs" color="blue.500" fontWeight="bold">
+                    {Math.round((subtasks.filter((s) => s.isCompleted).length / subtasks.length) * 100)}% Done ({subtasks.filter((s) => s.isCompleted).length}/{subtasks.length})
+                  </Text>
+                )}
+              </Flex>
+
+              {/* Progress bar */}
+              {subtasks.length > 0 && (
+                <Progress
+                  value={Math.round((subtasks.filter((s) => s.isCompleted).length / subtasks.length) * 100)}
+                  size="xs"
+                  colorScheme="blue"
+                  borderRadius="full"
+                />
+              )}
+
+              {/* Checklist items */}
+              <VStack align="stretch" spacing={2}>
+                {subtasks.map((st) => (
+                  <HStack key={st.id} justify="space-between" bg={inputBg} p={2} borderRadius="lg">
+                    <Checkbox
+                      isChecked={st.isCompleted}
+                      onChange={(e) => handleToggleSubtask(st.id, e.target.checked)}
+                      colorScheme="blue"
+                    >
+                      <Text
+                        fontSize="sm"
+                        textDecoration={st.isCompleted ? "line-through" : "none"}
+                        color={st.isCompleted ? "gray.500" : "inherit"}
+                      >
+                        {st.title}
+                      </Text>
+                    </Checkbox>
+                    <IconButton
+                      aria-label="Delete subtask"
+                      icon={<FiTrash2 />}
+                      size="xs"
+                      variant="ghost"
+                      colorScheme="red"
+                      onClick={() => handleDeleteSubtask(st.id)}
+                    />
+                  </HStack>
+                ))}
+              </VStack>
+
+              {/* Add subtask input */}
+              <HStack>
+                <Input
+                  placeholder="Add a subtask item..."
+                  size="sm"
+                  borderRadius="xl"
+                  bg={inputBg}
+                  value={newSubtaskTitle}
+                  onChange={(e) => setNewSubtaskTitle(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddSubtask();
+                    }
+                  }}
+                />
+                <Button size="sm" colorScheme="blue" borderRadius="xl" onClick={handleAddSubtask}>
+                  Add
+                </Button>
+              </HStack>
+            </VStack>
+
+            <Divider borderColor={borderColor} />
+
+            {/* Comments & Discussion Feed */}
+            <VStack align="stretch" spacing={3}>
+              <Text fontWeight="semibold" fontSize="sm">
+                Discussion & Comments ({comments.length})
+              </Text>
+
+              {/* Comments list */}
+              <VStack align="stretch" spacing={3} maxH="220px" overflowY="auto" pr={1}>
+                {comments.length === 0 ? (
+                  <Text fontSize="xs" color="gray.500" fontStyle="italic">
+                    No comments yet. Start the discussion below.
+                  </Text>
+                ) : (
+                  comments.map((c) => (
+                    <Box key={c.id} bg={inputBg} p={3} borderRadius="xl">
+                      <Flex justify="space-between" align="center" mb={1}>
+                        <HStack spacing={2}>
+                          <Avatar name={c.user?.name || c.user?.email || "User"} size="xs" />
+                          <Text fontSize="xs" fontWeight="bold">
+                            {c.user?.name || c.user?.email || "User"}
+                          </Text>
+                          <Text fontSize="10px" color="gray.500">
+                            {new Date(c.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                          </Text>
+                        </HStack>
+                        <IconButton
+                          aria-label="Delete comment"
+                          icon={<FiTrash2 />}
+                          size="xs"
+                          variant="ghost"
+                          colorScheme="red"
+                          onClick={() => handleDeleteComment(c.id)}
+                        />
+                      </Flex>
+                      <Text fontSize="xs" color={textColor} pl={7}>
+                        {c.content}
+                      </Text>
+                    </Box>
+                  ))
+                )}
+              </VStack>
+
+              {/* Post comment input */}
+              <HStack align="top">
+                <Textarea
+                  placeholder="Write a comment..."
+                  size="sm"
+                  rows={2}
+                  borderRadius="xl"
+                  bg={inputBg}
+                  value={newCommentText}
+                  onChange={(e) => setNewCommentText(e.target.value)}
+                />
+                <Button
+                  colorScheme="blue"
+                  size="sm"
+                  borderRadius="xl"
+                  h="auto"
+                  py={3}
+                  isLoading={isPostingComment}
+                  onClick={handleAddComment}
+                >
+                  Post
+                </Button>
+              </HStack>
+            </VStack>
           </VStack>
         </ModalBody>
 

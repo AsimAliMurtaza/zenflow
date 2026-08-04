@@ -19,21 +19,15 @@ import {
   Spinner,
   Center,
   Icon,
-  Avatar,
   useColorModeValue,
   Divider,
-  Tag,
-  TagLeftIcon,
-  TagLabel,
 } from "@chakra-ui/react";
-import { AddIcon, TimeIcon } from "@chakra-ui/icons";
+import { AddIcon } from "@chakra-ui/icons";
 import {
   FiCheckCircle,
   FiClock,
   FiAlertCircle,
-  FiCheckSquare,
   FiGrid,
-  FiPlus,
   FiArrowRight,
 } from "react-icons/fi";
 import { GrProjects, GrRobot } from "react-icons/gr";
@@ -51,7 +45,6 @@ const DashboardContent = () => {
   const borderColor = useColorModeValue("gray.200", "gray.700");
   const textColor = useColorModeValue("gray.900", "gray.100");
   const subTextColor = useColorModeValue("gray.600", "gray.400");
-  const cardHoverBg = useColorModeValue("gray.50", "gray.750");
 
   const isAdmin = session?.user?.role === "admin";
 
@@ -111,7 +104,7 @@ const DashboardContent = () => {
           </HStack>
           <Text fontSize="sm" color={subTextColor}>
             Welcome back, <span style={{ fontWeight: "bold" }}>{userName}</span>
-            . Here is your team's project activity summary.
+            . Here is your team&apos;s project activity summary.
           </Text>
         </VStack>
 

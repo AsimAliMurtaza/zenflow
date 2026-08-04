@@ -20,6 +20,7 @@ interface ExtendedSession extends NextAuthSession {
 }
 
 export const authOptions: NextAuthOptions = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   adapter: PrismaAdapter(prisma as any) as Adapter,
 
   providers: [

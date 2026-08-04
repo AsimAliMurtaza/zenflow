@@ -70,9 +70,11 @@ model User {
   sessions Session[]
 
   // App relations
-  projects     Project[]
-  teamMembers  TeamMember[]
-  invitationsSent Invitation[] @relation("InvitedBy")
+  projects        Project[]
+  teamMembers     TeamMember[]
+  invitationsSent Invitation[]   @relation("InvitedBy")
+  comments        Comment[]
+  notifications   Notification[]
 }
 
 model Team {
@@ -160,6 +162,8 @@ model Task {
   sprint    Sprint         @relation(fields: [sprintId], references: [id], onDelete: Cascade)
   project   Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
   assignees TaskAssignee[]
+  comments  Comment[]
+  subtasks  Subtask[]
 }
 
 // Junction table: which users are assigned to a task
@@ -169,4 +173,40 @@ model TaskAssignee {
   userEmail String // stored as email for compatibility
 
   task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  taskId    String
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Subtask {
+  id          String   @id @default(cuid())
+  title       String
+  isCompleted Boolean  @default(false)
+  taskId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  type      String   @default("info") // "info" | "task" | "team"
+  link      String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

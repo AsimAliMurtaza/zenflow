@@ -49,6 +49,13 @@ export async function GET(
       include: {
         sprint: true,
         assignees: true,
+        subtasks: { orderBy: { createdAt: "asc" } },
+        comments: {
+          include: {
+            user: { select: { id: true, name: true, email: true, image: true } },
+          },
+          orderBy: { createdAt: "asc" },
+        },
       },
       orderBy: { createdAt: "asc" },
     });

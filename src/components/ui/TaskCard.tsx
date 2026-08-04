@@ -103,21 +103,40 @@ const TaskCard = ({ task, onSelectTask }: TaskCardProps) => {
           </Text>
         )}
 
-        {/* Footer: Due Date & Assignee Avatars */}
+        {/* Footer: Due Date, Subtasks, Comments & Assignee Avatars */}
         <Flex justify="space-between" align="center" mt={1}>
-          {formattedDueDate ? (
-            <HStack spacing={1} color={isOverdue ? "red.500" : subTextColor}>
-              <Icon as={FiCalendar} boxSize={3.5} />
-              <Text fontSize="xs" fontWeight={isOverdue ? "bold" : "medium"}>
-                {formattedDueDate}
-              </Text>
-            </HStack>
-          ) : (
-            <HStack spacing={1} color={subTextColor}>
-              <Icon as={FiCheckSquare} boxSize={3.5} />
-              <Text fontSize="xs">Task</Text>
-            </HStack>
-          )}
+          <HStack spacing={3}>
+            {formattedDueDate ? (
+              <HStack spacing={1} color={isOverdue ? "red.500" : subTextColor}>
+                <Icon as={FiCalendar} boxSize={3.5} />
+                <Text fontSize="xs" fontWeight={isOverdue ? "bold" : "medium"}>
+                  {formattedDueDate}
+                </Text>
+              </HStack>
+            ) : (
+              <HStack spacing={1} color={subTextColor}>
+                <Icon as={FiCheckSquare} boxSize={3.5} />
+                <Text fontSize="xs">Task</Text>
+              </HStack>
+            )}
+
+            {/* Subtask progress count */}
+            {task.subtasks && task.subtasks.length > 0 && (
+              <HStack spacing={1} color={subTextColor}>
+                <Icon as={FiCheckSquare} boxSize={3.5} color="blue.400" />
+                <Text fontSize="xs" fontWeight="semibold">
+                  {task.subtasks.filter((s) => s.isCompleted).length}/{task.subtasks.length}
+                </Text>
+              </HStack>
+            )}
+
+            {/* Comment count */}
+            {task.comments && task.comments.length > 0 && (
+              <HStack spacing={1} color={subTextColor}>
+                <Text fontSize="xs">💬 {task.comments.length}</Text>
+              </HStack>
+            )}
+          </HStack>
 
           {task.assignees && task.assignees.length > 0 && (
             <AvatarGroup size="xs" max={3} spacing={-1}>

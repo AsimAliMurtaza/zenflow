@@ -19,7 +19,6 @@ import {
   Input,
   InputGroup,
   InputLeftElement,
-  Badge,
   useColorMode,
 } from "@chakra-ui/react";
 import { BiHome, BiUser, BiLogOut, BiSun, BiMoon } from "react-icons/bi";
@@ -28,6 +27,7 @@ import { GrProjects, GrRobot } from "react-icons/gr";
 import { ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import AIAssistant from "@/components/AIAssistant";
+import { NotificationBell } from "@/components/ui/NotificationBell";
 import { signOut, useSession } from "next-auth/react";
 
 const navModules = [
@@ -53,6 +53,8 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
   const activeColor = useColorModeValue("blue.600", "blue.300");
   const hoverBg = useColorModeValue("gray.100", "gray.800");
   const surfaceColor = useColorModeValue("gray.50", "gray.900");
+  const searchBg = useColorModeValue("gray.100", "gray.800");
+  const searchFocusBg = useColorModeValue("white", "gray.700");
 
   if (status === "loading") {
     return (
@@ -154,10 +156,10 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
             <Input
               placeholder="Search issues, projects..."
               borderRadius="xl"
-              bg={useColorModeValue("gray.100", "gray.800")}
+              bg={searchBg}
               border="none"
               _focus={{
-                bg: useColorModeValue("white", "gray.700"),
+                bg: searchFocusBg,
                 ring: 2,
                 ringColor: "blue.500",
               }}
@@ -166,6 +168,7 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
 
           {/* Right Tools & User Profile */}
           <HStack spacing={3}>
+            <NotificationBell />
             <IconButton
               aria-label="Toggle theme"
               icon={

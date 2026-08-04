@@ -10,6 +10,39 @@ export type TaskAssignee = {
   userEmail: string;
 };
 
+export type Comment = {
+  id: string;
+  content: string;
+  taskId: string;
+  userId: string;
+  createdAt: Date | string;
+  user?: {
+    id: string;
+    name?: string | null;
+    email: string;
+    image?: string | null;
+  };
+};
+
+export type Subtask = {
+  id: string;
+  title: string;
+  isCompleted: boolean;
+  taskId: string;
+  createdAt?: Date | string;
+};
+
+export type Notification = {
+  id: string;
+  userId: string;
+  title: string;
+  message: string;
+  read: boolean;
+  type: "info" | "task" | "team";
+  link?: string | null;
+  createdAt: Date | string;
+};
+
 // Task Type
 export type Task = {
   id: string;
@@ -21,6 +54,8 @@ export type Task = {
   priority: TaskPriority;
   dueDate?: string | Date | null;
   assignees?: TaskAssignee[];
+  comments?: Comment[];
+  subtasks?: Subtask[];
   projectId: string;
   project?: Project;
   createdAt?: Date | string;
