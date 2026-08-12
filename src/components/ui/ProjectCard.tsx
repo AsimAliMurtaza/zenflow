@@ -43,7 +43,7 @@ const ProjectCard = ({
   const tagColor = useColorModeValue("gray.100", "gray.700");
 
   useEffect(() => {
-    const assignedTeamName = teams.find((team) => team._id === assignedTeam);
+    const assignedTeamName = teams.find((team) => team.id === assignedTeam);
     if (assignedTeamName) {
       setIsTeamName(assignedTeamName.name);
     }

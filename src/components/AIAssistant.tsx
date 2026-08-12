@@ -5,12 +5,12 @@ import {
   Button,
   IconButton,
   Input,
-  Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  ModalHeader,
-  ModalOverlay,
+  Drawer,
+  DrawerBody,
+  DrawerCloseButton,
+  DrawerContent,
+  DrawerHeader,
+  DrawerOverlay,
   Text,
   useColorModeValue,
   useDisclosure,
@@ -19,16 +19,27 @@ import {
   Divider,
   Flex,
   Code,
-  UseToastOptions,
   VStack,
+  Tag,
+  TagLabel,
+  TagLeftIcon,
+  Tooltip,
 } from "@chakra-ui/react";
 import { ChatIcon } from "@chakra-ui/icons";
 import { useCallback, useState, useRef, useEffect } from "react";
 import { useToast } from "@chakra-ui/react";
+import { useSession } from "next-auth/react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { materialDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+import {
+  FiZap,
+  FiPieChart,
+  FiAlertCircle,
+  FiUsers,
+  FiTrash2,
+} from "react-icons/fi";
 
 interface AIMessage {
   role: "user" | "assistant";
@@ -42,7 +53,32 @@ interface CodeProps {
   children?: React.ReactNode;
 }
 
+const promptChips = [
+  {
+    label: "My Pending Tasks",
+    icon: FiZap,
+    query: "What tasks are assigned to me across all projects?",
+  },
+  {
+    label: "Project Summaries",
+    icon: FiPieChart,
+    query:
+      "Give me a summary of all accessible projects, their statuses, and completions.",
+  },
+  {
+    label: "High Priority Issues",
+    icon: FiAlertCircle,
+    query: "List all high priority and overdue tasks in my workspace.",
+  },
+  {
+    label: "Team Members",
+    icon: FiUsers,
+    query: "List all teams I belong to and their members.",
+  },
+];
+
 export default function AIAssistant() {
+  const { data: session } = useSession();
   const [aiQuery, setAiQuery] = useState<string>("");
   const [isAiLoading, setIsAiLoading] = useState<boolean>(false);
   const [conversation, setConversation] = useState<AIMessage[]>([]);
@@ -51,98 +87,95 @@ export default function AIAssistant() {
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Material You inspired color scheme (adapt as needed)
   const surface = useColorModeValue("white", "gray.900");
   const onSurface = useColorModeValue("gray.800", "gray.100");
-  const primary = useColorModeValue("blue.600", "blue.400");
-  const onPrimary = useColorModeValue("white", "gray.900");
-  const secondary = useColorModeValue("blue.100", "blue.700");
-  const onSecondary = useColorModeValue("blue.800", "blue.200");
-  const outline = useColorModeValue("gray.300", "gray.700");
+  const userBg = useColorModeValue("blue.50", "blue.900");
+  const assistantBg = useColorModeValue("gray.50", "gray.800");
+  const outline = useColorModeValue("gray.200", "gray.700");
   const codeBg = useColorModeValue("gray.100", "gray.800");
 
-  // Scroll to bottom of chat on new message
   useEffect(() => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop =
         chatContainerRef.current.scrollHeight;
     }
-  }, [conversation]);
+  }, [conversation, isAiLoading]);
 
-  const handleAskAI = useCallback(async () => {
-    if (!aiQuery.trim()) return;
+  const handleAskAI = useCallback(
+    async (customPrompt?: string) => {
+      const queryToSend = customPrompt || aiQuery;
+      if (!queryToSend.trim()) return;
 
-    setIsAiLoading(true);
-    const userMessage: AIMessage = { role: "user", content: aiQuery };
-    setConversation((prev) => [...prev, userMessage]);
-    setAiQuery("");
+      setIsAiLoading(true);
+      const userMessage: AIMessage = { role: "user", content: queryToSend };
+      const updatedConversation = [...conversation, userMessage];
 
-    try {
-      const response = await fetch("/api/gemini", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          prompt: aiQuery,
-        }),
-      });
+      setConversation(updatedConversation);
+      if (!customPrompt) setAiQuery("");
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData?.error || "Failed to get response from Gemini"
-        );
+      try {
+        const response = await fetch("/api/gemini", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.user?.id}`,
+          },
+          body: JSON.stringify({
+            messages: updatedConversation,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(
+            errorData?.error || "Failed to get response from Gemini",
+          );
+        }
+
+        const data = await response.json();
+        const assistantResponse = data?.response;
+
+        if (assistantResponse) {
+          const assistantMessage: AIMessage = {
+            role: "assistant",
+            content: assistantResponse,
+          };
+          setConversation((prev) => [...prev, assistantMessage]);
+        } else {
+          throw new Error("Empty response from Gemini");
+        }
+      } catch (error) {
+        console.error("Gemini error:", error);
+        toast({
+          title: "ZenFlow AI Error",
+          description: (error as Error).message || "Failed to get response",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      } finally {
+        setIsAiLoading(false);
       }
-
-      const data = await response.json();
-      const assistantResponse = data?.response;
-
-      if (assistantResponse) {
-        const assistantMessage: AIMessage = {
-          role: "assistant",
-          content: assistantResponse,
-        };
-        setConversation((prev) => [...prev, assistantMessage]);
-      } else {
-        throw new Error("Empty response from Gemini");
-      }
-    } catch (error) {
-      console.error("Gemini error:", error);
-      const toastOptions: UseToastOptions = {
-        title: "Gemini Error",
-        description:
-          (error as Error).message || "Failed to get response from Gemini",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      };
-      toast(toastOptions);
-    } finally {
-      setIsAiLoading(false);
-    }
-  }, [aiQuery, toast]);
+    },
+    [aiQuery, conversation, session, toast],
+  );
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault(); // Prevent newline in input
+      e.preventDefault();
       handleAskAI();
     }
   };
 
-  const handleOpenModal = () => {
-    onOpen();
-    // Focus on the input when the modal opens
-    setTimeout(() => {
-      inputRef.current?.focus();
-    }, 100);
+  const handleClearChat = () => {
+    setConversation([]);
   };
 
   return (
     <>
       {/* Floating Action Button */}
       <IconButton
-        aria-label="AI Assistant"
+        aria-label="ZenFlow AI Copilot"
         icon={<ChatIcon />}
         position="fixed"
         bottom="24px"
@@ -150,76 +183,139 @@ export default function AIAssistant() {
         size="lg"
         borderRadius="full"
         colorScheme="blue"
-        boxShadow="md"
-        zIndex="overlay"
-        onClick={handleOpenModal}
-        _hover={{ transform: "scale(1.05)", boxShadow: "lg" }}
-        transition="all 0.2s"
+        shadow="xl"
+        zIndex="1000"
+        onClick={onOpen}
+        _hover={{ transform: "scale(1.08)", shadow: "2xl" }}
+        transition="all 0.2s ease"
       />
 
-      {/* Chat Modal */}
-      <Modal isOpen={isOpen} onClose={onClose} size="xl">
-        <ModalOverlay />
-        <ModalContent
-          position="fixed"
-          bottom={0}
-          left="100v"
-          right={0}
-          m={4}
-          borderRadius="xl"
-          maxH="80vh"
-          display="flex"
-          flexDirection="column"
-          bg={surface}
-          color={onSurface}
-          boxShadow="xl"
-        >
-          <ModalHeader
-            p={4}
-            borderBottom="1px"
-            borderColor={outline}
-            display="flex"
-            alignItems="center"
-            justifyContent="space-between"
-          >
-            <HStack>
-              <ChatIcon color={primary} mr={2} />
-              <Text fontWeight="medium">ZenFlow AI</Text>
-              <Text fontSize="sm" color="gray.500">
-                (Powered by Gemini)
-              </Text>
-            </HStack>
-            <ModalCloseButton aria-label="Close chat" />
-          </ModalHeader>
-          <ModalBody p={4} flexGrow={1} overflowY="auto" ref={chatContainerRef}>
-            <VStack spacing={4} align="stretch">
-              {conversation.length === 0 ? (
+      {/* RAG Chat Copilot Drawer */}
+      <Drawer isOpen={isOpen} placement="right" onClose={onClose} size="md">
+        <DrawerOverlay backdropFilter="blur(3px)" />
+        <DrawerContent bg={surface} color={onSurface} shadow="2xl">
+          {/* Header */}
+          <DrawerHeader borderBottom="1px solid" borderColor={outline} p={4}>
+            <Flex justify="space-between" align="center">
+              <HStack spacing={2.5}>
                 <Flex
+                  w={7}
+                  h={7}
+                  bg="blue.500"
+                  color="white"
+                  borderRadius="lg"
                   align="center"
                   justify="center"
-                  h="full"
-                  color="gray.500"
+                >
+                  <ChatIcon boxSize={3.5} />
+                </Flex>
+                <VStack align="start" spacing={0}>
+                  <Text fontWeight="bold" fontSize="md">
+                    ZenFlow AI
+                  </Text>
+                </VStack>
+              </HStack>
+
+              <HStack spacing={1}>
+                {conversation.length > 0 && (
+                  <Tooltip label="Clear conversation">
+                    <IconButton
+                      aria-label="Clear chat"
+                      icon={<FiTrash2 />}
+                      size="xs"
+                      variant="ghost"
+                      colorScheme="red"
+                      onClick={handleClearChat}
+                    />
+                  </Tooltip>
+                )}
+                <DrawerCloseButton position="relative" top={0} right={0} />
+              </HStack>
+            </Flex>
+          </DrawerHeader>
+
+          {/* Chat Body */}
+          <DrawerBody
+            p={4}
+            display="flex"
+            flexDirection="column"
+            ref={chatContainerRef}
+          >
+            {/* Quick Prompt Chips */}
+            <Box mb={4}>
+              <Text
+                fontSize="xs"
+                fontWeight="bold"
+                color="gray.500"
+                mb={2}
+                textTransform="uppercase"
+              >
+                Quick Commands
+              </Text>
+              <Flex wrap="wrap" gap={2}>
+                {promptChips.map((chip, idx) => (
+                  <Tag
+                    key={idx}
+                    size="sm"
+                    variant="subtle"
+                    colorScheme="blue"
+                    borderRadius="full"
+                    cursor="pointer"
+                    p={2}
+                    _hover={{ bg: "blue.500", color: "white" }}
+                    onClick={() => handleAskAI(chip.query)}
+                  >
+                    <TagLeftIcon as={chip.icon} />
+                    <TagLabel fontSize="xs">{chip.label}</TagLabel>
+                  </Tag>
+                ))}
+              </Flex>
+            </Box>
+
+            <Divider mb={4} borderColor={outline} />
+
+            {/* Conversation Messages */}
+            <VStack spacing={4} align="stretch" flex={1}>
+              {conversation.length === 0 ? (
+                <Flex
+                  direction="column"
+                  align="center"
+                  justify="center"
+                  h="240px"
+                  color="gray.400"
                   textAlign="center"
                 >
-                  <Text>Ask ZenFlow a question...</Text>
+                  <ChatIcon boxSize={8} mb={3} color="blue.400" />
+                  <Text fontWeight="semibold" fontSize="sm" color={onSurface}>
+                    Ask ZenFlow AI anything about your workspace!
+                  </Text>
+                  <Text fontSize="xs" color="gray.500" maxW="300px" mt={1}>
+                    I have full real-time knowledge of your projects, tasks,
+                    sprints, deadlines, and teams.
+                  </Text>
                 </Flex>
               ) : (
                 conversation.map((msg, index) => (
                   <Box
                     key={index}
                     alignSelf={msg.role === "user" ? "flex-end" : "flex-start"}
-                    bg={msg.role === "user" ? secondary : surface}
-                    color={msg.role === "user" ? onSecondary : onSurface}
-                    p={4}
-                    borderRadius="lg"
-                    boxShadow="sm"
-                    border="1px solid"
+                    bg={msg.role === "user" ? userBg : assistantBg}
+                    color={onSurface}
+                    p={3.5}
+                    borderRadius="2xl"
+                    maxW="90%"
+                    shadow="xs"
+                    borderWidth="1px"
                     borderColor={outline}
                   >
-                    <Text fontWeight="medium" mb={1}>
+                    <Text
+                      fontSize="xs"
+                      fontWeight="bold"
+                      color={msg.role === "user" ? "blue.500" : "purple.500"}
+                      mb={1}
+                    >
                       {msg.role === "user" ? "You" : "ZenFlow AI"}
                     </Text>
-                    <Divider mb={2} borderColor={outline} opacity={0.5} />
                     <ReactMarkdown
                       remarkPlugins={[remarkGfm]}
                       components={{
@@ -236,7 +332,6 @@ export default function AIAssistant() {
                               overflow="hidden"
                               my={2}
                               bg={codeBg}
-                              color={onSurface}
                               p={2}
                             >
                               <SyntaxHighlighter
@@ -250,12 +345,11 @@ export default function AIAssistant() {
                             </Box>
                           ) : (
                             <Code
-                              px={2}
-                              py={1}
+                              px={1.5}
+                              py={0.5}
                               borderRadius="md"
                               bg={codeBg}
-                              color={onSurface}
-                              fontSize="sm"
+                              fontSize="xs"
                               {...props}
                             >
                               {children}
@@ -269,48 +363,51 @@ export default function AIAssistant() {
                   </Box>
                 ))
               )}
+
               {isAiLoading && (
-                <HStack alignSelf="flex-start" p={3}>
-                  <Spinner size="sm" color={primary} />
-                  <Text color="gray.500">Generating response...</Text>
+                <HStack
+                  alignSelf="flex-start"
+                  p={3}
+                  bg={assistantBg}
+                  borderRadius="xl"
+                >
+                  <Spinner size="xs" color="blue.500" />
+                  <Text fontSize="xs" color="gray.500">
+                    ZenFlow AI is thinking...
+                  </Text>
                 </HStack>
               )}
             </VStack>
-          </ModalBody>
-          <Box p={4} borderTop="1px solid" borderColor={outline}>
-            <HStack spacing={3}>
+          </DrawerBody>
+
+          {/* Input Footer */}
+          <Box p={4} borderTop="1px solid" borderColor={outline} bg={surface}>
+            <HStack spacing={2}>
               <Input
                 ref={inputRef}
-                placeholder="Ask something..."
+                placeholder="Ask about tasks, projects, sprints..."
                 value={aiQuery}
                 onChange={(e) => setAiQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
-                bg={surface}
-                color={onSurface}
                 borderRadius="full"
-                border="1px solid"
-                borderColor={outline}
-                _focus={{
-                  borderColor: primary,
-                  boxShadow: `0 0 0 1px ${primary}`,
-                }}
+                size="sm"
+                bg={assistantBg}
               />
               <Button
                 colorScheme="blue"
-                onClick={handleAskAI}
+                onClick={() => handleAskAI()}
                 isLoading={isAiLoading}
                 borderRadius="full"
-                px={6}
-                bg={primary}
-                color={onPrimary}
-                _hover={{ bg: useColorModeValue("blue.700", "blue.500") }}
+                size="sm"
+                px={5}
+                isDisabled={!aiQuery.trim()}
               >
                 Ask
               </Button>
             </HStack>
           </Box>
-        </ModalContent>
-      </Modal>
+        </DrawerContent>
+      </Drawer>
     </>
   );
 }

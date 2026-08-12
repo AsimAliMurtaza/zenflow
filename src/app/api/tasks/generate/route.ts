@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/lib/mongodb";
-import Task from "@/models/Task";
-import Sprint from "@/models/Sprint";
-import { generateGeminiContent } from "@/lib/gemini"; // Your Gemini API wrapper
-import mongoose from "mongoose";
-import { Task as TaskType } from "@/types/types";
+import { prisma } from "@/lib/prisma";
+import { generateGeminiContent } from "@/lib/gemini";
+
+interface GeneratedTask {
+  title: string;
+  description?: string;
+  status?: string;
+  priority?: string;
+  dueDate?: string;
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,38 +16,28 @@ export async function POST(req: NextRequest) {
 
     if (!prompt || !projectId || !sprintId) {
       return NextResponse.json(
-        { message: "Missing prompt or projectId, or sprintId" },
+        { message: "Missing prompt, projectId, or sprintId" },
         { status: 400 }
       );
     }
 
-    if (!mongoose.isValidObjectId(projectId)) {
-      return NextResponse.json(
-        { message: "Invalid projectId" },
-        { status: 400 }
-      );
+    // Verify sprint and project exist
+    const sprint = await prisma.sprint.findUnique({ where: { id: sprintId } });
+    if (!sprint) {
+      return NextResponse.json({ message: "Sprint not found" }, { status: 404 });
     }
 
-    if (!mongoose.isValidObjectId(sprintId)) {
-      return NextResponse.json(
-        { message: "Invalid sprintId" },
-        { status: 400 }
-      );
-    }
-
-    await dbConnect();
-
-    const structuredPrompt = `Generate task for the following project based on this prompt: "${prompt}". Return a JSON of task object. The task object should have these fields: "title" (string, required), "description" (string, optional), "status" (string, one of "To Do", "In Progress", "Completed", default "To Do"), "priority" (string, one of "Low", "Medium", "High", default "Medium"), and "dueDate" (string in "YYYY-MM-DD" format, optional). Do not include any text outside of the JSON array, such as markdown code blocks or backticks.`;
+    const structuredPrompt = `Generate task for the following project based on this prompt: "${prompt}". Return a JSON array of task objects. Each task object should have these fields: "title" (string, required), "description" (string, optional), "status" (string, one of "To Do", "In Progress", "Completed", default "To Do"), "priority" (string, one of "Low", "Medium", "High", default "Medium"), and "dueDate" (string in "YYYY-MM-DD" format, optional). Do not include any text outside of the JSON array, such as markdown code blocks or backticks.`;
 
     const geminiResponse = await generateGeminiContent(structuredPrompt);
 
     try {
-      // Clean up the Gemini response to extract only the JSON
       const cleanedResponse = geminiResponse
         .replace(/```json\n?/g, "")
-        .replace(/```/g, "");
+        .replace(/```/g, "")
+        .trim();
 
-      const generatedTasks = JSON.parse(cleanedResponse);
+      const generatedTasks: GeneratedTask[] = JSON.parse(cleanedResponse);
 
       if (!Array.isArray(generatedTasks)) {
         return NextResponse.json(
@@ -52,43 +46,69 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // Save the tasks and link them to the sprint
-      const savedTasks = await Promise.all(
-        generatedTasks.map(async (task: TaskType) => {
-          const newTaskData: Partial<TaskType> = {
-            title: task.title,
-            description: task.description,
-            status: task.status,
-            priority: task.priority,
-            dueDate: new Date(), // Convert dueDate string to Date object
-            project: projectId,
-            sprint: sprintId,
-          };
-          const newTask = new Task(newTaskData);
-          await newTask.save();
-
-          // Update the sprint's tasks array with the new task ID
-          await Sprint.findByIdAndUpdate(sprintId, {
-            $push: { tasks: newTask._id },
-          });
-
-          return newTask; // Return the task object
-        })
+      // Save all tasks linked to the sprint in a transaction
+      const savedTasks = await prisma.$transaction(
+        generatedTasks.map((task) =>
+          prisma.task.create({
+            data: {
+              title: task.title,
+              description: task.description ?? null,
+              status: task.status ?? "To Do",
+              priority: task.priority ?? "Medium",
+              dueDate: task.dueDate ? new Date(task.dueDate) : null,
+              projectId,
+              sprintId,
+            },
+          })
+        )
       );
+
+      // Recalculate sprint/project completion
+      const sprintTasks = await prisma.task.findMany({ where: { sprintId } });
+      const sprintCompleted = sprintTasks.filter(
+        (t) => t.status === "Completed"
+      ).length;
+      const sprintCompletion =
+        sprintTasks.length > 0
+          ? Math.round((sprintCompleted / sprintTasks.length) * 100)
+          : 0;
+      await prisma.sprint.update({
+        where: { id: sprintId },
+        data: { completion: sprintCompletion },
+      });
+
+      const projectTasks = await prisma.task.findMany({
+        where: { projectId },
+      });
+      const projectCompleted = projectTasks.filter(
+        (t) => t.status === "Completed"
+      ).length;
+      const projectCompletion =
+        projectTasks.length > 0
+          ? Math.round((projectCompleted / projectTasks.length) * 100)
+          : 0;
+      await prisma.project.update({
+        where: { id: projectId },
+        data: {
+          completion: projectCompletion,
+          status:
+            projectCompletion === 100
+              ? "Completed"
+              : projectCompletion > 0
+              ? "In Progress"
+              : "Not Started",
+        },
+      });
 
       return NextResponse.json({ tasks: savedTasks }, { status: 201 });
     } catch (jsonError) {
-      console.error(
-        "Error parsing Gemini response as JSON:",
-        jsonError,
-        geminiResponse
-      );
+      console.error("Error parsing Gemini response:", jsonError, geminiResponse);
       return NextResponse.json(
         {
           message:
-            "Failed to parse Gemini response as valid tasks. Raw response: " +
+            "Failed to parse Gemini response as valid tasks. Raw: " +
             geminiResponse,
-        }, //Include raw response in error
+        },
         { status: 500 }
       );
     }

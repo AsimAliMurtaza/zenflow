@@ -1,164 +1,183 @@
 import { NextResponse } from "next/server";
-import Task from "@/models/Task";
-import Sprint from "@/models/Sprint";
-import dbConnect from "@/lib/mongodb";
-import Project from "@/models/Project";
-import { Task as TaskType } from "@/types/types";
-import { calculateCompletion } from "@/lib/calculateCompletion";
+import { prisma } from "@/lib/prisma";
+
+// Helper: recalculate sprint and project completion
+async function recalculateCompletion(sprintId: string, projectId: string) {
+  const sprintTasks = await prisma.task.findMany({ where: { sprintId } });
+  const sprintCompleted = sprintTasks.filter(
+    (t) => t.status === "Completed"
+  ).length;
+  const sprintCompletion =
+    sprintTasks.length > 0
+      ? Math.round((sprintCompleted / sprintTasks.length) * 100)
+      : 0;
+  await prisma.sprint.update({
+    where: { id: sprintId },
+    data: { completion: sprintCompletion },
+  });
+
+  const projectTasks = await prisma.task.findMany({ where: { projectId } });
+  const projectCompleted = projectTasks.filter(
+    (t) => t.status === "Completed"
+  ).length;
+  const projectCompletion =
+    projectTasks.length > 0
+      ? Math.round((projectCompleted / projectTasks.length) * 100)
+      : 0;
+  await prisma.project.update({
+    where: { id: projectId },
+    data: {
+      completion: projectCompletion,
+      status:
+        projectCompletion === 100
+          ? "Completed"
+          : projectCompletion > 0
+          ? "In Progress"
+          : "Not Started",
+    },
+  });
+}
 
 // GET all tasks for a project
 export async function GET(
-  request: Request,
+  _request: Request,
   { params }: { params: { projectID: string } }
 ) {
-  await dbConnect();
-  const tasks = await Task.find({ project: params.projectID })
-    .populate("sprint")
-    .populate("project"); // optional, since you already have projectID
-  console.log("tasks", tasks);
-  return NextResponse.json(tasks);
+  try {
+    const tasks = await prisma.task.findMany({
+      where: { projectId: params.projectID },
+      include: {
+        sprint: true,
+        assignees: true,
+        subtasks: { orderBy: { createdAt: "asc" } },
+        comments: {
+          include: {
+            user: { select: { id: true, name: true, email: true, image: true } },
+          },
+          orderBy: { createdAt: "asc" },
+        },
+      },
+      orderBy: { createdAt: "asc" },
+    });
+
+    return NextResponse.json(tasks);
+  } catch (error) {
+    console.error("GET tasks error:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch tasks" },
+      { status: 500 }
+    );
+  }
 }
 
+// POST — create a new task in a sprint
 export async function POST(
   req: Request,
   { params }: { params: { projectID: string } }
 ) {
-  const {
-    title,
-    description,
-    status,
-    priority,
-    assignedTo,
-    dueDate,
-    sprintID,
-    createdBy,
-  } = await req.json();
-
   try {
-    // Create the task
-    const task = await Task.create({
+    const {
       title,
       description,
       status,
-      sprint: sprintID,
-      assignedTo,
       priority,
-      createdBy,
+      assignedTo,
       dueDate,
-      project: params.projectID, // Use the projectID from params
-    });
+      sprintId,
+    } = await req.json();
 
-    // Update the sprint to include this new task in the sprint's tasks array
-    await Sprint.findByIdAndUpdate(sprintID, {
-      $push: { tasks: task._id }, // Add the task to the sprint's tasks array
-    });
-
-    // Update sprint completion
-    const sprintTasks = await Task.find({ sprint: sprintID });
-    const sprintCompleted = sprintTasks.filter(
-      (t) => t.status === "Completed"
-    ).length;
-    const sprintCompletion = calculateCompletion(
-      sprintCompleted,
-      sprintTasks.length
-    );
-    await Sprint.findByIdAndUpdate(sprintID, { completion: sprintCompletion });
-
-    // Update project completion
-    const sprint = await Sprint.findById(sprintID).populate("project");
-    const project = sprint?.project;
-    if (project) {
-      const allSprints = await Sprint.find({ project: project._id });
-      const allSprintIds = allSprints.map((s) => s._id);
-
-      const allTasks = await Task.find({ sprint: { $in: allSprintIds } });
-      const completedTasks = allTasks.filter(
-        (t) => t.status === "Completed"
-      ).length;
-
-      const projectCompletion = calculateCompletion(
-        completedTasks,
-        allTasks.length
+    if (!sprintId) {
+      return NextResponse.json(
+        { error: "sprintId is required" },
+        { status: 400 }
       );
-      await Project.findByIdAndUpdate(project._id, {
-        completion: projectCompletion,
-        status: projectCompletion === 100 ? "Completed" : "In Progress",
-      });
     }
 
-    return Response.json({ task });
+    const task = await prisma.task.create({
+      data: {
+        title,
+        description,
+        status: status ?? "To Do",
+        priority: priority ?? "Medium",
+        dueDate: dueDate ? new Date(dueDate) : null,
+        sprintId,
+        projectId: params.projectID,
+        // Create assignee records from array of emails
+        assignees: assignedTo
+          ? {
+              create: (Array.isArray(assignedTo) ? assignedTo : [assignedTo]).map(
+                (email: string) => ({ userEmail: email })
+              ),
+            }
+          : undefined,
+      },
+      include: {
+        sprint: true,
+        assignees: true,
+      },
+    });
+
+    await recalculateCompletion(sprintId, params.projectID);
+
+    return NextResponse.json({ task }, { status: 201 });
   } catch (err) {
-    console.error(err);
-    return new Response("Failed to create task", { status: 500 });
+    console.error("POST task error:", err);
+    return NextResponse.json(
+      { error: "Failed to create task" },
+      { status: 500 }
+    );
   }
 }
 
+// PUT — update a task
 export async function PUT(
   request: Request,
   { params }: { params: { projectID: string } }
 ) {
-  await dbConnect();
+  try {
+    const { id, title, description, status, priority } = await request.json();
 
-  console.log("params", params.projectID);
+    const task = await prisma.task.update({
+      where: { id },
+      data: { title, description, status, priority },
+      include: { sprint: true, assignees: true },
+    });
 
-  const { id, title, description, status, priority } = await request.json();
+    await recalculateCompletion(task.sprintId, params.projectID);
 
-  // 1. Update the task
-  const task = await Task.findByIdAndUpdate(
-    id,
-    { title, description, status, priority },
-    { new: true }
-  );
-
-  if (!task) {
-    return NextResponse.json({ error: "Task not found" }, { status: 404 });
+    return NextResponse.json(task);
+  } catch (error) {
+    console.error("PUT task error:", error);
+    return NextResponse.json(
+      { error: "Failed to update task" },
+      { status: 500 }
+    );
   }
-
-  // 2. Recalculate sprint completion
-  const sprint = await Sprint.findById(task.sprint);
-  if (sprint) {
-    const sprintTasks = await Task.find({ _id: { $in: sprint.tasks } });
-    const completedCount = sprintTasks.filter(
-      (t: TaskType) => t.status === "Completed"
-    ).length;
-    const sprintCompletion = (completedCount / sprintTasks.length) * 100;
-
-    sprint.completion = Math.round(sprintCompletion);
-    await sprint.save();
-  }
-
-  // 3. Recalculate project completion
-  const project = await Project.findById(task.project).populate("sprints");
-  if (project) {
-    let allTasks: TaskType[] = [];
-
-    for (const sprint of project.sprints) {
-      const sprintTasks = await Task.find({ _id: { $in: sprint.tasks } });
-      allTasks = allTasks.concat(sprintTasks);
-    }
-
-    const completedCount = allTasks.filter(
-      (t: TaskType) => t.status === "Completed"
-    ).length;
-    const projectCompletion =
-      allTasks.length > 0 ? (completedCount / allTasks.length) * 100 : 0;
-
-    project.completion = Math.round(projectCompletion);
-    await project.save();
-  }
-
-  return NextResponse.json(task);
 }
 
-// DELETE a task
+// DELETE — remove a task
 export async function DELETE(
   request: Request,
   { params }: { params: { projectID: string } }
 ) {
-  await dbConnect();
-  console.log("params", params);
-  const { id } = await request.json();
+  try {
+    const { id } = await request.json();
 
-  await Task.findByIdAndDelete(id);
-  return NextResponse.json({ message: "Task deleted" });
+    // Fetch first to know which sprint it belonged to
+    const task = await prisma.task.findUnique({ where: { id } });
+    if (!task) {
+      return NextResponse.json({ error: "Task not found" }, { status: 404 });
+    }
+
+    await prisma.task.delete({ where: { id } });
+    await recalculateCompletion(task.sprintId, params.projectID);
+
+    return NextResponse.json({ message: "Task deleted" });
+  } catch (error) {
+    console.error("DELETE task error:", error);
+    return NextResponse.json(
+      { error: "Failed to delete task" },
+      { status: 500 }
+    );
+  }
 }

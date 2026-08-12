@@ -1,21 +1,34 @@
 import { NextResponse } from "next/server";
-import connectDB from "@/lib/mongodb";
-import Team from "@/models/Team";
-import Project from "@/models/Project";
+import { prisma } from "@/lib/prisma";
 
+// GET the team assigned to a project
 export async function GET(
-  request: Request,
+  _request: Request,
   { params }: { params: { projectID: string } }
 ) {
   try {
-    await connectDB(); // Ensure DB connection
+    const project = await prisma.project.findUnique({
+      where: { id: params.projectID },
+      include: {
+        assignedTeam: {
+          include: {
+            members: {
+              include: {
+                user: {
+                  select: { id: true, name: true, email: true, image: true },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
 
-    const teamIds = await Project.find({ _id: params.projectID }).select("assignedTeam");
-    console.log(teamIds)
-    const team = await Team.find({ _id: { $in: teamIds[0].assignedTeam } });
-    console.log(team)
+    if (!project) {
+      return NextResponse.json({ error: "Project not found" }, { status: 404 });
+    }
 
-    return NextResponse.json(team[0], { status: 200 });
+    return NextResponse.json(project.assignedTeam ?? null, { status: 200 });
   } catch (error) {
     console.error("Error fetching team:", error);
     return NextResponse.json(

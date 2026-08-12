@@ -28,7 +28,7 @@ const GenerateTasks: React.FC<GenerateTasksProps> = ({ projects }) => {
   const [selectedSprintId, setSelectedSprintId] = useState("");
   const [loading, setLoading] = useState(false);
   const toast = useToast();
-  const selectedProject = projects.find((p) => p._id === selectedProjectId);
+  const selectedProject = projects.find((p) => p.id === selectedProjectId);
   const availableSprints = selectedProject?.sprints || [];
 
   const bg = useColorModeValue("white", "gray.800");
@@ -152,7 +152,7 @@ const GenerateTasks: React.FC<GenerateTasksProps> = ({ projects }) => {
             _focusVisible={{ borderColor: "blue.500", boxShadow: "sm" }}
           >
             {projects.map((project) => (
-              <option key={project._id} value={project._id}>
+              <option key={project.id} value={project.id}>
                 {project.name}
               </option>
             ))}
@@ -169,7 +169,7 @@ const GenerateTasks: React.FC<GenerateTasksProps> = ({ projects }) => {
             _focusVisible={{ borderColor: "blue.500", boxShadow: "sm" }}
           >
             {availableSprints.map((sprint: Sprint) => (
-              <option key={sprint._id} value={sprint._id}>
+              <option key={sprint.id} value={sprint.id}>
                 {sprint.name}
               </option>
             ))}

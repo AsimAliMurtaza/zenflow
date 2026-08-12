@@ -179,7 +179,7 @@ const ProjectOverview = ({ project }: { project: Project | null }) => {
   };
 
   const startEditingSprint = (sprint: Sprint) => {
-    setEditingSprintId(sprint._id);
+    setEditingSprintId(sprint.id);
     setEditedSprint({
       name: sprint.name,
       startDate: sprint.startDate
@@ -224,7 +224,7 @@ const ProjectOverview = ({ project }: { project: Project | null }) => {
       const updatedSprint = await res.json();
       if (project && project.sprints) {
         project.sprints = project.sprints.map((s) =>
-          s._id === sprintID ? updatedSprint : s
+          s.id === sprintID ? updatedSprint : s
         );
       }
       setEditingSprintId(null);
@@ -258,7 +258,7 @@ const ProjectOverview = ({ project }: { project: Project | null }) => {
       });
 
       if (project && project.sprints) {
-        project.sprints = project.sprints.filter((s) => s._id !== sprintID);
+        project.sprints = project.sprints.filter((s) => s.id !== sprintID);
       }
     } catch (err) {
       console.error(err);
@@ -390,7 +390,7 @@ const ProjectOverview = ({ project }: { project: Project | null }) => {
                 <VStack align="stretch" spacing={4}>
                   {tasks.map((task) => (
                     <Box
-                      key={task._id}
+                      key={task.id}
                       p={4}
                       borderRadius="lg"
                       borderWidth="1px"
@@ -425,7 +425,7 @@ const ProjectOverview = ({ project }: { project: Project | null }) => {
                             fontSize="xs"
                             variant="subtle"
                           >
-                            {task.sprint.name}
+                            {task.sprint?.name ?? "Sprint"}
                           </Badge>
                         </Box>
                       </Flex>
@@ -436,9 +436,9 @@ const ProjectOverview = ({ project }: { project: Project | null }) => {
                             Assigned
                           </Text>
                           <AvatarGroup size="sm" max={3} mt={1}>
-                            {Array.isArray(task.assignedTo) &&
-                              task.assignedTo.map((member: string) => (
-                                <Avatar key={member} name={member} />
+                            {Array.isArray(task.assignees) &&
+                              task.assignees.map((assignee) => (
+                                <Avatar key={assignee.id} name={assignee.userEmail} />
                               ))}
                           </AvatarGroup>
                         </Box>
@@ -545,14 +545,14 @@ const ProjectOverview = ({ project }: { project: Project | null }) => {
                 ) : (
                   project.sprints.map((sprint: Sprint) => (
                     <Box
-                      key={sprint._id}
+                      key={sprint.id}
                       p={4}
                       borderRadius="lg"
                       boxShadow="lg"
                       borderWidth="1px"
                       borderColor={dividerColor}
                     >
-                      {editingSprintId === sprint._id ? (
+                      {editingSprintId === sprint.id ? (
                         <VStack align="stretch" spacing={3}>
                           <FormControl>
                             <FormLabel fontSize="sm">Sprint Name</FormLabel>
@@ -598,7 +598,7 @@ const ProjectOverview = ({ project }: { project: Project | null }) => {
                             <Button
                               size="sm"
                               colorScheme="blue"
-                              onClick={() => handleUpdateSprint(sprint._id)}
+                              onClick={() => handleUpdateSprint(sprint.id)}
                               leftIcon={<FiCheck />}
                             >
                               Save
@@ -640,7 +640,7 @@ const ProjectOverview = ({ project }: { project: Project | null }) => {
                                 size="sm"
                                 variant="ghost"
                                 colorScheme="red"
-                                onClick={() => handleDeleteSprint(sprint._id)}
+                                onClick={() => handleDeleteSprint(sprint.id)}
                               />
                             </HStack>
                           </Flex>

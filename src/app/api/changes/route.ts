@@ -1,35 +1,17 @@
+// MongoDB Change Streams are not available in PostgreSQL.
+// This route is temporarily stubbed during the Postgres migration.
+// TODO: Reimplement using PostgreSQL LISTEN/NOTIFY or a polling endpoint.
+import { NextRequest, NextResponse } from "next/server";
+
 export const dynamic = "force-dynamic";
-import dbConnect from "@/lib/mongodb";
-import Task from "@/models/Task";
-import { NextRequest } from "next/server";
 
-export async function GET(req: NextRequest) {
-  const { readable, writable } = new TransformStream();
-  const writer = writable.getWriter();
-
-  await dbConnect();
-
-  const changeStream = Task.watch([], { fullDocument: "updateLookup" });
-
-  const encoder = new TextEncoder();
-
-  changeStream.on("change", (change) => {
-    writer.write(
-      encoder.encode(`data: ${JSON.stringify(change.fullDocument)}\n\n`)
-    );
-  });
-
-  req.signal.addEventListener("abort", () => {
-    changeStream.close();
-    writer.close();
-  });
-
-  // Set SSE headers
-  return new Response(readable, {
-    headers: {
-      "Content-Type": "text/event-stream",
-      "Cache-Control": "no-cache",
-      Connection: "keep-alive",
+export async function GET(_req: NextRequest) {
+  void _req;
+  return NextResponse.json(
+    {
+      message:
+        "Real-time change stream not yet implemented for PostgreSQL. Coming soon.",
     },
-  });
+    { status: 501 }
+  );
 }

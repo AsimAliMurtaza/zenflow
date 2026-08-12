@@ -1,68 +1,79 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/mongodb";
-import Task from "@/models/Task";
+import { prisma } from "@/lib/prisma";
+import { getAuthenticatedUserId, getUserTeamIds } from "@/lib/authHelpers";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    await dbConnect();
+    const userId = await getAuthenticatedUserId(request);
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-    const taskReports = await Task.aggregate([
-      {
-        $group: {
-          _id: "$project",
-          totalTasks: { $sum: 1 },
-          completedTasks: {
-            $sum: {
-              $cond: [{ $eq: ["$status", "Completed"] }, 1, 0],
-            },
-          },
-          pendingTasks: {
-            $sum: {
-              $cond: [{ $ne: ["$status", "Completed"] }, 1, 0],
-            },
-          },
-          highPriorityTasks: {
-            $sum: {
-              $cond: [{ $eq: ["$priority", "High"] }, 1, 0],
-            },
-          },
-          mediumPriorityTasks: {
-            $sum: {
-              $cond: [{ $eq: ["$priority", "Medium"] }, 1, 0],
-            },
-          },
-          lowPriorityTasks: {
-            $sum: {
-              $cond: [{ $eq: ["$priority", "Low"] }, 1, 0],
-            },
+    const teamIds = await getUserTeamIds(userId);
+
+    // Isolated Projects query for Task Reports
+    const projects = await prisma.project.findMany({
+      where: {
+        OR: [
+          { createdById: userId },
+          { assignedTeamId: { in: teamIds } },
+        ],
+      },
+      select: {
+        id: true,
+        name: true,
+        tasks: {
+          select: {
+            status: true,
+            priority: true,
+            dueDate: true,
           },
         },
       },
-      {
-        $lookup: {
-          from: "projects", // Name of the MongoDB collection, NOT the model name
-          localField: "_id",
-          foreignField: "_id",
-          as: "projectInfo",
-        },
-      },
-      {
-        $unwind: "$projectInfo",
-      },
-      {
-        $project: {
-          _id: 0,
-          projectId: "$_id",
-          projectName: "$projectInfo.name",
-          totalTasks: 1,
-          completedTasks: 1,
-          pendingTasks: 1,
-          highPriorityTasks: 1,
-          mediumPriorityTasks: 1,
-          lowPriorityTasks: 1,
-        },
-      },
-    ]);
+    });
+
+    const now = new Date();
+
+    const taskReports = projects
+      .filter((p) => p.tasks.length > 0)
+      .map((project) => {
+        const tasks = project.tasks;
+
+        const totalTasks = tasks.length;
+        const completedTasks = tasks.filter(
+          (t) => t.status === "Completed"
+        ).length;
+        const pendingTasks = tasks.filter(
+          (t) => t.status !== "Completed"
+        ).length;
+        const highPriorityTasks = tasks.filter(
+          (t) => t.priority === "High"
+        ).length;
+        const mediumPriorityTasks = tasks.filter(
+          (t) => t.priority === "Medium"
+        ).length;
+        const lowPriorityTasks = tasks.filter(
+          (t) => t.priority === "Low"
+        ).length;
+        const overdueTasks = tasks.filter(
+          (t) =>
+            t.dueDate &&
+            new Date(t.dueDate) < now &&
+            t.status !== "Completed"
+        ).length;
+
+        return {
+          projectId: project.id,
+          projectName: project.name,
+          totalTasks,
+          completedTasks,
+          pendingTasks,
+          highPriorityTasks,
+          mediumPriorityTasks,
+          lowPriorityTasks,
+          overdueTasks,
+        };
+      });
 
     return NextResponse.json(taskReports);
   } catch (error) {

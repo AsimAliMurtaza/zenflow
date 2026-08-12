@@ -1,416 +1,436 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import {
   Box,
   Flex,
+  Heading,
   Text,
   Grid,
   VStack,
-  useColorModeValue,
+  HStack,
   Card,
   CardBody,
-  HStack,
-  Divider,
+  Button,
+  Badge,
   Progress,
   Spinner,
-  Alert,
-  AlertIcon,
-  Button,
-  ButtonGroup,
-  Badge,
+  Center,
   Icon,
+  useColorModeValue,
+  Divider,
 } from "@chakra-ui/react";
+import { AddIcon } from "@chakra-ui/icons";
 import {
-  FiHome,
   FiCheckCircle,
   FiClock,
   FiAlertCircle,
-  FiList,
-  FiAlertTriangle,
-  FiPercent,
-  FiChevronLeft,
-  FiChevronRight,
+  FiGrid,
+  FiArrowRight,
 } from "react-icons/fi";
-import { useEffect, useState } from "react";
-import { useToast } from "@chakra-ui/react";
-import { format } from "date-fns";
-import { StatsCard } from "@/components/ui/StatsCard";
-import { ProjectListCard } from "@/components/ui/ProjectListCard";
-import { TaskOverviewCard } from "@/components/ui/TaskOverviewCard";
-import { DashboardReports, TaskReport } from "@/types/dashboard";
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { GrProjects, GrRobot } from "react-icons/gr";
+import { DashboardReports } from "@/types/dashboard";
 
 const DashboardContent = () => {
-  const bgColor = useColorModeValue("white", "gray.900");
-  const cardBg = useColorModeValue("white", "gray.800");
-  const borderColor = useColorModeValue("gray.200", "gray.700");
-  const textColor = useColorModeValue("gray.800", "gray.100");
-  const iconColor = useColorModeValue("gray.600", "gray.300");
-  const statCardHover = useColorModeValue("gray.100", "gray.700");
-  const toast = useToast();
+  const { data: session } = useSession();
   const router = useRouter();
 
-  const { data: session } = useSession();
   const [reports, setReports] = useState<DashboardReports | null>(null);
-  const [taskReports, setTaskReports] = useState<TaskReport[] | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 2;
+
+  const bgColor = useColorModeValue("gray.50", "gray.900");
+  const cardBg = useColorModeValue("white", "gray.800");
+  const borderColor = useColorModeValue("gray.200", "gray.700");
+  const textColor = useColorModeValue("gray.900", "gray.100");
+  const subTextColor = useColorModeValue("gray.600", "gray.400");
 
   const isAdmin = session?.user?.role === "admin";
 
   useEffect(() => {
-    async function fetchAllReports() {
+    async function fetchReports() {
       try {
-        setLoading(true);
-
         const userId = session?.user?.id;
-
-        // 📊 Fetch project reports
-        const projectResponse = await fetch("/api/projects/reports", {
+        const res = await fetch("/api/projects/reports", {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${userId}`,
-            cache: "no-store",
           },
         });
-
-        if (!projectResponse.ok) {
-          throw new Error(
-            `Failed to fetch project reports: ${projectResponse.status}`
-          );
+        if (res.ok) {
+          const data = await res.json();
+          setReports(data);
         }
-
-        const projectData: DashboardReports = await projectResponse.json();
-
-        // ✅ Fetch task reports with same Bearer
-        const taskResponse = await fetch("/api/tasks/reports", {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${userId}`,
-            cache: "no-store",
-          },
-        });
-
-        if (!taskResponse.ok) {
-          throw new Error(
-            `Failed to fetch task reports: ${taskResponse.status}`
-          );
-        }
-
-        const taskData: TaskReport[] = await taskResponse.json();
-
-        setReports(projectData);
-        setTaskReports(taskData);
-      } catch (e) {
-        const error = e as Error;
-        setError(error.message);
-        toast({
-          title: "Error loading reports",
-          description: error.message,
-          status: "error",
-          duration: 4000,
-          isClosable: true,
-        });
+      } catch (err) {
+        console.error("Dashboard error:", err);
       } finally {
         setLoading(false);
       }
     }
-
-    fetchAllReports();
-  }, [toast, session, router]);
+    if (session) fetchReports();
+  }, [session]);
 
   if (isAdmin) {
     router.push("/redirect");
-  }
-
-  const formatDate = (dateString: string) => {
-    try {
-      return format(new Date(dateString), "MMM dd, yyyy");
-    } catch (e) {
-      console.error("Error formatting date:", e);
-      return dateString;
-    }
-  };
-
-  const paginatedTaskReports = taskReports?.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-  const totalPages = taskReports
-    ? Math.ceil(taskReports.length / itemsPerPage)
-    : 0;
-
-  if (loading) {
-    return (
-      <Flex
-        flex="1"
-        flexDir="column"
-        p={8}
-        bg={bgColor}
-        minH="100vh"
-        justify="center"
-        align="center"
-      >
-        <Spinner colorScheme="blue" size="xl" />
-      </Flex>
-    );
-  }
-
-  if (error) {
-    return (
-      <Flex
-        flex="1"
-        flexDir="column"
-        p={8}
-        bg={bgColor}
-        minH="100vh"
-        justify="center"
-        align="center"
-      >
-        <Alert status="error" maxW="md">
-          <AlertIcon />
-          Error loading dashboard: {error}
-        </Alert>
-      </Flex>
-    );
-  }
-
-  if (!reports) {
     return null;
   }
 
+  if (loading) {
+    return (
+      <Center h="70vh">
+        <Spinner color="blue.500" size="xl" thickness="3px" />
+      </Center>
+    );
+  }
+
+  const userName = session?.user?.name || "User";
+
   return (
-    <Flex flex="1" flexDir="column" p={8} bg={bgColor} minH="100vh">
-      <Text fontSize="2xl" fontWeight="bold" mb={6} color={textColor}>
-        Project Dashboard
-      </Text>
-
-      {/* Stats Grid */}
-      <Grid
-        templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }}
-        gap={6}
+    <Box minH="100vh" bg={bgColor} p={{ base: 4, md: 8 }}>
+      {/* Jira Greeting & Action Header */}
+      <Flex
+        justify="space-between"
+        align="center"
         mb={8}
+        flexWrap="wrap"
+        gap={4}
       >
-        <Card
-          bg={cardBg}
-          shadow="md"
-          border="1px solid"
-          borderColor={borderColor}
-          borderRadius="2xl"
-          transition="background-color 0.3s ease"
-          _hover={{ bg: statCardHover }}
-        >
-          <CardBody>
-            <StatsCard
-              title="Total Projects"
-              count={reports.totalProjects}
-              icon={FiHome}
-              color="blue.500"
-              iconColor={iconColor}
-            />
-          </CardBody>
-        </Card>
-
-        <Card
-          bg={cardBg}
-          shadow="md"
-          border="1px solid"
-          borderColor={borderColor}
-          borderRadius="2xl"
-          transition="background-color 0.3s ease"
-          _hover={{ bg: statCardHover }}
-        >
-          <CardBody>
-            <StatsCard
-              title="Completed Projects"
-              count={reports.completedProjects}
-              icon={FiCheckCircle}
-              color="green.500"
-              iconColor={iconColor}
-            />
-          </CardBody>
-        </Card>
-
-        <Card
-          bg={cardBg}
-          shadow="md"
-          border="1px solid"
-          borderColor={borderColor}
-          borderRadius="2xl"
-          transition="background-color 0.3s ease"
-          _hover={{ bg: statCardHover }}
-        >
-          <CardBody>
-            <StatsCard
-              title="In Progress Projects"
-              count={reports.inProgressProjects}
-              icon={FiClock}
-              color="purple.500"
-              iconColor={iconColor}
-            />
-          </CardBody>
-        </Card>
-      </Grid>
-
-      {/* Project Reports Section */}
-      <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={6} mb={8}>
-        <Card
-          bg={cardBg}
-          shadow="md"
-          border="1px solid"
-          borderColor={borderColor}
-          borderRadius="2xl"
-          transition="background-color 0.3s ease"
-          _hover={{ bg: statCardHover }}
-        >
-          <CardBody>
-            <ProjectListCard
-              title="Upcoming Deadlines"
-              projects={reports.approachingDeadlineProjects}
-              icon={FiAlertCircle}
-              iconColor="yellow.500"
-              emptyMessage="No projects approaching deadline"
-              formatDate={formatDate}
-            />
-          </CardBody>
-        </Card>
-
-        <Card
-          bg={cardBg}
-          shadow="md"
-          border="1px solid"
-          borderColor={borderColor}
-          borderRadius="2xl"
-          transition="background-color 0.3s ease"
-          _hover={{ bg: statCardHover }}
-        >
-          <CardBody>
-            <ProjectListCard
-              title="Overdue Projects"
-              projects={reports.overdueProjects}
-              icon={FiAlertTriangle}
-              iconColor="red.500"
-              emptyMessage="No overdue projects"
-              formatDate={formatDate}
-            />
-          </CardBody>
-        </Card>
-      </Grid>
-
-      {/* Task Reports Section */}
-      <Card
-        bg={cardBg}
-        shadow="md"
-        border="1px solid"
-        borderColor={borderColor}
-        borderRadius="2xl"
-        p={6}
-        mb={8}
-        transition="background-color 0.3s ease"
-        _hover={{ bg: statCardHover }}
-      >
-        <CardBody>
-          <HStack mb={4} justify="space-between">
-            <HStack>
-              <Icon as={FiList} boxSize={5} color="blue.500" />
-              <Text fontSize="lg" fontWeight="bold" color={textColor}>
-                Task Overview by Project
-              </Text>
-            </HStack>
-            {totalPages > 1 && (
-              <ButtonGroup size="sm" isAttached variant="outline">
-                <Button
-                  leftIcon={<FiChevronLeft />}
-                  isDisabled={currentPage === 1}
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.max(prev - 1, 1))
-                  }
-                >
-                  Previous
-                </Button>
-                <Button
-                  rightIcon={<FiChevronRight />}
-                  isDisabled={currentPage === totalPages}
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                  }
-                >
-                  Next
-                </Button>
-              </ButtonGroup>
-            )}
+        <VStack align="start" spacing={1}>
+          <HStack spacing={2}>
+            <Heading size="xl" fontWeight="bold" color={textColor}>
+              Your Work
+            </Heading>
           </HStack>
-          <Divider mb={6} />
-          {paginatedTaskReports && paginatedTaskReports.length > 0 ? (
-            <Grid
-              templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }}
-              gap={6}
-            >
-              {paginatedTaskReports.map((report) => (
-                <TaskOverviewCard key={report.projectId} report={report} />
-              ))}
-            </Grid>
-          ) : (
-            <Text color="gray.500">No task reports available</Text>
-          )}
-        </CardBody>
-      </Card>
+          <Text fontSize="sm" color={subTextColor}>
+            Welcome back, <span style={{ fontWeight: "bold" }}>{userName}</span>
+            . Here is your team&apos;s project activity summary.
+          </Text>
+        </VStack>
 
-      {/* Project Completion */}
-      <Card
-        bg={cardBg}
-        shadow="md"
-        border="1px solid"
-        borderColor={borderColor}
-        borderRadius="2xl"
-        p={6}
-        transition="background-color 0.3s ease"
-        _hover={{ bg: statCardHover }}
-      >
-        <CardBody>
-          <HStack mb={4}>
-            <Icon as={FiPercent} boxSize={5} color="purple.500" />
-            <Text fontSize="lg" fontWeight="bold" color={textColor}>
-              Project Completion
-            </Text>
-          </HStack>
-          <Divider mb={6} />
-          {reports.projectCompletions.length > 0 ? (
-            <VStack spacing={4}>
-              {reports.projectCompletions.map((project, index) => (
-                <Box key={index} w="full">
-                  <HStack justify="space-between" mb={2}>
-                    <Text fontWeight="medium">{project.name}</Text>
-                    <Badge
-                      colorScheme={
-                        (project.completion ?? 0) > 70
-                          ? "green"
-                          : (project.completion ?? 0) > 40
-                          ? "yellow"
-                          : "red"
-                      }
+        <HStack spacing={3}>
+          <Button
+            leftIcon={<GrRobot />}
+            variant="outline"
+            size="sm"
+            borderRadius="full"
+            onClick={() => router.push("/dashboard/generate-task")}
+          >
+            AI Generator
+          </Button>
+          <Button
+            leftIcon={<AddIcon boxSize={2.5} />}
+            colorScheme="blue"
+            size="sm"
+            borderRadius="full"
+            px={5}
+            onClick={() => router.push("/dashboard/projects")}
+          >
+            New Project
+          </Button>
+        </HStack>
+      </Flex>
+
+      {/* Metrics Row */}
+      {reports && (
+        <Grid
+          templateColumns={{ base: "1fr", md: "repeat(4, 1fr)" }}
+          gap={5}
+          mb={8}
+        >
+          <Card
+            bg={cardBg}
+            shadow="sm"
+            borderRadius="2xl"
+            border="1px solid"
+            borderColor={borderColor}
+          >
+            <CardBody p={5}>
+              <HStack justify="space-between">
+                <VStack align="start" spacing={0}>
+                  <Text
+                    fontSize="xs"
+                    color={subTextColor}
+                    fontWeight="bold"
+                    textTransform="uppercase"
+                  >
+                    Total Projects
+                  </Text>
+                  <Text fontSize="2xl" fontWeight="bold">
+                    {reports.totalProjects}
+                  </Text>
+                </VStack>
+                <Flex
+                  w={10}
+                  h={10}
+                  bg="blue.50"
+                  color="blue.500"
+                  borderRadius="xl"
+                  align="center"
+                  justify="center"
+                >
+                  <Icon as={GrProjects} boxSize={5} />
+                </Flex>
+              </HStack>
+            </CardBody>
+          </Card>
+
+          <Card
+            bg={cardBg}
+            shadow="sm"
+            borderRadius="2xl"
+            border="1px solid"
+            borderColor={borderColor}
+          >
+            <CardBody p={5}>
+              <HStack justify="space-between">
+                <VStack align="start" spacing={0}>
+                  <Text
+                    fontSize="xs"
+                    color={subTextColor}
+                    fontWeight="bold"
+                    textTransform="uppercase"
+                  >
+                    In Progress
+                  </Text>
+                  <Text fontSize="2xl" fontWeight="bold" color="blue.500">
+                    {reports.inProgressProjects}
+                  </Text>
+                </VStack>
+                <Flex
+                  w={10}
+                  h={10}
+                  bg="blue.50"
+                  color="blue.500"
+                  borderRadius="xl"
+                  align="center"
+                  justify="center"
+                >
+                  <Icon as={FiClock} boxSize={5} />
+                </Flex>
+              </HStack>
+            </CardBody>
+          </Card>
+
+          <Card
+            bg={cardBg}
+            shadow="sm"
+            borderRadius="2xl"
+            border="1px solid"
+            borderColor={borderColor}
+          >
+            <CardBody p={5}>
+              <HStack justify="space-between">
+                <VStack align="start" spacing={0}>
+                  <Text
+                    fontSize="xs"
+                    color={subTextColor}
+                    fontWeight="bold"
+                    textTransform="uppercase"
+                  >
+                    Completed
+                  </Text>
+                  <Text fontSize="2xl" fontWeight="bold" color="green.500">
+                    {reports.completedProjects}
+                  </Text>
+                </VStack>
+                <Flex
+                  w={10}
+                  h={10}
+                  bg="green.50"
+                  color="green.500"
+                  borderRadius="xl"
+                  align="center"
+                  justify="center"
+                >
+                  <Icon as={FiCheckCircle} boxSize={5} />
+                </Flex>
+              </HStack>
+            </CardBody>
+          </Card>
+
+          <Card
+            bg={cardBg}
+            shadow="sm"
+            borderRadius="2xl"
+            border="1px solid"
+            borderColor={borderColor}
+          >
+            <CardBody p={5}>
+              <HStack justify="space-between">
+                <VStack align="start" spacing={0}>
+                  <Text
+                    fontSize="xs"
+                    color={subTextColor}
+                    fontWeight="bold"
+                    textTransform="uppercase"
+                  >
+                    Overdue
+                  </Text>
+                  <Text fontSize="2xl" fontWeight="bold" color="red.500">
+                    {reports.overdueProjects?.length || 0}
+                  </Text>
+                </VStack>
+                <Flex
+                  w={10}
+                  h={10}
+                  bg="red.50"
+                  color="red.500"
+                  borderRadius="xl"
+                  align="center"
+                  justify="center"
+                >
+                  <Icon as={FiAlertCircle} boxSize={5} />
+                </Flex>
+              </HStack>
+            </CardBody>
+          </Card>
+        </Grid>
+      )}
+
+      {/* Main Grid: Projects Overview & Deadlines */}
+      <Grid templateColumns={{ base: "1fr", lg: "2fr 1fr" }} gap={6}>
+        {/* Left Column: Project Progress */}
+        <VStack align="stretch" spacing={6}>
+          <Card
+            bg={cardBg}
+            shadow="sm"
+            borderRadius="2xl"
+            border="1px solid"
+            borderColor={borderColor}
+          >
+            <CardBody p={6}>
+              <Flex justify="space-between" align="center" mb={4}>
+                <HStack spacing={2}>
+                  <Icon as={FiGrid} color="blue.500" boxSize={5} />
+                  <Heading size="md" fontWeight="bold">
+                    Recent Projects Activity
+                  </Heading>
+                </HStack>
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  colorScheme="blue"
+                  rightIcon={<FiArrowRight />}
+                  onClick={() => router.push("/dashboard/projects")}
+                >
+                  View All
+                </Button>
+              </Flex>
+              <Divider mb={4} borderColor={borderColor} />
+
+              {reports &&
+              reports.projectCompletions &&
+              reports.projectCompletions.length > 0 ? (
+                <VStack spacing={4} align="stretch">
+                  {reports.projectCompletions.map((p, idx) => (
+                    <Box
+                      key={idx}
+                      p={3}
+                      borderRadius="xl"
+                      borderWidth="1px"
+                      borderColor={borderColor}
                     >
-                      {project.completion}%
-                    </Badge>
-                  </HStack>
-                  <Progress
-                    value={project.completion}
-                    colorScheme="blue"
-                    size="sm"
-                    borderRadius="full"
-                  />
-                </Box>
-              ))}
-            </VStack>
-          ) : (
-            <Text color="gray.500">No completion data available</Text>
-          )}
-        </CardBody>
-      </Card>
-    </Flex>
+                      <Flex justify="space-between" align="center" mb={2}>
+                        <Text fontWeight="semibold" fontSize="sm">
+                          {p.name}
+                        </Text>
+                        <Badge
+                          colorScheme={
+                            (p.completion || 0) === 100
+                              ? "green"
+                              : (p.completion || 0) > 0
+                                ? "blue"
+                                : "gray"
+                          }
+                          borderRadius="full"
+                        >
+                          {p.completion || 0}% Completed
+                        </Badge>
+                      </Flex>
+                      <Progress
+                        value={p.completion || 0}
+                        colorScheme="blue"
+                        size="xs"
+                        borderRadius="full"
+                      />
+                    </Box>
+                  ))}
+                </VStack>
+              ) : (
+                <Text
+                  fontSize="sm"
+                  color={subTextColor}
+                  py={4}
+                  textAlign="center"
+                >
+                  No projects available yet.
+                </Text>
+              )}
+            </CardBody>
+          </Card>
+        </VStack>
+
+        {/* Right Column: Deadlines & Overdue */}
+        <VStack align="stretch" spacing={6}>
+          <Card
+            bg={cardBg}
+            shadow="sm"
+            borderRadius="2xl"
+            border="1px solid"
+            borderColor={borderColor}
+          >
+            <CardBody p={6}>
+              <HStack spacing={2} mb={4}>
+                <Icon as={FiAlertCircle} color="amber.500" boxSize={5} />
+                <Heading size="md" fontWeight="bold">
+                  Upcoming Deadlines
+                </Heading>
+              </HStack>
+              <Divider mb={4} borderColor={borderColor} />
+
+              {reports &&
+              reports.approachingDeadlineProjects &&
+              reports.approachingDeadlineProjects.length > 0 ? (
+                <VStack align="stretch" spacing={3}>
+                  {reports.approachingDeadlineProjects.map((proj, idx) => (
+                    <Flex
+                      key={idx}
+                      p={3}
+                      borderRadius="xl"
+                      bg={bgColor}
+                      justify="space-between"
+                      align="center"
+                    >
+                      <Box>
+                        <Text fontWeight="semibold" fontSize="sm">
+                          {proj.name}
+                        </Text>
+                        <Text fontSize="xs" color="red.400">
+                          Due: {proj.dueDate}
+                        </Text>
+                      </Box>
+                      <Badge colorScheme="amber" fontSize="xs">
+                        Soon
+                      </Badge>
+                    </Flex>
+                  ))}
+                </VStack>
+              ) : (
+                <Text
+                  fontSize="sm"
+                  color={subTextColor}
+                  py={3}
+                  textAlign="center"
+                >
+                  No upcoming deadlines.
+                </Text>
+              )}
+            </CardBody>
+          </Card>
+        </VStack>
+      </Grid>
+    </Box>
   );
 };
 

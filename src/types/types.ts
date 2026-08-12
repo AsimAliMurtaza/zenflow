@@ -1,18 +1,65 @@
 // Enums for status and priority
 export type TaskStatus = "To Do" | "In Progress" | "Completed";
 export type TaskPriority = "Low" | "Medium" | "High";
+export type SprintStatus = "Active" | "Planned" | "Completed";
+
+// Assignee type (join table row)
+export type TaskAssignee = {
+  id: string;
+  taskId: string;
+  userEmail: string;
+};
+
+export type Comment = {
+  id: string;
+  content: string;
+  taskId: string;
+  userId: string;
+  createdAt: Date | string;
+  user?: {
+    id: string;
+    name?: string | null;
+    email: string;
+    image?: string | null;
+  };
+};
+
+export type Subtask = {
+  id: string;
+  title: string;
+  isCompleted: boolean;
+  taskId: string;
+  createdAt?: Date | string;
+};
+
+export type Notification = {
+  id: string;
+  userId: string;
+  title: string;
+  message: string;
+  read: boolean;
+  type: "info" | "task" | "team";
+  link?: string | null;
+  createdAt: Date | string;
+};
 
 // Task Type
 export type Task = {
-  _id: string;
+  id: string;
   title: string;
-  sprint: Sprint;
-  description: string;
+  sprint?: Sprint;
+  sprintId: string;
+  description?: string | null;
   status: TaskStatus;
   priority: TaskPriority;
-  dueDate?: string | Date;
-  assignedTo?: string | null;
-  project: Project;
+  dueDate?: string | Date | null;
+  assignees?: TaskAssignee[];
+  comments?: Comment[];
+  subtasks?: Subtask[];
+  projectId: string;
+  project?: Project;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
 };
 
 export type TaskBoard = {
@@ -21,42 +68,55 @@ export type TaskBoard = {
   Completed: Task[];
 };
 
-// TeamMember Type
+// TeamMember Type (join table row with nested user)
 export type TeamMember = {
-  _id: string;
-  name: string;
-  email: string;
+  id: string;
+  teamId: string;
+  userId: string;
   role: string;
+  joinedAt?: Date | string;
+  user?: {
+    id: string;
+    name?: string | null;
+    email: string;
+    image?: string | null;
+  };
 };
 
 // Sprint Type
 export type Sprint = {
-  _id: string;
+  id: string;
   name: string;
-  projectId: Project;
+  projectId: string;
   startDate: string | Date;
   endDate: string | Date;
-  tasks: Task[];
-  completion: number; // represents percent completion of tasks
+  status?: SprintStatus;
+  tasks?: Task[];
+  completion: number;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
 };
 
 // Team Type
 export type Team = {
-  _id: string;
+  id: string;
   name: string;
-  members?: string[]; // Added members array (optional)
+  members?: TeamMember[];
+  createdAt?: Date | string;
 };
-// types/types.ts
+
+// Project Type
 export type Project = {
-  _id: string;
+  id: string;
   name: string;
   description: string;
-  status: TaskStatus;
-  assignedTeam: string | null; // Use Team instead of string
-  dueDate: string;
-  completion?: number; // Optional
-  sprints?: Sprint[]; // Optional
-  createdAt?: Date; // Optional
-  updatedAt?: Date; // Optional
-  createdBy?: string; // Optional
+  status: string;
+  assignedTeamId?: string | null;
+  assignedTeam?: Team | null;
+  dueDate?: string | null;
+  completion?: number;
+  sprints?: Sprint[];
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
+  createdById?: string;
 };

@@ -1,15 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/options";
-import dbConnect from "@/lib/mongodb";
-import User from "@/models/User";
-import mongoose from "mongoose";
-
-const isValidObjectId = (id: string) => mongoose.Types.ObjectId.isValid(id);
+import { prisma } from "@/lib/prisma";
 
 // DELETE /api/admin/users/:userId
 export async function DELETE(
-  request: Request,
+  _request: Request,
   { params }: { params: { userId: string } }
 ) {
   try {
@@ -20,29 +16,37 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    if (!userId || !isValidObjectId(userId)) {
-      return NextResponse.json({ error: "Invalid user ID format" }, { status: 400 });
+    if (!userId) {
+      return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
     }
 
     if (session.user.id === userId) {
-      return NextResponse.json({ error: "Cannot delete your own account" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Cannot delete your own account" },
+        { status: 400 }
+      );
     }
 
-    await dbConnect();
-    const deletedUser = await User.findByIdAndDelete(userId);
+    const deletedUser = await prisma.user.delete({ where: { id: userId } });
 
     if (!deletedUser) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ message: "User deleted successfully" }, { status: 200 });
+    return NextResponse.json(
+      { message: "User deleted successfully" },
+      { status: 200 }
+    );
   } catch (error) {
     console.error("Error deleting user:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }
 
-// PATCH /api/admin/users/:userId (Update Role)
+// PATCH /api/admin/users/:userId — update role
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { userId: string } }
@@ -54,25 +58,26 @@ export async function PATCH(
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
-  if (!userId || !isValidObjectId(userId)) {
+  if (!userId) {
     return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
   }
 
   try {
-    await dbConnect();
-
     const { role } = await req.json();
     if (!["admin", "user"].includes(role)) {
       return NextResponse.json({ error: "Invalid role" }, { status: 400 });
     }
 
-    const updatedUser = await User.findByIdAndUpdate(userId, { role }, { new: true });
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { role },
+      select: { id: true, email: true, name: true, role: true },
+    });
 
-    if (!updatedUser) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
-
-    return NextResponse.json({ message: "Role updated", user: updatedUser }, { status: 200 });
+    return NextResponse.json(
+      { message: "Role updated", user: updatedUser },
+      { status: 200 }
+    );
   } catch (error) {
     console.error("Error updating role:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });

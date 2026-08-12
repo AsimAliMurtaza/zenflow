@@ -6,13 +6,22 @@ import {
   Heading,
   Text,
   VStack,
+  HStack,
   Button,
   useDisclosure,
   useToast,
   useColorModeValue,
   SimpleGrid,
+  Input,
+  InputGroup,
+  InputLeftElement,
+  Card,
+  CardBody,
+  Icon,
+  Flex,
 } from "@chakra-ui/react";
-import { AddIcon } from "@chakra-ui/icons";
+import { AddIcon, SearchIcon } from "@chakra-ui/icons";
+import { FiUsers, FiFolder } from "react-icons/fi";
 import TeamCard from "@/components/ui/TeamCard";
 import TeamModal from "@/components/ui/TeamModal";
 import { Team } from "@/types/types";
@@ -27,16 +36,17 @@ const Teams = ({ teams: initialTeams }: TeamsProps) => {
   const [teamName, setTeamName] = useState("");
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   const [inviteEmail, setInviteEmail] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { data: session } = useSession();
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
-  const bg = useColorModeValue("white", "gray.900");
-  const textColor = useColorModeValue("gray.700", "gray.200");
-  const headingColor = useColorModeValue("gray.900", "gray.100");
-  const buttonBg = useColorModeValue("blue.500", "blue.600");
-  const buttonColor = useColorModeValue("white", "white");
+  const bg = useColorModeValue("gray.50", "gray.900");
+  const cardBg = useColorModeValue("white", "gray.800");
+  const borderColor = useColorModeValue("gray.200", "gray.700");
+  const textColor = useColorModeValue("gray.900", "gray.100");
+  const subTextColor = useColorModeValue("gray.600", "gray.400");
 
   const addTeam = async () => {
     if (!teamName.trim()) {
@@ -49,12 +59,15 @@ const Teams = ({ teams: initialTeams }: TeamsProps) => {
       const response = await fetch("/api/teams", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: teamName }),
+        body: JSON.stringify({
+          name: teamName,
+          creatorId: session?.user?.id,
+        }),
       });
 
       if (response.ok) {
         const newTeam = await response.json();
-        setTeams([...teams, newTeam]);
+        setTeams([newTeam, ...teams]);
         setTeamName("");
         onClose();
         toast({ title: "Team created successfully!", status: "success" });
@@ -69,7 +82,7 @@ const Teams = ({ teams: initialTeams }: TeamsProps) => {
     }
   };
 
-  const inviteMember = async () => {
+  const addMember = async () => {
     if (!selectedTeamId) {
       toast({ title: "Please select a team.", status: "warning" });
       return;
@@ -81,28 +94,33 @@ const Teams = ({ teams: initialTeams }: TeamsProps) => {
 
     setIsLoading(true);
     try {
-      const response = await fetch("/api/teams/invite", {
+      const response = await fetch("/api/teams/add-member", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           teamId: selectedTeamId,
           email: inviteEmail,
-          invitedBy: session?.user?.email,
         }),
       });
 
       if (response.ok) {
-        toast({ title: "Invitation sent successfully!", status: "success" });
+        const updatedTeam = await response.json();
+        setTeams((prevTeams) =>
+          prevTeams.map((team) =>
+            team.id === updatedTeam.id ? updatedTeam : team
+          )
+        );
+        toast({ title: "Member added successfully!", status: "success" });
       } else {
         const errorData = await response.json();
         toast({
-          title: errorData.error || "Failed to send invitation.",
+          title: errorData.error || "Failed to add member.",
           status: "error",
         });
       }
     } catch (error) {
-      console.error("Error sending invitation:", error);
-      toast({ title: "Failed to send invitation.", status: "error" });
+      console.error("Error adding member:", error);
+      toast({ title: "Failed to add member.", status: "error" });
     } finally {
       setIsLoading(false);
       setInviteEmail("");
@@ -120,7 +138,7 @@ const Teams = ({ teams: initialTeams }: TeamsProps) => {
       });
 
       if (response.ok) {
-        setTeams(teams.filter((team) => team._id !== teamId));
+        setTeams(teams.filter((team) => team.id !== teamId));
         toast({ title: "Team deleted successfully.", status: "success" });
       } else {
         toast({ title: "Failed to delete team.", status: "error" });
@@ -143,34 +161,54 @@ const Teams = ({ teams: initialTeams }: TeamsProps) => {
       });
 
       if (response.ok) {
-        const updatedTeam = await response.json();
+        const resJson = await response.json();
+        const updatedTeam = resJson.team;
         setTeams((prevTeams) =>
           prevTeams.map((team) =>
-            team._id === updatedTeam.team._id ? updatedTeam.team : team
+            team.id === updatedTeam.id ? updatedTeam : team
           )
         );
-        toast({ title: "Member deleted successfully.", status: "success" });
+        toast({ title: "Member removed successfully.", status: "success" });
       } else {
-        toast({ title: "Failed to delete member.", status: "error" });
+        toast({ title: "Failed to remove member.", status: "error" });
       }
     } catch (error) {
-      console.error("Error deleting member:", error);
-      toast({ title: "Failed to delete member.", status: "error" });
+      console.error("Error removing member:", error);
+      toast({ title: "Failed to remove member.", status: "error" });
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Search filtering
+  const filteredTeams = teams.filter((team) => {
+    if (!searchQuery) return true;
+    const nameMatch = team.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const memberMatch = team.members?.some(
+      (m) =>
+        m.user?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        m.user?.email.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    return nameMatch || memberMatch;
+  });
+
+  const totalMembers = teams.reduce(
+    (acc, t) => acc + (t.members ? t.members.length : 0),
+    0
+  );
+
   return (
-    <Box h="90vh" p={6} bg={bg} borderRadius="xl">
-      <VStack spacing={6} align="start">
-        <Heading size="xl" fontWeight="semibold" color={headingColor}>
-          Teams
-        </Heading>
-        <Text fontSize="lg" color={textColor} fontWeight="medium">
-          Collaborate efficiently with your teams. Manage members and create new
-          spaces.
-        </Text>
+    <Box minH="100vh" p={{ base: 4, md: 8 }} bg={bg}>
+      {/* Header Bar */}
+      <Flex justify="space-between" align="center" mb={6} flexWrap="wrap" gap={4}>
+        <Box>
+          <Heading size="xl" fontWeight="bold" color={textColor} mb={1}>
+            Teams & Members
+          </Heading>
+          <Text fontSize="md" color={subTextColor}>
+            Organize users into teams and assign them to active projects.
+          </Text>
+        </Box>
 
         <Button
           leftIcon={<AddIcon />}
@@ -178,47 +216,103 @@ const Teams = ({ teams: initialTeams }: TeamsProps) => {
             setSelectedTeamId(null);
             onOpen();
           }}
-          size="lg"
+          size="md"
           borderRadius="full"
-          bg={buttonBg}
-          color={buttonColor}
-          _hover={{ bg: useColorModeValue("blue.600", "blue.700") }}
-          isLoading={isLoading}
-          boxShadow="md"
+          colorScheme="blue"
+          px={6}
         >
           Create New Team
         </Button>
+      </Flex>
 
-        {teams.length > 0 ? (
-          <SimpleGrid
-            columns={{ base: 1, md: 2, lg: 3 }}
-            spacing={8}
-            width="full"
-          >
-            {teams.map((team) => (
-              <TeamCard
-                key={team._id}
-                team={team}
-                onDeleteTeam={deleteTeam}
-                onAddMember={(teamId) => {
-                  setSelectedTeamId(teamId);
-                  onOpen();
-                }}
-                onDeleteMember={deleteMember}
-              />
-            ))}
-          </SimpleGrid>
-        ) : (
-          <Text fontSize="xl" color="gray.500" mt={6}>
-            No teams created yet. Start by creating one!
+      {/* Metrics Row */}
+      <SimpleGrid columns={{ base: 1, md: 2 }} spacing={5} mb={6}>
+        <Card bg={cardBg} borderRadius="2xl" border="1px solid" borderColor={borderColor} shadow="sm">
+          <CardBody p={5}>
+            <HStack justify="space-between">
+              <VStack align="start" spacing={0}>
+                <Text fontSize="xs" fontWeight="bold" color={subTextColor} textTransform="uppercase">
+                  Total Teams
+                </Text>
+                <Text fontSize="2xl" fontWeight="bold" color={textColor}>
+                  {teams.length}
+                </Text>
+              </VStack>
+              <Flex w={10} h={10} bg="blue.50" color="blue.500" borderRadius="xl" align="center" justify="center">
+                <Icon as={FiUsers} boxSize={5} />
+              </Flex>
+            </HStack>
+          </CardBody>
+        </Card>
+
+        <Card bg={cardBg} borderRadius="2xl" border="1px solid" borderColor={borderColor} shadow="sm">
+          <CardBody p={5}>
+            <HStack justify="space-between">
+              <VStack align="start" spacing={0}>
+                <Text fontSize="xs" fontWeight="bold" color={subTextColor} textTransform="uppercase">
+                  Total Members
+                </Text>
+                <Text fontSize="2xl" fontWeight="bold" color="purple.500">
+                  {totalMembers}
+                </Text>
+              </VStack>
+              <Flex w={10} h={10} bg="purple.50" color="purple.500" borderRadius="xl" align="center" justify="center">
+                <Icon as={FiFolder} boxSize={5} />
+              </Flex>
+            </HStack>
+          </CardBody>
+        </Card>
+      </SimpleGrid>
+
+      {/* Search Bar */}
+      <Box p={3} bg={cardBg} borderRadius="2xl" border="1px solid" borderColor={borderColor} mb={6}>
+        <InputGroup size="sm">
+          <InputLeftElement pointerEvents="none">
+            <SearchIcon color="gray.400" />
+          </InputLeftElement>
+          <Input
+            placeholder="Search teams by name or member..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            borderRadius="xl"
+          />
+        </InputGroup>
+      </Box>
+
+      {/* Teams Grid */}
+      {filteredTeams.length > 0 ? (
+        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6} width="full">
+          {filteredTeams.map((team) => (
+            <TeamCard
+              key={team.id}
+              team={team}
+              onDeleteTeam={deleteTeam}
+              onAddMember={(teamId) => {
+                setSelectedTeamId(teamId);
+                onOpen();
+              }}
+              onDeleteMember={deleteMember}
+            />
+          ))}
+        </SimpleGrid>
+      ) : (
+        <Card p={10} textAlign="center" borderRadius="2xl" bg={cardBg} border="1px solid" borderColor={borderColor}>
+          <Text fontSize="lg" fontWeight="semibold" color={subTextColor}>
+            No teams found.
           </Text>
-        )}
-      </VStack>
+          <Text fontSize="sm" color={subTextColor} mt={1}>
+            {searchQuery
+              ? "Try adjusting your search query."
+              : "Get started by creating your first team!"}
+          </Text>
+        </Card>
+      )}
 
+      {/* Create / Add Member Modal */}
       <TeamModal
         isOpen={isOpen}
         onClose={onClose}
-        onSubmit={selectedTeamId ? inviteMember : addTeam}
+        onSubmit={selectedTeamId ? addMember : addTeam}
         isAddingMember={!!selectedTeamId}
         teamName={teamName}
         setTeamName={setTeamName}

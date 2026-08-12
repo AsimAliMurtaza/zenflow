@@ -1,8 +1,12 @@
-// components/TaskColumn.tsx
+"use client";
+
 import {
   VStack,
+  HStack,
   Heading,
   Box,
+  Badge,
+  Button,
   useColorModeValue,
   IconButton,
 } from "@chakra-ui/react";
@@ -15,98 +19,111 @@ type TaskColumnProps = {
   status: string;
   tasks: Task[];
   onAddTask: () => void;
-  onEditTask: (taskId: string) => void;
-  onDeleteTask: (taskId: string) => void;
-  editingTaskId: string | null;
-  editTitle: string;
-  editPriority: Task["priority"];
-  onEditTitleChange: (value: string) => void;
-  onEditPriorityChange: (value: Task["priority"]) => void;
-  onSaveEdit: () => void;
+  onSelectTask: (task: Task) => void;
 };
 
 const TaskColumn = ({
   status,
   tasks,
   onAddTask,
-  onEditTask,
-  onDeleteTask,
-  editingTaskId,
-  editTitle,
-  editPriority,
-  onEditTitleChange,
-  onEditPriorityChange,
-  onSaveEdit,
+  onSelectTask,
 }: TaskColumnProps) => {
-  const columnBg = useColorModeValue("gray.100", "gray.700");
-  const headingColor = useColorModeValue("blue.500", "blue.400");
-  const buttonBg = useColorModeValue("blue.300", "gray.600");
-  const buttonHoverBg = useColorModeValue("gray.300", "gray.500");
-  const columnShadow = useColorModeValue("md", "md-dark");
+  const columnBg = useColorModeValue("gray.50", "gray.900");
+  const columnBorder = useColorModeValue("gray.200", "gray.800");
+  const headingColor = useColorModeValue("gray.800", "gray.100");
+  const badgeBg = useColorModeValue("gray.200", "gray.700");
+
+  const statusAccentMap: Record<string, string> = {
+    "To Do": "purple.500",
+    "In Progress": "blue.500",
+    Completed: "green.500",
+  };
 
   return (
     <Droppable droppableId={status}>
-      {(provided) => (
+      {(provided, snapshot) => (
         <VStack
           ref={provided.innerRef}
           {...provided.droppableProps}
           bg={columnBg}
-          p={4}
-          w={{ base: "100%", md: "320px" }}
-          h="80vh"
-          borderRadius="xl"
-          shadow={columnShadow}
+          borderWidth="1px"
+          borderColor={snapshot.isDraggingOver ? "blue.400" : columnBorder}
+          p={3.5}
+          w={{ base: "100%", md: "340px" }}
+          minH="75vh"
+          maxH="80vh"
+          borderRadius="2xl"
           align="stretch"
-          overflowY={"auto"}
-          transition="all 0.3s"
+          overflowY="auto"
+          transition="all 0.2s ease"
           spacing={3}
+          shadow="sm"
         >
-          <Heading
-            size="md"
-            mb={4}
-            textAlign="center"
-            color={headingColor}
-            textTransform="uppercase"
-            fontWeight="semibold"
-          >
-            {status}
-          </Heading>
+          {/* Column Header */}
+          <HStack justify="space-between" align="center" px={1} py={1}>
+            <HStack spacing={2}>
+              <Box
+                w="10px"
+                h="10px"
+                borderRadius="full"
+                bg={statusAccentMap[status] || "gray.400"}
+              />
+              <Heading size="sm" fontWeight="bold" color={headingColor}>
+                {status}
+              </Heading>
+              <Badge
+                bg={badgeBg}
+                color={headingColor}
+                borderRadius="full"
+                px={2.5}
+                py={0.5}
+                fontSize="xs"
+                fontWeight="bold"
+              >
+                {tasks.length}
+              </Badge>
+            </HStack>
+
+            <IconButton
+              aria-label="Add Task to column"
+              icon={<AddIcon boxSize={2.5} />}
+              size="xs"
+              variant="ghost"
+              borderRadius="md"
+              onClick={onAddTask}
+            />
+          </HStack>
+
+          {/* Cards List */}
           {tasks.map((task, index) => (
-            <Draggable key={task._id} draggableId={task._id} index={index}>
-              {(provided) => (
+            <Draggable key={task.id} draggableId={task.id} index={index}>
+              {(provided, snapshot) => (
                 <Box
                   ref={provided.innerRef}
                   {...provided.draggableProps}
                   {...provided.dragHandleProps}
+                  opacity={snapshot.isDragging ? 0.8 : 1}
                 >
-                  <TaskCard
-                    task={task}
-                    isEditing={editingTaskId === task._id}
-                    editTitle={editTitle}
-                    editPriority={editPriority}
-                    onEditTitleChange={onEditTitleChange}
-                    onEditPriorityChange={onEditPriorityChange}
-                    onSaveEdit={onSaveEdit}
-                    onStartEditing={() => onEditTask(task._id)}
-                    onDeleteTask={() => onDeleteTask(task._id)}
-                  />
+                  <TaskCard task={task} onSelectTask={onSelectTask} />
                 </Box>
               )}
             </Draggable>
           ))}
           {provided.placeholder}
-          <IconButton
-            mt={2}
-            aria-label="Add Task"
-            w="30px"
-            size="md"
+
+          <Button
+            size="sm"
+            variant="ghost"
+            colorScheme="blue"
+            leftIcon={<AddIcon boxSize={2.5} />}
+            justifyContent="start"
+            borderRadius="xl"
             onClick={onAddTask}
-            bg={buttonBg}
-            _hover={{ bg: buttonHoverBg }}
-            borderRadius="full"
-            icon={<AddIcon />}
-            boxShadow="md"
-          />
+            mt={2}
+            fontSize="xs"
+          >
+            Add Task
+          </Button>
         </VStack>
       )}
     </Droppable>

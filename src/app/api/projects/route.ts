@@ -1,55 +1,38 @@
 import { NextResponse } from "next/server";
-import Project from "@/models/Project";
-import connectDB from "@/lib/mongodb";
-import mongoose from "mongoose";
-import Team from "@/models/Team";
-import Task from "@/models/Task";
-import Sprint from "@/models/Sprint";
+import { prisma } from "@/lib/prisma";
+import { getAuthenticatedUserId, getUserTeamIds } from "@/lib/authHelpers";
 
-// GET all projects
+// GET all projects accessible by the authenticated user
 export async function GET(request: Request) {
   try {
-    await connectDB();
-    if (!mongoose.models.Project) {
-      mongoose.model("Project", Project.schema);
-    }
-    if (!mongoose.models.Task) {
-      mongoose.model("Task", Task.schema);
-    }
-  
-    if (mongoose.models.Sprint) {
-      mongoose.model("Sprint", Sprint.schema);
-    }
-  
-    // Extract the Authorization header and get user ID
-    const authHeader = request.headers.get("Authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return NextResponse.json({ error: "hello 1" }, { status: 401 });
-    }
-
-    const userId = authHeader.split(" ")[1];
+    const userId = await getAuthenticatedUserId(request);
     if (!userId) {
-      return NextResponse.json({ error: "hello 2" }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const createdBy = userId
+    const teamIds = await getUserTeamIds(userId);
 
-    console.log("Session user ID:", createdBy);
+    // Isolated Projects query: Created by user OR assigned to a team user is a member of
+    const projects = await prisma.project.findMany({
+      where: {
+        OR: [
+          { createdById: userId },
+          { assignedTeamId: { in: teamIds } },
+        ],
+      },
+      include: {
+        assignedTeam: { select: { id: true, name: true } },
+        sprints: {
+          include: {
+            tasks: {
+              include: { assignees: true },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
 
-    // Ensure the Project model is registered
-    if (!mongoose.models.Project) {
-      mongoose.model("Project", Project.schema);
-    }
-
-    if (!mongoose.models.Team) {
-      mongoose.model("Team", Team.schema);
-    }
-
-    // Fetch all projects and populate assignedTeam
-    const projects = await Project.find({ createdBy }).populate(
-      "assignedTeam",
-      "name" // Populate only the name field of the assignedTeam
-    ).populate("sprints").exec();
     return NextResponse.json(projects);
   } catch (error) {
     console.error("Error fetching projects:", error);
@@ -60,53 +43,59 @@ export async function GET(request: Request) {
   }
 }
 
-
-// POST a new project
+// POST a new project (auto-creates Sprint 0)
 export async function POST(request: Request) {
   try {
-    await connectDB();
-
+    const userId = await getAuthenticatedUserId(request);
     const body = await request.json();
+    const { name, description, assignedTeamId, dueDate } = body;
+    const createdById = body.createdById || userId;
 
-    if (!body.name || !body.description) {
+    if (!name || !description) {
       return NextResponse.json(
         { error: "Name and description are required" },
         { status: 400 }
       );
     }
 
-    if (body.assignedTeam && typeof body.assignedTeam !== "string") {
+    if (!createdById) {
       return NextResponse.json(
-        { error: "assignedTeam must be a Team object" },
+        { error: "createdById is required" },
         { status: 400 }
       );
     }
 
-    // 1. Create the project
-    const newProject = new Project({
-      ...body,
-      sprints: [], // initialize sprints array
+    // Create project + Sprint 0 in a transaction
+    const project = await prisma.$transaction(async (tx) => {
+      const newProject = await tx.project.create({
+        data: {
+          name,
+          description,
+          assignedTeamId: assignedTeamId ?? null,
+          dueDate: dueDate ?? null,
+          createdById,
+        },
+      });
+
+      await tx.sprint.create({
+        data: {
+          name: "Sprint 0",
+          startDate: new Date(),
+          endDate: new Date(),
+          projectId: newProject.id,
+        },
+      });
+
+      return tx.project.findUnique({
+        where: { id: newProject.id },
+        include: {
+          assignedTeam: { select: { id: true, name: true } },
+          sprints: true,
+        },
+      });
     });
-    await newProject.save();
 
-    // 2. Create Sprint 0
-    const Sprint = (await import("@/models/Sprint")).default;
-    const sprintZero = await Sprint.create({
-      name: "Sprint 0",
-      startDate: new Date(),
-      endDate: new Date(),
-      tasks: [],
-      project: newProject._id,
-    });
-
-    // 3. Add Sprint 0 to project
-    newProject.sprints.push(sprintZero._id);
-    await newProject.save();
-
-    // 4. Populate the assignedTeam and return the result
-    const populatedProject = await Project.findById(newProject._id).populate("assignedTeam");
-
-    return NextResponse.json(populatedProject, { status: 201 });
+    return NextResponse.json(project, { status: 201 });
   } catch (error) {
     console.error("Error creating project:", error);
     return NextResponse.json(
@@ -116,18 +105,12 @@ export async function POST(request: Request) {
   }
 }
 
+// PUT update a project (via ?id= query param)
 export async function PUT(request: Request) {
   try {
-    await connectDB();
-
-    // Parse the query parameters
     const url = new URL(request.url);
     const id = url.searchParams.get("id");
 
-    // Parse the request body
-    const updateData = await request.json();
-
-    // Validate required fields
     if (!id) {
       return NextResponse.json(
         { error: "Project ID is required" },
@@ -135,29 +118,19 @@ export async function PUT(request: Request) {
       );
     }
 
-    // Validate assignedTeam (if provided)
-    if (
-      updateData.assignedTeam &&
-      !mongoose.Types.ObjectId.isValid(updateData.assignedTeam)
-    ) {
-      return NextResponse.json(
-        { error: "assignedTeam must be a valid ObjectId" },
-        { status: 400 }
-      );
-    }
+    const updateData = await request.json();
+    const { id: _id, createdById: _c, createdAt: _ca, ...safeData } = updateData;
+    void _id; void _c; void _ca;
 
-    // Update the project with only the provided fields
-    const project = await Project.findByIdAndUpdate(
-      id,
-      { $set: updateData }, // Use $set to update only the provided fields
-      { new: true }
-    ).populate("assignedTeam"); // Populate the assignedTeam field
+    const project = await prisma.project.update({
+      where: { id },
+      data: safeData,
+      include: {
+        assignedTeam: { select: { id: true, name: true } },
+        sprints: true,
+      },
+    });
 
-    if (!project) {
-      return NextResponse.json({ error: "Project not found" }, { status: 404 });
-    }
-
-    // Return the updated project
     return NextResponse.json(project);
   } catch (error) {
     console.error("Error updating project:", error);
@@ -171,12 +144,8 @@ export async function PUT(request: Request) {
 // DELETE a project
 export async function DELETE(request: Request) {
   try {
-    await connectDB();
-
-    // Parse the request body
     const { id } = await request.json();
 
-    // Validate required fields
     if (!id) {
       return NextResponse.json(
         { error: "Project ID is required" },
@@ -184,13 +153,7 @@ export async function DELETE(request: Request) {
       );
     }
 
-    // Delete the project
-    const project = await Project.findByIdAndDelete(id);
-
-    if (!project) {
-      return NextResponse.json({ error: "Project not found" }, { status: 404 });
-    }
-
+    await prisma.project.delete({ where: { id } });
     return NextResponse.json({ message: "Project deleted" });
   } catch (error) {
     console.error("Error deleting project:", error);
